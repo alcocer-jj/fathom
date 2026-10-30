@@ -1,0 +1,253 @@
+---
+title: "What Mexicans ask their government for"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{What Mexicans ask their government for}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r baked, include=FALSE}
+p <- system.file("extdata", "vignette_results.rds", package = "fathom")
+if (!nzchar(p)) {
+  stop("baked results not found. Run bake_results.R, then devtools::install().")
+}
+baked <- readRDS(p)
+need <- c("res_topics")
+missing <- setdiff(need, names(baked))
+if (length(missing)) {
+  stop(
+    "vignette_results.rds is missing ", paste(missing, collapse = ", "),
+    ". Re-run data-raw/bake_results.R and reinstall."
+  )
+}
+```
+
+[A complete run](complete_run.html) uses `fathom` to build an exclusive coding instrument, where every label category is placed in the question itself and their probabilities share a single distribution. This article provides an example of how to build an independent binary qualitative instrument, where each label category is asked as its own yes-or-no question, so that a document can fall into multiple categories. The pipeline uses a dataset available in the package (`ati`) of three hundred Spanish-language access-to-information requests that Mexicans filed with their federal government through INFOMEX, sampled from a corpus hand-coded by Erlich et al. (2022).
+
+## Overview
+
+1. **Preprocess the corpus** by dropping the documents whose text contains no meaningful information.
+2. **Code the qualitative instrument** with `template_items()` and `instrument()`, and use `preview()` to see what the local large language model (LLM) will read.
+3. **Extract response probabilities** with `measure()`.
+4. **Read the results** with `item_report()` and `as_wide()`.
+5. **Check sensitivity to the cut point** with `threshold_sensitivity()`.
+
+## The corpus
+
+`ati` contains the text of Spanish-language requests that were filed by Mexicans between 2003 and 2015, along with the fields that trace them back to their source. `folio` is the request number from INFOMEX, the portal created by Mexico’s 2002 transparency law, *la Ley Federal de Transparencia y Acceso a la Información Pública*, and `dependency` is the federal agency that received the request. Unlike `parlasent`, this dataset carries no human codings, so the article does not validate the results against coders.
+
+```{r data}
+library(fathom)
+library(dplyr)
+library(pander)
+
+data(ati)
+
+ati %>%
+  slice(1:5)
+```
+
+## Step 1. Preprocess the corpus
+
+As described by Erlich et al. (2022), about one in eight document requests arrived with an attachment, and for many of those the text field contains only pointer language, which makes it noise for this analysis.
+Given this, the pipeline drops those documents, along with any request shorter than six words.
+
+```{r pointer}
+vocab <- paste0(
+  "ver|favor de ver|se anexa|se adjunta|solicito|solicita|",
+  "archivo|documento|documentos|cuestionario|anexo|anexa|adjunto|adjunta|",
+  "informacion|información|el|la|los|las|un|una|de|del|en|y|mi|se"
+)
+
+pointer <- paste0("^([[:space:]]*\\b(", vocab, ")\\b)+[[:space:].]*$")
+
+ati <- ati %>%
+  mutate(
+    n_words = lengths(strsplit(trimws(text), "\\s+"))
+  ) %>%
+  filter(
+    !grepl(pointer, tolower(trimws(text)), perl = TRUE),
+    n_words >= 6
+  )
+```
+
+The coded pattern matches text made of nothing but pointer vocabulary, so a document request that opens with *documento* and then says something survives the filter.
+
+## Step 2. Code the qualitative instrument
+
+Erlich et al. (2022) coded their requests on twenty-one features, and their topic block names six categories. However, their codebook was never published, and their supplemental material only named the variables without describing how they were defined. To circumvent this challenge, the pipeline instead draws from five categories found in Article 7 of the 2002 Mexican transparency law, which lists what every federal agency must publish.
+
+The `template_items()` function can build questions from a single question stem, slotting each category into the stem's `{label}` placeholder so that the only thing varying across the questions is the category they name. While `fathom` comes with shipped stems, the function also accepts a custom string as the stem.
+
+```{r topics}
+# Build custom question stem in Spanish
+custom_stem <- paste0(
+  "¿Esta solicitud pide a la dependencia o entidad información ",
+  "sobre {label}?"
+)
+
+# Build list of topics from Article 7 also in Spanish
+topics <- c(
+  actividades = paste0(
+    "las actividades, servicios, trámites o programas que ofrece o ",
+    "realiza"
+  ),
+  presupuesto = paste0(
+    "el presupuesto, el gasto, los recursos financieros o los montos ",
+    "destinados a algo"
+  ),
+  contratos = paste0(
+    "contratos, contrataciones, licitaciones, proveedores, concesiones o ",
+    "permisos otorgados"
+  ),
+  estructura = paste0(
+    "su estructura, sus unidades administrativas, su personal, los puestos ",
+    "o las remuneraciones"
+  ),
+  normatividad = paste0(
+    "normatividad, reglamentos, lineamientos o el marco legal que le aplica"
+  )
+)
+```
+
+`fathom` ships with two prompt scaffolding languages, English and Spanish. The `lang = "es"` argument in the `instrument()` function writes the scaffolding text around the question in the language chosen. The question text itself is not affected by this argument.
+
+```{r instrument}
+b_topics <- instrument(
+  template_items(custom_stem, topics),
+  labels = c("sí", "no"),
+  lang = "es"
+)
+
+b_topics
+```
+
+### Previewing the model call
+
+The `preview()` function prints what the local LLM would receive without executing the call.^[`preview()` cosmetically trims the document at `truncate`, 300 characters by default, and marks where it cut. The actual run does not truncate the text.]
+
+```{r preview}
+preview(b_topics, text = ati$text[1])
+```
+
+## Step 3. Extract response probabilities
+
+The `measure()` function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured with `ollama_backend()`. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.
+
+```{r run, eval=FALSE}
+oll <- ollama_backend("gemma4:31b")
+
+oll
+#> Ollama backend
+#>
+#> Model         gemma4:31b
+#> Host          http://localhost:11434
+#> Logprobs      top 20
+#> Modalities    text, image
+
+res_topics <- measure(
+  ati,                    # the data frame
+  backend = oll,          # the model, from above
+  instrument = b_topics,  # the codebook, from Step 2
+  id      = "id",         # column holding the document identifier
+  text    = "text",       # column holding the document
+  keep    = "dependency"  # existing columns to carry into `res_topics`
+)
+#> Constrained-label measurement
+#>
+#> Model               gemma4:31b
+#> Context Ceiling     2,048 tokens
+#> Longest doc         '3635', 588 words, 995 tokens
+#> First token         'NO', a label, from 20 log probabilities
+#> Documents           286
+#> Items               5 (actividades, presupuesto, contratos, estructura,
+#>                     normatividad)
+#> Labels              2 (sí, no)
+#> Checkpoints         off
+#>
+#> Measuring           [===============]  286/286  100%  3.2 s/doc  ETA 0.0 s
+#>
+#> Done                286 processed, 0 skipped, 0 item failures
+#> Elapsed             15.3 min, 3.2 s per document
+```
+
+```{r run-hidden, echo=FALSE}
+res_topics <- baked$res_topics
+```
+
+## Step 4. Read the results
+
+As explained in [A complete run](complete_run.html), the `measure()` function returns an object holding two data frames.
+
+- `$probs`, which contains the results themselves, these being the probabilities that the local LLM assigned to each label of each document-question pair.
+
+- `$calls`, which contains call-level information for checking the run, along with the columns `keep` carried through (in this case `dependency`).
+
+### Summarizing the results by question and label
+
+The `item_report()` function summarizes each item across the corpus, and its shape depends on the results object that it receives. If the `target` parameter is left unset, it uses the instrument's first label, which here is `sí`.
+
+```{r report}
+report <- item_report(res_topics)
+pander(report, split.table = Inf)
+```
+
+Here, the `endorse_renorm` column depicts the proportion of requests where `sí` had the highest probability mass, whereas `pct_extreme_renorm` depicts the share of requests whose probability on `sí` sat at the most extreme ends (<= 0.01 or >= 0.99). Based on this share, which runs from `r sprintf("%.3f", min(report$pct_extreme_renorm))` to `r sprintf("%.3f", max(report$pct_extreme_renorm))` across the five questions, it can be said that the local LLM answered nearly every request with certainty.
+
+Visit the `item_report()` documentation page for information that outlines every column for this shape.
+
+### The analysis matrix
+
+Finally, the `as_wide()` function takes the results object and creates a wide data frame where each request is one row and each question is a column, which is where the package hands off. Setting `dichotomize = TRUE` turns each probability into a binary using a 0.5 cutoff.
+
+```{r wide}
+wide <- as_wide(
+  res_topics,
+  prefix      = "t_",
+  dichotomize = TRUE
+)
+
+head(wide, 6)
+```
+
+## Step 5. Check sensitivity to the cut point
+
+By default, `fathom` sets the endorsement cut point at 0.5. The `threshold_sensitivity()` function conducts a grid search testing each cut point across the 0.1 to 0.9 range and reports the endorsement rates at each.
+
+```{r threshold}
+sens <- threshold_sensitivity(res_topics)
+
+sens
+```
+
+```{r swing, include=FALSE}
+# Each question's swing across the range, widest first, in percentage points.
+swing <- sort(
+  tapply(sens$endorse, sens$item, function(e) 100 * (max(e) - min(e))),
+  decreasing = TRUE
+)
+code <- function(x) paste0("`", x, "`")
+rest <- paste0(sprintf("%.1f", swing[-1]), " on ", code(names(swing)[-1]))
+rest <- paste0(
+  paste(rest[-length(rest)], collapse = ", "),
+  ", and ",
+  rest[length(rest)]
+)
+```
+
+Across the whole range the widest swing is `r sprintf("%.1f", swing[1])` percentage points, on `r code(names(swing)[1])`, and the rest move by `r rest`, suggesting that the endorsement rates are not sensitive to where the cut point is placed.
+
+## References
+
+Erlich, A., Dantas, S. G., Bagozzi, B. E., Berliner, D., & Palmer-Rubin, B. (2022).
+Multi-label prediction for political text-as-data.
+*Political Analysis*, 30(4), 463–480. <https://doi.org/10.1017/pan.2021.15>

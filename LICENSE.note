@@ -1,0 +1,44 @@
+Licensing of the data shipped with fathom
+=========================================
+
+The R code in this package is under MIT, as stated in DESCRIPTION and LICENSE.
+The datasets in data/ carry their own terms. One is CC0 1.0 Universal, a
+public domain dedication that carries no obligation. One is CC BY-SA 4.0, which
+does.
+
+parlasent
+---------
+Derived from ParlaSent 1.0, a hundred-sentence stratified sample of the English
+training file.
+
+  Mochtak, M., Rupnik, P., Meden, K., and Ljubesic, N. (2023). The multilingual
+  sentiment dataset of parliamentary debates ParlaSent 1.0. Slovenian language
+  resource repository CLARIN.SI. http://hdl.handle.net/11356/1868
+
+Licensed under Creative Commons Attribution-ShareAlike 4.0 International.
+
+  https://creativecommons.org/licenses/by-sa/4.0/
+
+ShareAlike attaches to this dataset and to adaptations of it, not to the R code
+in this package. Anyone redistributing `parlasent` or a derivative of it must do
+so under CC BY-SA 4.0 and must attribute the authors above. Using the package to
+analyze other data creates no such obligation.
+
+The sentences originate in the ParlaMint corpora of European parliamentary
+debates.
+
+  Kuzman Pungersek, T., Ljubesic, N., Erjavec, T., et al. (2025).
+  Linguistically annotated multilingual comparable corpora of parliamentary
+  debates ParlaMint-en.ana 5.0. CLARIN.SI. http://hdl.handle.net/11356/2006
+
+ati
+---
+Drawn from the replication materials of Erlich et al. (2022).
+
+  Erlich, A., Dantas, S. G., Bagozzi, B. E., Berliner, D., and Palmer-Rubin, B.
+  (2022). Multi-label prediction for political text-as-data.
+  Political Analysis 30(4), 463-480. https://doi.org/10.1017/pan.2021.15
+
+Replication data at https://doi.org/10.7910/DVN/SOVPA4, released under CC0 1.0
+Universal. The underlying requests are
+published by Mexico's federal transparency system.

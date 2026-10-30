@@ -1,0 +1,6 @@
+.DS_Store
+**/.quarto/
+/Meta/
+data-raw
+dev
+fathom-design.md

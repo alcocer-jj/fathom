@@ -1,0 +1,98 @@
+url: https://alcocer-jj.github.io/fathom/
+template:
+  bootstrap: 5
+  bootswatch: sandstone
+  light-switch: true
+  assets: imgs
+navbar:
+  structure:
+    left: [intro, articles, reference]
+    right: [search, github, lightswitch]
+  components:
+    intro:
+      text: Getting started
+      menu:
+      - text: Quick start
+        href: articles/quick_start.html
+      - text: A complete run
+        href: articles/complete_run.html
+    articles:
+      text: Articles
+      menu:
+      - text: What Mexicans ask their government for
+        href: articles/example_ati.html
+repo:
+  # Supplying repo.url makes package_repo() return this list and skip its own
+  # discovery entirely, rather than merging with it. So the three that are
+  # wanted have to be restated beside the one being removed. Dropping them
+  # again takes the navbar GitHub icon with them, along with issue and user
+  # autolinking in NEWS. `source: ~` is the only line doing the removing, and
+  # it kills the "Source: vignettes/..." line on articles and reference pages
+  # alike, since one setting serves both.
+  #
+  # Trailing slashes are required. The varying part, an issue number or a user
+  # name, is pasted directly onto the end.
+  url:
+    home: https://github.com/alcocer-jj/fathom/
+    source: ~
+    issue: https://github.com/alcocer-jj/fathom/issues/
+    user: https://github.com/
+home:
+  sidebar:
+    structure: [links, license, citation, authors, dev]
+articles:
+- title: Start here
+  desc: >
+    Quick start installs the package and confirms the server answers. A
+    complete run then walks the whole pipeline on a hundred parliamentary
+    sentences, from pointing at a model to reading the results, and reads
+    them against the codings the corpus carries rather than against nothing.
+  contents:
+  - quick_start
+  - complete_run
+- title: Examples
+  navbar: Examples
+  contents:
+  - example_ati
+reference:
+- title: Building an instrument
+  desc: >
+    An instrument bundles the questions with the labels the model may answer
+    with. Read the assembled prompt before spending anything on a run.
+  contents: [instrument, template_items, preview, ollama_backend]
+- title: Extracting
+  desc: >
+    One unconstrained call per document-item, reading the probability
+    distribution at generated position 1.
+  contents: [measure, read_checkpoints]
+- title: Reading the results
+  desc: >
+    Aggregate statistics cannot tell you whether an item measures what you
+    intended. These describe; only inspect_cases() answers that question, by
+    showing you the documents.
+  contents: [item_report, inspect_cases]
+- title: Preparing a corpus
+  desc: >
+    A corpus of files rather than a column of text. One row per document, with
+    the columns measure() and the audit functions expect.
+  contents: [prepare_image, prepare_audio, prepare_video]
+- title: Testing the measurement
+  desc: >
+    A probability is more than a label, and these are what that buys. How much
+    of an item's endorsement rate is the threshold rather than the corpus,
+    whether the model agreed with a human, how far two humans agreed with each
+    other, and whether its probabilities were honest.
+  contents: [threshold_sensitivity, coding_sample, validate_sample,
+    coder_reference]
+- title: Downstream
+  contents: [as_wide]
+- title: Data
+  desc: >
+    Two corpora hand-coded by the researchers who collected them. parlasent is
+    the only one carrying two independent codings before reconciliation, so it
+    is the only one against which a model can be read at a human ceiling rather
+    than against perfect agreement. It ships under CC BY-SA 4.0 rather than
+    MIT, see LICENSE.note.
+  contents: [ati, parlasent]
+- title: Package
+  contents: [fathom-package]

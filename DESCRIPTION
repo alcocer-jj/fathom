@@ -1,0 +1,62 @@
+Package: fathom
+Type: Package
+Title: Qualitative Coding and Measurement with Local Language Models
+Version: 0.0.1.0
+Authors@R: c(
+	person(
+	  "Jose J.", "Alcocer",
+	  email = "alcocer@protonmail.com",
+	  role = c("aut", "cre"),
+	  comment = c(ORCID = "0009-0005-0469-3689")),
+        person("Ewon", "Baik", email = "ebaik@usc.edu", role = "ctb",
+	       comment = c(ORCID = "0000-0002-4811-9401")),
+        person("Karen", "Borglund", email = "borglund@usc.edu", role = "ctb"),
+	person("Alain S.", "Muñoz", email = "santiago.mc1106@gmail.com", role = "ctb"),
+        person("Sandra S.", "Muñoz", email = "saandramc2@gmail.com", role = "ctb")
+	)
+Description: Qualitatively code a corpus by asking a local language model a set
+    of questions about each document and reading the answer from the model's
+    next-token probability distribution rather than parsing its text. Extraction
+    never fails to parse, returns a probability per label, and reports the
+    probability mass the model placed outside the label set. Includes the
+    auditing steps that separate usable annotation from plausible-looking
+    output. These inspect the documents that fired on an item and draw blinded
+    samples for human coding. Requires a running Ollama server.
+License: MIT + file LICENSE
+Note: The `parlasent` dataset is distributed under CC BY-SA 4.0 rather than
+    MIT. See LICENSE.note.
+Encoding: UTF-8
+SystemRequirements: Ollama (>= 0.12.11);
+    ffmpeg (for prepare_audio() and prepare_video());
+    whisperx or whispermlx (optional, for prepare_audio() and prepare_video())
+Depends:
+    R (>= 4.4.0)
+Imports:
+    cli (>= 3.0.0),
+    digest,
+    dplyr,
+    httr2,
+    jsonlite,
+    magrittr,
+    stats,
+    stringi,
+    tibble,
+    tidyr,
+    utils
+Suggests:
+    ggplot2,
+    testthat (>= 3.0.0),
+    readr,
+    knitr,
+    rmarkdown (>= 2.13),
+    quarto,
+    withr,
+    ragg,
+    pander
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+URL: https://alcocer-jj.github.io/fathom, https://github.com/alcocer-jj/fathom
+BugReports: https://github.com/alcocer-jj/fathom/issues
+Config/roxygen2/version: 8.0.0
+LazyData: true
+VignetteBuilder: knitr, quarto

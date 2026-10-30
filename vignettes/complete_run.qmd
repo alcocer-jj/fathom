@@ -1,0 +1,294 @@
+---
+title: "A complete run"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A complete run}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(dplyr)
+library(fathom)
+library(pander)
+
+p <- system.file("extdata", "vignette_results.rds", package = "fathom")
+if (!nzchar(p)) {
+  stop("baked results not found. Run bake_results.R, then devtools::install().")
+}
+baked <- readRDS(p)
+need <- c("res_six")
+missing <- setdiff(need, names(baked))
+if (length(missing)) {
+  stop(
+    "vignette_results.rds is missing ", paste(missing, collapse = ", "),
+    ". Re-run data-raw/bake_results.R and reinstall."
+  )
+}
+```
+
+This article provides an example of how to run the whole `fathom` package pipeline. The [**Quick start**](quick_start.html) page covers package installation and Ollama setup.
+
+The pipeline uses a dataset available in the package (`parlasent`) of one hundred UK parliamentary sentences that were sampled from the English portion of ParlaSent 1.0 by Mochtak, Rupnik, Meden, and Ljubešić (2023).
+
+## Overview
+
+1. **Select a model** with `ollama_backend()`.
+2. **Code the qualitative instrument** with `instrument()` and use `preview()` to see what the local large language model (LLM) will read.
+3. **Extract response probabilities** with `measure()`.
+4. **Read the results** with `item_report()` for descriptive summaries, use `inspect_cases()` to manually validate some entries, and apply `as_wide()` to hand off for downstream analyses.
+5. **Validate the LLM results** with `coding_sample()` and `validate_sample()`.
+
+## The corpus
+
+`parlasent` contains data on two annotators who coded every parliamentary sentence independently based on a six-level ordered scale. In addition, it contains a reconciliation column resulting from those two. `annotator1` and `annotator2` are the two codings, `reconciliation` is what they settled on.
+
+```{r data}
+library(dplyr)
+library(fathom)
+library(pander)
+
+data(parlasent)
+parlasent %>% select(id, sentence, annotator1, annotator2, reconciliation)
+
+levels(parlasent$reconciliation)
+```
+
+The `Positive` and `Negative` labels are used for sentences that emit these emotions entirely or predominantly. The `M_Positive` and `M_Negative` labels are used for sentences that emit these emotions in a mixed or leaning manner. The `P_Neutral` and `N_Neutral` labels carry no sentiment and differ only in which way they tilt. Overall, the sample of 100 documents holds around sixteen or seventeen of each.
+
+## Step 1. Select a model
+
+The `ollama_backend()` function accepts an existing local model name and returns an object holding the settings that every model call will use.
+
+```{r backend, eval=FALSE}
+oll <- ollama_backend("gemma4:31b")
+
+oll
+#> Ollama backend
+#>
+#> Model         gemma4:31b
+#> Host          http://localhost:11434
+#> Logprobs      top 20
+#> Modalities    text, image
+```
+
+## Step 2. Code the qualitative instrument
+
+The `instrument()` function constructs a codebook containing the question and response categories the local LLM may answer that question with, and it returns an object that the `measure()` function accepts. The annotators who coded the parliamentary speeches categorized each sentence on one of the previously discussed six ordinal levels, and the article uses `fathom` to ask a local LLM that same question using those same six categories.
+
+```{r instrument}
+b <- instrument(
+  items = "Where does this sentence fall on the six-point sentiment scale?",
+  labels = c("1", "2", "3", "4", "5", "6"),
+  definitions = c(
+    "1" = "entirely or predominantly negative",
+    "2" = "ambiguous, or a mixture of sentiments, leaning negative",
+    "3" = "no sentiment of its own, leaning negative",
+    "4" = "no sentiment of its own, leaning positive",
+    "5" = "ambiguous, or a mixture of sentiments, leaning positive",
+    "6" = "entirely or predominantly positive"
+  ),
+  exclusive = TRUE
+)
+
+b
+```
+
+The `items` argument holds the question that the local LLM reads exactly as written. The `labels` argument holds the one-word labels that the local LLM is instructed to answer with. Because scoring reads a single token, the labels chosen must have differing first characters. Given that the actual scheme's own names do not meet this requirement (e.g., `Negative` and `N_Neutral` both start with N), the codebook uses numerals instead. The `definitions` argument holds the definitions of the labels that the local LLM reads in tandem with the question. Setting `exclusive = TRUE` places every category in one question, causing their probabilities to share a single distribution.^[When `exclusive = TRUE`, the `items` argument must be a single string, and passing more than one is refused. That question is named _category_, which is the name that appears in the results and in every table below.] The other mechanism is independent binary items, which ask one question per category. The article [What Mexicans ask their government for](example_ati.html) shows that kind of example.
+
+### Previewing the model call
+
+The `preview()` function prints what the local LLM would receive without executing the call.^[`preview()` cosmetically trims the document at `truncate`, 300 characters by default, and marks where it cut. The actual run does not truncate the text.]
+
+```{r preview}
+preview(b, text = parlasent$sentence[1])
+```
+
+## Step 3. Extract response probabilities
+
+As in the `preview()` function, the `measure()` function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured in Step 1. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.
+
+```{r run, eval=FALSE}
+res <- measure(
+  parlasent,                     # the data frame
+  backend    = oll,              # the model, from Step 1
+  instrument = b,                # the codebook, from Step 2
+  id         = "id",             # column holding the document identifier
+  text       = "sentence",       # column holding the document
+  keep       = "reconciliation"  # existing columns to carry into `res`
+)
+#> Constrained-label measurement
+#>
+#> Model               gemma4:31b
+#> Context Ceiling     2,048 tokens
+#> Longest doc         'uk_063', 32 words, 157 tokens
+#> First token         '6', a label, from 20 log probabilities
+#> Documents           100
+#> Items               1 (category)
+#> Labels              6 (1, 2, 3, 4, 5, 6)
+#> Checkpoints         off
+#>
+#> Measuring           [===============]  100/100  100%  0.7 s/doc  ETA 0.0 s
+#>
+#> Done                100 processed, 0 skipped, 0 item failures
+#> Elapsed             1.2 min, 0.7 s per document
+```
+
+```{r run-hidden, echo=FALSE}
+res <- baked$res_six
+```
+
+Before the very first call, `measure()` by default establishes the context window that the run needs by measuring the token count of the longest document-question pair and rounding it up with headroom, so that no prompt is cut short and Ollama does not reset its cache between calls. The help page for `measure()` covers setting the window by hand with `num_ctx`.
+
+## Step 4. Read the results
+
+The results object holds two data frames.
+
+- `$probs` is one row per document, item and label, and contains the results themselves, the probability that the local LLM assigned to each label of each document-question pair.
+
+- `$calls` is one row per document and item, and contains call-level information for checking the run, along with any columns `keep` carried through.
+
+### Probabilities (`$probs`)
+
+```{r result-shape}
+pander(head(res$probs), n = 6)
+```
+
+Here, the `prob_renorm` and `prob` columns convey the probabilities that the local LLM assigned to a label. However, `prob_renorm` is renormalized to the codebook instrument's label set, making it the main measure of interest.
+
+### Calls (`$calls`)
+
+```{r result-calls}
+pander(head(res$calls), split.table = Inf)
+```
+
+Given that this data frame is at the call level, the `prob_other` column conveys the raw probability mass that the local LLM gave to all other tokens not corresponding to the codebook instrument's label set. Additionally, the `error` and `truncated` columns flag whether certain calls would benefit from further examination or a re-run.
+
+For further information, the documentation page for `measure()` outlines every column found in both data frames.
+
+### Summarizing the results by question and label
+
+The `item_report()` function summarizes the run `measure()` produced. On a forced choice codebook instrument it returns one row per category and prints a header above the table.
+
+```{r report}
+item_report(res)
+```
+
+Here, the `n_won` column counts the number of documents where each label had the highest probability, whereas the `share_won` column expresses it as a proportion of the documents scored.
+
+The console also outputs two diagnostics, *Leaked mass* and *Winning*. Leaked mass depicts the max and mean probability mass that landed on no category at all, while *Winning* depicts the lowest probability that any winning category received, conveying the floor of the local LLM's confidence.
+
+### Inspecting question-document pairs
+
+The `inspect_cases()` function can be used to print a question alongside the corpus documents it was answered on, by the codebook instrument label of interest and by whether that label won or the local LLM's answer was a close call between two labels.
+
+```{r inspect}
+inspect_cases(
+  res,                  # model results
+  "category",           # which item to read
+  parlasent,            # data frame containing corpus
+  text   = "sentence",  # corpus documents
+  id     = "id",        # document ids
+  which  = "endorsed",  # documents where `target` won
+  target = "1",         # most negative sentiment
+  n      = 2,           # number of documents to print
+  seed   = 444          # fixed seed
+)
+```
+
+### The analysis matrix
+
+Finally, the `as_wide()` function takes the results object and creates a wide data frame where each document is one row and each category is a column, which is where the package hands off.
+
+```{r wide}
+as_wide(res, prefix = "p_") %>%
+  head(6)
+```
+
+## Step 5. Validate the LLM results
+
+An LLM cannot entirely discern whether its answers are right. Some degree of human validation is often necessary. To do this, the `coding_sample()` function draws a sample of document-question pairs that a human coder can then fill out as the first step.
+
+```{r sample}
+sheet <- coding_sample(
+  res,                  # model results
+  parlasent,            # data frame containing corpus
+  text   = "sentence",  # corpus documents
+  id     = "id",        # document ids
+  n      = 20,          # document-item pairs to sample
+  seed   = 444          # fixed seed
+)
+
+pander(head(sheet, n = 2), split.table = Inf)
+```
+
+Here, each row of the sample sheet pairs a corpus document with one of the codebook instrument's questions, named in the `item` column and written out with its label definitions in the `question` column. Since this coding instrument asks a single question, every row carries the same question and each pair is simply a document. However, on a coding instrument of several questions, a document appears once per question and `n` counts pairs either way. The `human_label` column is left blank for human coders to fill in using the labels that the `allowed` column lists.
+
+```{r fill-hidden, echo=FALSE}
+labels <- c(
+  "Negative", "M_Negative", "N_Neutral",
+  "P_Neutral", "M_Positive", "Positive"
+)
+
+codings <- parlasent %>%
+  transmute(
+    id,
+    a1 = as.character(match(annotator1, labels)),
+    a2 = as.character(match(annotator2, labels))
+  )
+
+append <- function(sample, name) {
+  sample %>%
+    left_join(codings, by = "id") %>%
+    mutate(human_label = .data[[name]]) %>%
+    select(-a1, -a2)
+}
+
+coding_sample1 <- append(sheet, "a1")
+coding_sample2 <- append(sheet, "a2")
+```
+
+### Validating the sample using two coders
+
+Handing the `validate_sample()` function a named list of `coding_sample()` sheets will get it to score the local LLM against each of the human coders, calculate the ceiling the coders set between themselves, and return the distance between the two. Because the categories are ordinal, the call sets `level = "ordinal"`. Additionally, because the `parlasent` dataset already has two independent hand codings, this article uses those for validation.
+
+```{r validate}
+v <- validate_sample(
+  list(
+    annotator1 = coding_sample1,
+    annotator2 = coding_sample2
+  ),
+  res,
+  level = "ordinal",
+  labels = as.character(1:6),
+  seed = 444
+)
+
+pander(v$ceiling$pairs, split.table = Inf)
+```
+
+The `v$ceiling$pairs` table establishes a ceiling between the two coders on the same corpus documents. The `agreement` column denotes the proportion of documents where the two coders wrote the same label, while the `alpha` column corresponds to Krippendorff's alpha (Krippendorff 2019). Rather than counting coding matches, Krippendorff's alpha compares the disagreement among the coders with how much they would disagree if each label were assigned at random, in the proportions the coders actually used. Alpha is calculated as one minus the ratio of the two, where 0 is chance-level agreement, 1 is a perfect match, and a value in between is the share of chance-level disagreement the coders avoided. Calculating alpha when using ordinal labels accounts for distance between disagreeing labels by weighting those that disagree by fewer levels less and vice versa. Given that Krippendorff's alpha is a chance-corrected index, it usually sits below raw agreement. Here, however, an alpha of `r round(v$ceiling$pairs$alpha[1], 3)` sits above agreement of `r round(v$ceiling$pairs$agreement[1], 3)`, suggesting that most of the disagreements between the coders were by few levels rather than by being far off between them. Additionally, the precision of alpha depends on the sample size `n`.
+
+### Validating the model against the coders
+
+```{r gap}
+pander(v$gap, split.table = Inf)
+```
+
+The `v$gap` table compares the model with the ceiling the coders set, with one row per question. The `model_alpha` column is the model's average alpha with each of the coders, while the `coder_alpha` column is the coders' average alpha with each other, which with two coders is simply their one pairwise alpha. The `gap` column subtracts the second from the first, so it reads in the same units as alpha (see `v$discrimination` table for individual level comparisons between the model and each coder). A gap value below zero would indicate that the model on average disagrees with the coders more than they on average disagree with each other. Conversely, a gap value above zero would indicate that the model had a higher average agreement with the coders than the coders had with each other. The `gap_ci` column holds a percentile confidence interval around the gap (default of 95 percent), built from an empirical bootstrap. Here, the local LLM's average alpha of `r round(v$gap$model_alpha[1], 3)` against the human coders' average alpha of `r round(v$gap$coder_alpha[1], 3)` has a gap of `r round(v$gap$gap[1], 3)` with an interval of `r v$gap$gap_ci[1]`. Both alpha values sitting at or near Krippendorff's 0.80 threshold along with its gap interval crossing zero suggest that the local LLM's judgment matched the annotators' about as closely as their judgments match each other, further suggesting that the LLM's coding can serve as a viable alternative to human coders for this corpus.
+
+## References
+
+Krippendorff, K. (2019).
+*Content Analysis: An Introduction to Its Methodology* (4th ed.).
+Sage. <https://doi.org/10.4135/9781071878781>
+
+Mochtak, M., Rupnik, P., Meden, K., & Ljubešić, N. (2023).
+The multilingual sentiment dataset of parliamentary debates ParlaSent 1.0.
+*Slovenian language resource repository CLARIN.SI*.
+<http://hdl.handle.net/11356/1868>
