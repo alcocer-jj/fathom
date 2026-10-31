@@ -828,9 +828,58 @@ test_that("ffprobe is found beside ffmpeg, and refused when absent", {
     fixed = TRUE
   )
   file.create(file.path(d, "ffprobe"))
+  # On Windows dirname() returns / where local_tempdir() hands back \, so the
+  # same file is spelled two ways. Normalizing both compares the file itself.
+  found <- fathom:::find_ffprobe(file.path(d, "ffmpeg"))
   expect_equal(
-    fathom:::find_ffprobe(file.path(d, "ffmpeg")),
-    file.path(d, "ffprobe")
+    normalizePath(found, winslash = "/"),
+    normalizePath(file.path(d, "ffprobe"), winslash = "/")
+  )
+})
+
+test_that("the refusals give each system its own PATH line and ffmpeg command", {
+  # Windows joins PATH entries with `;` rather than `:`, and R drops every
+  # backslash outside quotes when it reads ~/.Renviron, after expanding
+  # ${PATH}. Unquoted there, the line would strip the backslashes from every
+  # directory already on the PATH.
+  expect_identical(
+    fathom:::renviron_path_line("unix"),
+    "PATH=${PATH}:/your/dir"
+  )
+  expect_identical(
+    fathom:::renviron_path_line("windows"),
+    "PATH=\"${PATH};C:\\your\\dir\""
+  )
+  # The install commands are the quick start's, one per system.
+  hint <- fathom:::ffmpeg_install_hint
+  expect_match(hint("Darwin"), "brew install ffmpeg", fixed = TRUE)
+  expect_match(
+    hint("Windows"),
+    "winget install -e --id Gyan.FFmpeg",
+    fixed = TRUE
+  )
+  expect_match(hint("Linux"), "sudo apt install ffmpeg", fixed = TRUE)
+  expect_match(hint("SunOS"), "https://www.ffmpeg.org", fixed = TRUE)
+
+  # Each refusal carries what fits the system it runs on. fmt_err() wraps at
+  # 80 columns, so the spaces it breaks on are put back before matching.
+  refusal <- function(expr) {
+    gsub("[[:space:]]+", " ", tryCatch(expr, error = conditionMessage))
+  }
+  d <- withr::local_tempdir()
+  withr::local_envvar(PATH = d)
+  line <- fathom:::renviron_path_line()
+  expect_match(
+    refusal(fathom:::find_recognizer("whisperx_no_such_tool")),
+    line,
+    fixed = TRUE
+  )
+  expect_match(refusal(fathom:::find_ffmpeg()), line, fixed = TRUE)
+  expect_match(refusal(fathom:::find_ffmpeg()), hint(), fixed = TRUE)
+  expect_match(
+    refusal(fathom:::find_ffprobe(file.path(d, "ffmpeg"))),
+    line,
+    fixed = TRUE
   )
 })
 

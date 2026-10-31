@@ -596,7 +596,9 @@ find_recognizer <- function(tool) {
           "R does not always inherit the PATH a shell uses, so a tool that ",
           "runs in your terminal can be invisible here. Check ",
           "Sys.getenv(\"PATH\") before reinstalling, and add a directory ",
-          "permanently with PATH=${PATH}:/your/dir in ~/.Renviron."
+          "permanently with ",
+          renviron_path_line(),
+          " in ~/.Renviron."
         ),
         paste0(
           "If it is genuinely absent, `uv tool install ",
@@ -1646,9 +1648,11 @@ find_ffmpeg <- function() {
           "R does not always inherit the PATH a shell uses, so a tool that ",
           "runs in your terminal can be invisible here. Check ",
           "Sys.getenv(\"PATH\") before reinstalling, and add a directory ",
-          "permanently with PATH=${PATH}:/your/dir in ~/.Renviron."
+          "permanently with ",
+          renviron_path_line(),
+          " in ~/.Renviron."
         ),
-        "If it is genuinely absent, `brew install ffmpeg` on macOS."
+        paste0("If it is genuinely absent, ", ffmpeg_install_hint())
       ),
       call. = FALSE
     )
@@ -1682,13 +1686,62 @@ find_ffprobe <- function(bin) {
           "It ships with ffmpeg, so the install that provided ",
           bin,
           " should have it. Check Sys.getenv(\"PATH\"), and add a directory ",
-          "permanently with PATH=${PATH}:/your/dir in ~/.Renviron."
+          "permanently with ",
+          renviron_path_line(),
+          " in ~/.Renviron."
         )
       ),
       call. = FALSE
     )
   }
   probe
+}
+
+#' The ~/.Renviron line that adds a directory to the PATH
+#'
+#' Shared by `find_recognizer()`, `find_ffmpeg()`, and `find_ffprobe()`, which
+#' all point to the same remedy. Windows joins PATH entries with `;` where
+#' everything else uses `:`. R also reads ~/.Renviron by expanding `${PATH}`
+#' first and then dropping every backslash outside quotes, so on Windows the
+#' whole value is quoted, or every directory already on the PATH loses its
+#' backslashes.
+#'
+#' @param os A string, as in `.Platform$OS.type`. Defaults to the running
+#'   session's.
+#' @return A string.
+#' @keywords internal
+#' @noRd
+renviron_path_line <- function(os = .Platform$OS.type) {
+  if (identical(os, "windows")) {
+    "PATH=\"${PATH};C:\\your\\dir\""
+  } else {
+    "PATH=${PATH}:/your/dir"
+  }
+}
+
+#' The command that installs ffmpeg on the running system
+#'
+#' The commands the quick start gives, so the refusal and the article name the
+#' same route. `.Platform$OS.type` cannot tell macOS from Linux, so this reads
+#' `Sys.info()`. A system it does not name is sent to the ffmpeg site.
+#'
+#' @param sysname A string, as in `Sys.info()[["sysname"]]`. Defaults to the
+#'   running session's.
+#' @return A string, the end of the sentence that opens "If it is genuinely
+#'   absent".
+#' @keywords internal
+#' @noRd
+ffmpeg_install_hint <- function(sysname = Sys.info()[["sysname"]] %||% "") {
+  switch(
+    sysname,
+    Darwin = "`brew install ffmpeg` on macOS.",
+    Windows = paste0(
+      "`winget install -e --id Gyan.FFmpeg` on Windows, ",
+      "then restart R."
+    ),
+    Linux = "`sudo apt install ffmpeg` on Debian or Ubuntu.",
+    "install it from https://www.ffmpeg.org."
+  )
 }
 
 #' What ffprobe says a file is

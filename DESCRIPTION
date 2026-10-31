@@ -1,7 +1,7 @@
 Package: fathom
 Type: Package
 Title: Qualitative Coding and Measurement with Local Language Models
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
 	person(
 	  "Jose J.", "Alcocer",
