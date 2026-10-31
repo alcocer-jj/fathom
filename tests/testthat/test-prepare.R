@@ -1,7 +1,8 @@
 # prepare_image() and prepare_audio() build a corpus of files. No network is
 # touched, no audio is decoded and no recognizer is spawned. prepare_audio()
-# reads a transcript that sits beside the recording and is newer than it, so
-# writing one is how the whole path is exercised offline.
+# reads a transcript from `cache_dir` that is newer than the recording, so
+# writing one is how the whole path is exercised offline. fake_clip() writes it
+# beside the recording, and the calls here point `cache_dir` at that folder.
 
 test_that("prepare_image reports a missing file rather than dropping it", {
   good <- tempfile(fileext = ".PNG")
@@ -92,7 +93,7 @@ test_that("a cached transcript is read and the recognizer is never reached", {
   # No whisperx on the machine running this, and none needed. If the cache
   # check were not ahead of the PATH check, every test below would fail here.
   wav <- fake_clip()
-  out <- prepare_audio(wav)
+  out <- prepare_audio(wav, cache_dir = dirname(wav))
 
   expect_equal(nrow(out), 1L)
   expect_true(out$exists)
@@ -107,14 +108,18 @@ test_that("two switches, each writing one thing, and they compose", {
   dia_clip <- fake_clip(diarize = TRUE)
 
   # Everything off. No token, no diarizer, no optional package, no markers.
-  plain <- prepare_audio(plain_clip)
+  plain <- prepare_audio(plain_clip, cache_dir = dirname(plain_clip))
   expect_equal(plain$text, "I already told you no you")
   expect_false(plain$annotate_timing)
   expect_false(plain$diarized)
 
   # Timing alone. One run of text, since without diarization there are no
   # turns and every silence is a pause.
-  tim <- prepare_audio(plain_clip, annotate_timing = TRUE)
+  tim <- prepare_audio(
+    plain_clip,
+    annotate_timing = TRUE,
+    cache_dir = dirname(plain_clip)
+  )
   expect_equal(
     tim$text,
     "I already [pause 0.4s] told you [pause 2.5s] no you"
@@ -122,12 +127,21 @@ test_that("two switches, each writing one thing, and they compose", {
   expect_true(tim$annotate_timing)
 
   # Names alone, which is where turns come from.
-  spk <- prepare_audio(dia_clip, diarize_names = TRUE)
+  spk <- prepare_audio(
+    dia_clip,
+    diarize_names = TRUE,
+    cache_dir = dirname(dia_clip)
+  )
   expect_equal(spk$text, "[S0]: I already told you\n[S1]: no you")
   expect_true(spk$diarized)
 
   # Both, and the turn boundary silence is a gap rather than a pause.
-  both <- prepare_audio(dia_clip, diarize_names = TRUE, annotate_timing = TRUE)
+  both <- prepare_audio(
+    dia_clip,
+    diarize_names = TRUE,
+    annotate_timing = TRUE,
+    cache_dir = dirname(dia_clip)
+  )
   expect_equal(
     both$text,
     "[S0]: I already [pause 0.4s] told you\n[gap 2.5s]\n[S1]: no you"
@@ -139,7 +153,9 @@ test_that("names off means the speaker column is ignored, not just unprinted", {
   # for. Printing no labels but still breaking the text into turns would be
   # the text obeying something the caller switched off.
   wav <- fake_clip(sidecar = FALSE)
-  out <- suppressMessages(prepare_audio(wav, annotate_timing = TRUE))
+  out <- suppressMessages(
+    prepare_audio(wav, annotate_timing = TRUE, cache_dir = dirname(wav))
+  )
 
   expect_false(grepl("\n", out$text, fixed = TRUE))
   expect_false(grepl("[gap", out$text, fixed = TRUE))
@@ -156,10 +172,20 @@ test_that("names off means the speaker column is ignored, not just unprinted", {
 test_that("the counts describe the recording, not the rendering", {
   wav <- fake_clip(diarize = TRUE)
   four <- list(
-    prepare_audio(wav, diarize_names = TRUE, annotate_timing = TRUE),
-    prepare_audio(wav, diarize_names = TRUE),
-    prepare_audio(wav, diarize_names = TRUE, annotate_timing = TRUE),
-    prepare_audio(wav, diarize_names = TRUE)
+    prepare_audio(
+      wav,
+      diarize_names = TRUE,
+      annotate_timing = TRUE,
+      cache_dir = dirname(wav)
+    ),
+    prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav)),
+    prepare_audio(
+      wav,
+      diarize_names = TRUE,
+      annotate_timing = TRUE,
+      cache_dir = dirname(wav)
+    ),
+    prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav))
   )
 
   # Only text and the annotate_* columns move. Everything else is a fact about
@@ -183,25 +209,30 @@ test_that("the two rates answer different questions, and both are free", {
   # Six words spanning 4.20 s of which 1.24 s is voiced. Fast on the clock and
   # fast while speaking are different states, and the ratio between them is
   # how much of the elapsed time was pausing.
-  d <- prepare_audio(fake_clip(diarize = TRUE), diarize_names = TRUE)
+  wav <- fake_clip(diarize = TRUE)
+  d <- prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav))
   expect_equal(d$speech_rate, 6 / 4.2)
   expect_equal(d$articulation_rate, 6 / 1.24)
   expect_true(d$articulation_rate > d$speech_rate)
 
   # Both come off word boundaries rather than off what was written, so they
   # hold with the markers off.
-  plain <- prepare_audio(fake_clip())
+  wav <- fake_clip()
+  plain <- prepare_audio(wav, cache_dir = dirname(wav))
   expect_equal(plain$speech_rate, 6 / 4.2)
   expect_equal(plain$articulation_rate, 6 / 1.24)
 })
 
 test_that("median_turn_s needs turns, and median_score needs a transcript", {
   # Turns of 1.30 s and 0.40 s.
-  d <- prepare_audio(fake_clip(diarize = TRUE), diarize_names = TRUE)
+  wav <- fake_clip(diarize = TRUE)
+  d <- prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav))
   expect_equal(d$median_turn_s, 0.85)
   # Without diarization there are no turns to measure, so NA rather than the
   # whole recording counted as one.
-  expect_true(is.na(prepare_audio(fake_clip())$median_turn_s))
+  wav <- fake_clip()
+  plain <- prepare_audio(wav, cache_dir = dirname(wav))
+  expect_true(is.na(plain$median_turn_s))
 
   # The fixture writes no `score`, which is what a hand-made transcript looks
   # like, so there is nothing to report rather than a number to invent.
@@ -213,8 +244,9 @@ test_that("median_turn_s needs turns, and median_score needs a transcript", {
   }
   w <- fathom:::read_timings(scored)
   expect_equal(w$score, c(0.9, 0.8, 0.2, 0.7, 0.6, 0.5))
+  wav <- fake_clip(scored)
   expect_equal(
-    prepare_audio(fake_clip(scored))$median_score,
+    prepare_audio(wav, cache_dir = dirname(wav))$median_score,
     stats::median(c(0.9, 0.8, 0.2, 0.7, 0.6, 0.5))
   )
 })
@@ -222,10 +254,12 @@ test_that("median_turn_s needs turns, and median_score needs a transcript", {
 test_that("a turn is a maximal run by one speaker and nothing splits it", {
   # S0 holds the floor across a 0.40 silence, so it stays one line and the
   # silence is written where it happened rather than breaking the turn.
+  wav <- fake_clip(diarize = TRUE)
   both <- prepare_audio(
-    fake_clip(diarize = TRUE),
+    wav,
     diarize_names = TRUE,
-    annotate_timing = TRUE
+    annotate_timing = TRUE,
+    cache_dir = dirname(wav)
   )
   expect_equal(length(strsplit(both$text, "\n", fixed = TRUE)[[1]]), 3L)
   expect_equal(both$n_turns, 2L)
@@ -237,10 +271,12 @@ test_that("a turn is a maximal run by one speaker and nothing splits it", {
   quick[[5]]$end <- 1.55
   quick[[6]]$start <- 1.57
   quick[[6]]$end <- 1.70
+  wav <- fake_clip(quick, diarize = TRUE)
   q <- prepare_audio(
-    fake_clip(quick, diarize = TRUE),
+    wav,
     diarize_names = TRUE,
-    annotate_timing = TRUE
+    annotate_timing = TRUE,
+    cache_dir = dirname(wav)
   )
   expect_equal(q$n_turns, 2L)
   # Below min_pause, so the line break carries the turn and no marker does.
@@ -251,10 +287,12 @@ test_that("a turn is a maximal run by one speaker and nothing splits it", {
 test_that("pause and gap are told apart by diarization, not by the labels", {
   # Whether a silence is hesitation or a turn transition is a fact about the
   # recording, so the distinction holds even where no labels are written.
+  wav <- fake_clip(diarize = TRUE)
   tim <- prepare_audio(
-    fake_clip(diarize = TRUE),
+    wav,
     diarize_names = TRUE,
-    annotate_timing = TRUE
+    annotate_timing = TRUE,
+    cache_dir = dirname(wav)
   )
   expect_true(grepl("[pause 0.4s]", tim$text, fixed = TRUE))
   expect_true(grepl("[gap 2.5s]", tim$text, fixed = TRUE))
@@ -263,7 +301,8 @@ test_that("pause and gap are told apart by diarization, not by the labels", {
 
   # The same words without diarization. Without turns the 2.50 is just another
   # silence, so it counts as a pause and n_gaps has nothing to report.
-  b <- prepare_audio(fake_clip(), annotate_timing = TRUE)
+  wav <- fake_clip()
+  b <- prepare_audio(wav, annotate_timing = TRUE, cache_dir = dirname(wav))
   expect_true(grepl("[pause 2.5s]", b$text, fixed = TRUE))
   expect_false(grepl("[gap", b$text, fixed = TRUE))
   expect_equal(b$n_pauses, 2L)
@@ -271,7 +310,8 @@ test_that("pause and gap are told apart by diarization, not by the labels", {
 })
 
 test_that("speaker is passed through, never invented, and never silent", {
-  a <- prepare_audio(fake_clip(diarize = TRUE), diarize_names = TRUE)
+  wav <- fake_clip(diarize = TRUE)
+  a <- prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav))
   expect_true(a$diarized)
   expect_equal(a$n_speakers, 2L)
 
@@ -282,8 +322,13 @@ test_that("speaker is passed through, never invented, and never silent", {
   wav <- fake_clip(bare, diarize = TRUE)
   # A transcript that cannot supply the labels asked for is reported, and the
   # reason stays visible in the row afterwards.
-  expect_message(prepare_audio(wav, diarize_names = TRUE), "no speaker")
-  b <- suppressMessages(prepare_audio(wav, diarize_names = TRUE))
+  expect_message(
+    prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav)),
+    "no speaker"
+  )
+  b <- suppressMessages(
+    prepare_audio(wav, diarize_names = TRUE, cache_dir = dirname(wav))
+  )
   expect_false(b$diarized)
   # NA rather than 1, so a transcript with no speaker is never read as a
   # transcript with one speaker.
@@ -296,7 +341,8 @@ test_that("speakers renames, and refuses a name that is not there", {
   a <- prepare_audio(
     wav,
     diarize_names = TRUE,
-    speakers = c(S0 = "Interviewer", S1 = "Respondent")
+    speakers = c(S0 = "Interviewer", S1 = "Respondent"),
+    cache_dir = dirname(wav)
   )
   expect_true(grepl("[Interviewer]:", a$text, fixed = TRUE))
   expect_true(grepl("[Respondent]:", a$text, fixed = TRUE))
@@ -305,15 +351,30 @@ test_that("speakers renames, and refuses a name that is not there", {
   # A typo that renamed nothing would leave a corpus that looks relabelled and
   # is not, so it is an error rather than a silent no-op.
   expect_error(
-    prepare_audio(wav, diarize_names = TRUE, speakers = c(S9 = "Interviewer")),
+    prepare_audio(
+      wav,
+      diarize_names = TRUE,
+      speakers = c(S9 = "Interviewer"),
+      cache_dir = dirname(wav)
+    ),
     "not in the timings"
   )
   expect_error(
-    prepare_audio(wav, diarize_names = TRUE, speakers = c(S9 = "Interviewer")),
+    prepare_audio(
+      wav,
+      diarize_names = TRUE,
+      speakers = c(S9 = "Interviewer"),
+      cache_dir = dirname(wav)
+    ),
     "Present"
   )
   expect_error(
-    prepare_audio(wav, diarize_names = TRUE, speakers = "Interviewer"),
+    prepare_audio(
+      wav,
+      diarize_names = TRUE,
+      speakers = "Interviewer",
+      cache_dir = dirname(wav)
+    ),
     "named character vector"
   )
 })
@@ -347,21 +408,33 @@ test_that("what the caller typed is refused before the machine is inspected", {
     prepare_audio(c("a.wav", "b/a.wav")),
     "ids must be unique"
   )
+  # Where the transcript goes is the caller's to say, so leaving it out is
+  # refused here too, before any path in `x` is looked at.
+  expect_error(prepare_audio("nowhere.wav"), "`cache_dir` is required")
+  expect_error(
+    prepare_audio("nowhere.wav", cache_dir = c("a", "b")),
+    "one directory, or one per file"
+  )
 
   # Three independent switches make the combinations that used to need
   # refusing unrepresentable. Nothing implies another, so there is no way to
   # ask for labels and switch off the thing that produces them.
   wav <- fake_clip()
-  expect_false(prepare_audio(wav)$diarized)
-  expect_false(prepare_audio(wav)$transcribed)
+  expect_false(prepare_audio(wav, cache_dir = dirname(wav))$diarized)
+  expect_false(prepare_audio(wav, cache_dir = dirname(wav))$transcribed)
 })
 
 test_that("a path that does not resolve is kept rather than dropped", {
   wav <- fake_clip()
   gone <- file.path(tempdir(), "no_such_recording.wav")
 
-  expect_message(prepare_audio(c(wav, gone)), "do not resolve")
-  out <- suppressMessages(prepare_audio(c(wav, gone)))
+  expect_message(
+    prepare_audio(c(wav, gone), cache_dir = dirname(wav)),
+    "do not resolve"
+  )
+  out <- suppressMessages(
+    prepare_audio(c(wav, gone), cache_dir = dirname(wav))
+  )
 
   expect_equal(nrow(out), 2L)
   expect_equal(out$exists, c(TRUE, FALSE))
@@ -370,12 +443,15 @@ test_that("a path that does not resolve is kept rather than dropped", {
   expect_equal(out$id, c("clip", "no_such_recording"))
 
   # Nothing resolving at all is an error rather than a frame of NAs.
-  expect_error(prepare_audio(gone), "none of the paths")
+  expect_error(
+    prepare_audio(gone, cache_dir = dirname(gone)),
+    "none of the paths"
+  )
 })
 
 test_that("provenance travels on the row, since two runs are two corpora", {
   wav <- fake_clip()
-  out <- prepare_audio(wav)
+  out <- prepare_audio(wav, cache_dir = dirname(wav))
 
   expect_false(out$transcribed)
   expect_equal(out$tool, "whisperx")
@@ -386,16 +462,31 @@ test_that("provenance travels on the row, since two runs are two corpora", {
 
   # min_pause reaches no recognizer, so it is not in the cache key and a
   # different value re-reads the same transcript rather than re-transcribing.
-  expect_equal(prepare_audio(wav, min_pause = 0.5)$min_pause, 0.5)
   expect_equal(
-    prepare_audio(wav, min_pause = 0.5, annotate_timing = TRUE)$n_pauses,
+    prepare_audio(wav, min_pause = 0.5, cache_dir = dirname(wav))$min_pause,
+    0.5
+  )
+  expect_equal(
+    prepare_audio(
+      wav,
+      min_pause = 0.5,
+      annotate_timing = TRUE,
+      cache_dir = dirname(wav)
+    )$n_pauses,
     1L
   )
   expect_equal(
-    prepare_audio(wav, min_pause = 0.01, annotate_timing = TRUE)$n_pauses,
+    prepare_audio(
+      wav,
+      min_pause = 0.01,
+      annotate_timing = TRUE,
+      cache_dir = dirname(wav)
+    )$n_pauses,
     5L
   )
-  expect_false(prepare_audio(wav, min_pause = 0.5)$transcribed)
+  expect_false(
+    prepare_audio(wav, min_pause = 0.5, cache_dir = dirname(wav))$transcribed
+  )
 })
 
 test_that("the cache asks what measure() asks, whether these settings ran", {
@@ -462,9 +553,12 @@ test_that("a transcript of unknown origin is used, and says it is unknown", {
   # the correction, and naming settings that did not produce those words would
   # be worse than saying nothing.
   wav <- fake_clip(sidecar = FALSE)
-  expect_message(prepare_audio(wav), "no record of how they were made")
+  expect_message(
+    prepare_audio(wav, cache_dir = dirname(wav)),
+    "no record of how they were made"
+  )
 
-  out <- suppressMessages(prepare_audio(wav))
+  out <- suppressMessages(prepare_audio(wav, cache_dir = dirname(wav)))
   expect_false(out$transcribed)
   expect_true(is.na(out$tool))
   expect_true(is.na(out$asr_model))
@@ -477,9 +571,30 @@ test_that("a transcript of unknown origin is used, and says it is unknown", {
 
 test_that("id names the recording and can be set", {
   wav <- fake_clip()
-  expect_equal(prepare_audio(wav)$id, "clip")
-  expect_equal(prepare_audio(wav, id = "hearing_04")$id, "hearing_04")
+  expect_equal(prepare_audio(wav, cache_dir = dirname(wav))$id, "clip")
+  expect_equal(
+    prepare_audio(wav, id = "hearing_04", cache_dir = dirname(wav))$id,
+    "hearing_04"
+  )
   expect_error(prepare_audio(wav, id = c("a", "b")), "one per file")
+})
+
+test_that("cache_dir decides where a transcript is looked for", {
+  # Two recordings in two folders, each with its transcript beside it. One
+  # directory per file is how dirname() keeps every output where it was.
+  a <- fake_clip(name = "a")
+  b <- fake_clip(name = "b")
+  out <- prepare_audio(c(a, b), cache_dir = dirname(c(a, b)))
+  expect_equal(out$id, c("a", "b"))
+  expect_false(any(out$transcribed))
+
+  # An empty directory is a miss even with a transcript beside the recording,
+  # so the call goes looking for a recognizer. With no PATH there is none.
+  withr::local_envvar(PATH = "")
+  expect_error(
+    prepare_audio(a, cache_dir = withr::local_tempdir()),
+    "PATH this R session"
+  )
 })
 
 test_that("the three input shapes all parse, and untimed words are counted", {
@@ -539,7 +654,7 @@ test_that("verbosity is checked like every other choice argument", {
   # Nothing is transcribed here, so no level says anything. The per-recording
   # line belongs to the transcription, not to reading a cached transcript.
   for (v in c("quiet", "normal", "verbose")) {
-    expect_silent(prepare_audio(wav, verbosity = v))
+    expect_silent(prepare_audio(wav, verbosity = v, cache_dir = dirname(wav)))
   }
 })
 
@@ -569,7 +684,7 @@ test_that("the recognizer is only demanded when something needs it", {
   dir.create(d, showWarnings = FALSE, recursive = TRUE)
   wav <- file.path(d, "untranscribed.wav")
   writeBin(as.raw(c(1, 2, 3, 4)), wav)
-  expect_error(prepare_audio(wav), "PATH this R session")
+  expect_error(prepare_audio(wav, cache_dir = d), "PATH this R session")
 })
 
 # prepare_video() rests on ffmpeg for the frames and prepare_audio() for the
@@ -675,7 +790,11 @@ test_that("what the caller typed is refused before ffmpeg is looked for", {
   expect_error(prepare_video("a.mp4", select = "keyframe"), "should be one of")
   expect_error(prepare_video("a.mp4", id = c("a", "b")), "one per file")
   expect_error(prepare_video(c("a/x.mp4", "b/x.mp4")), "ids must be unique")
-  expect_error(prepare_video("no_such_video.mp4"), "none of the paths")
+  expect_error(prepare_video("a.mp4"), "`cache_dir` is required")
+  expect_error(
+    prepare_video("no_such_video.mp4", cache_dir = tempdir()),
+    "none of the paths"
+  )
 })
 
 test_that("a video path that does not resolve is kept rather than dropped", {
@@ -706,8 +825,13 @@ test_that("a video path that does not resolve is kept rather than dropped", {
   skip_if_not(file.exists(real), "ffmpeg could not write a fixture")
   gone <- file.path(d, "no_such_clip.mp4")
 
-  expect_message(prepare_video(c(real, gone), frames = 3), "do not resolve")
-  out <- suppressMessages(prepare_video(c(real, gone), frames = 3))
+  expect_message(
+    prepare_video(c(real, gone), frames = 3, cache_dir = d),
+    "do not resolve"
+  )
+  out <- suppressMessages(
+    prepare_video(c(real, gone), frames = 3, cache_dir = d)
+  )
 
   expect_equal(nrow(out), 2L)
   expect_equal(out$exists, c(TRUE, FALSE))
@@ -743,8 +867,12 @@ test_that("a silent video is a document, and the batch does not stop", {
   ))
   skip_if_not(file.exists(v), "ffmpeg could not write a fixture")
 
-  expect_message(prepare_video(v, frames = 3), "no audio stream")
-  out <- suppressMessages(prepare_video(v, frames = 3))
+  cd <- file.path(d, "prepared")
+  expect_message(
+    prepare_video(v, frames = 3, cache_dir = cd),
+    "no audio stream"
+  )
+  out <- suppressMessages(prepare_video(v, frames = 3, cache_dir = cd))
 
   expect_true(out$exists)
   expect_false(out$has_audio)
@@ -764,9 +892,11 @@ test_that("a silent video is a document, and the batch does not stop", {
   expect_true(is.na(out$asr_model))
   expect_true(is.na(out$transcribed))
 
-  # Frames live beside the recording rather than in a temp directory, because
-  # measure() reads paths and coding_sample() copies them.
-  expect_true(all(startsWith(out$image[[1]], d)))
+  # Frames go where cache_dir says rather than into a temp directory, because
+  # measure() reads paths and coding_sample() copies them. Nothing is written
+  # beside the recording unless cache_dir names its folder.
+  expect_true(all(startsWith(out$image[[1]], cd)))
+  expect_false(dir.exists(file.path(d, "silent_frames")))
 })
 
 test_that("changing the frame settings cuts the frames again", {
@@ -799,11 +929,11 @@ test_that("changing the frame settings cuts the frames again", {
     list.files(file.path(d, "clip_frames"), pattern = "\\.jpg$")
   }
 
-  three <- suppressMessages(prepare_video(v, frames = 3))
+  three <- suppressMessages(prepare_video(v, frames = 3, cache_dir = d))
   first <- unname(tools::md5sum(three$image[[1]][1]))
   expect_length(on_disk(), 3L)
 
-  two <- suppressMessages(prepare_video(v, frames = 2))
+  two <- suppressMessages(prepare_video(v, frames = 2, cache_dir = d))
   expect_equal(two$n_frames, 2L)
   # The third picture of the earlier set is removed rather than left behind.
   expect_length(on_disk(), 2L)
@@ -813,7 +943,7 @@ test_that("changing the frame settings cuts the frames again", {
 
   # The same settings again reuse what is on disk.
   stamp <- file.mtime(two$image[[1]])
-  again <- suppressMessages(prepare_video(v, frames = 2))
+  again <- suppressMessages(prepare_video(v, frames = 2, cache_dir = d))
   expect_equal(file.mtime(again$image[[1]]), stamp)
 })
 
@@ -918,6 +1048,88 @@ test_that("the recognizer receives a path holding spaces as one argument", {
     extra = NULL
   )
   expect_true(file.exists(json))
+})
+
+test_that("a recording typed with ~ reaches the recognizer expanded", {
+  # file.exists() expands a leading ~ and the recognizer does not, since it
+  # receives the path quoted and no shell sees it. Unexpanded, the call found
+  # the file and the recognizer then reported it missing.
+  skip_on_os("windows")
+  home <- withr::local_tempdir()
+  withr::local_envvar(HOME = home)
+  skip_if_not(identical(path.expand("~"), home), "~ does not follow HOME here")
+  writeBin(as.raw(c(1, 2, 3, 4)), file.path(home, "clip.wav"))
+
+  # A stand-in that fails the way a real one does on a path that is not there,
+  # and otherwise writes a one-word transcript where --output_dir says.
+  bin <- withr::local_tempdir()
+  words <- "[{\"word\":\"hello\",\"start\":0.1,\"end\":0.4}]"
+  writeLines(
+    c(
+      "#!/bin/sh",
+      "in=\"$1\"",
+      "out=''",
+      "while [ $# -gt 0 ]; do",
+      "  if [ \"$1\" = \"--output_dir\" ]; then out=\"$2\"; fi",
+      "  shift",
+      "done",
+      "[ -f \"$in\" ] || exit 1",
+      paste0(
+        "echo '{\"word_segments\":",
+        words,
+        ",\"language\":\"en\"}' > \"$out/clip.json\""
+      )
+    ),
+    file.path(bin, "whisperx")
+  )
+  Sys.chmod(file.path(bin, "whisperx"), "755")
+  withr::local_envvar(PATH = paste(bin, Sys.getenv("PATH"), sep = ":"))
+
+  out <- prepare_audio(
+    "~/clip.wav",
+    cache_dir = withr::local_tempdir(),
+    verbosity = "quiet"
+  )
+  expect_equal(out$text, "hello")
+  expect_equal(out$audio, file.path(home, "clip.wav"))
+})
+
+test_that("a video typed with ~ is read rather than returned empty", {
+  # ffprobe and ffmpeg receive the path quoted as well. Unexpanded, nothing
+  # failed. The row came back with no frames and a note that the recording had
+  # no audio stream.
+  skip_if_not(nzchar(Sys.which("ffmpeg")), "ffmpeg is not installed here")
+  home <- withr::local_tempdir()
+  withr::local_envvar(HOME = home)
+  skip_if_not(identical(path.expand("~"), home), "~ does not follow HOME here")
+  suppressWarnings(system2(
+    "ffmpeg",
+    c(
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc=s=64x48:d=4",
+      "-r",
+      "10",
+      shQuote(file.path(home, "clip.mp4")),
+      "-y"
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  skip_if_not(
+    file.exists(file.path(home, "clip.mp4")),
+    "ffmpeg could not write a fixture"
+  )
+
+  out <- suppressMessages(
+    prepare_video("~/clip.mp4", frames = 3, cache_dir = withr::local_tempdir())
+  )
+  expect_equal(out$n_frames, 3L)
+  expect_equal(out$video, file.path(home, "clip.mp4"))
 })
 
 test_that("scene scores are read off the log ffmpeg writes", {

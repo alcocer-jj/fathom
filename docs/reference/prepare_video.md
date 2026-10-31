@@ -32,7 +32,7 @@ prepare_video(
   min_pause = 0.2,
   speakers = NULL,
   id = NULL,
-  cache_dir = NULL,
+  cache_dir,
   force = FALSE,
   verbosity = c("normal", "quiet", "verbose")
 )
@@ -158,7 +158,8 @@ prepare_video(
 - cache_dir:
 
   A string giving the directory where frames, the wav and the transcript
-  are written and looked for. Defaults to beside each recording.
+  are written and looked for, or a character vector giving one per file.
+  Required. `dirname(x)` keeps them beside each recording.
 
 - force:
 
@@ -243,7 +244,7 @@ naming a model would assert settings that produced no words.
 
 ## Frame storage
 
-On disk beside the recording, in `<stem>_frames/`, because
+On disk in `<stem>_frames/` inside `cache_dir`, because
 `measure(image = )` reads paths.
 
 The wav lands beside it, which is what lets
@@ -272,7 +273,7 @@ ads <- list.files("campaign_ads", "[.]mp4$", full.names = TRUE)
 ins <- instrument(c(attack = "Does this advertisement attack an opponent?"))
 
 # Frames spread evenly, and whatever was said alongside them.
-d <- prepare_video(ads, frames = 8)
+d <- prepare_video(ads, frames = 8, cache_dir = "prepared")
 measure(
   d,
   backend = ollama_backend("gemma3:27b"),
@@ -288,7 +289,8 @@ d <- prepare_video(
   select = "change",
   diarize_names = TRUE,
   annotate_timing = TRUE,
-  hf_token = Sys.getenv("HF_TOKEN")
+  hf_token = Sys.getenv("HF_TOKEN"),
+  cache_dir = "prepared"
 )
 } # }
 ```

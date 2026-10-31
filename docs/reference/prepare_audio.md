@@ -25,7 +25,7 @@ prepare_audio(
   min_pause = 0.2,
   speakers = NULL,
   id = NULL,
-  cache_dir = NULL,
+  cache_dir,
   force = FALSE,
   verbosity = c("normal", "quiet", "verbose")
 )
@@ -114,7 +114,8 @@ prepare_audio(
 - cache_dir:
 
   A string giving the directory where transcripts are written and looked
-  for. Defaults to beside each recording.
+  for, or a character vector giving one per file. Required. `dirname(x)`
+  keeps each transcript beside its recording.
 
 - force:
 
@@ -184,9 +185,9 @@ A tibble of one row per file.
 
 ## Caching
 
-A transcript already on disk is read instead of transcribing again, so
-an interrupted run resumes and a hand-corrected transcript survives.
-`force = TRUE` returns to the recognizer.
+A transcript already in `cache_dir` is read instead of transcribing
+again, so an interrupted run resumes and a hand-corrected transcript
+survives. `force = TRUE` returns to the recognizer.
 
 What counts as already done is the question
 [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
@@ -280,7 +281,7 @@ if (FALSE) { # \dontrun{
 
 # Everything off, which is a plain transcript and needs no token and no
 # optional package.
-plain <- prepare_audio("hearing_04.wav")
+plain <- prepare_audio("hearing_04.wav", cache_dir = "transcripts")
 
 # Two speakers known in advance, labeled turns with the silences marked.
 docs <- prepare_audio(
@@ -289,13 +290,15 @@ docs <- prepare_audio(
   annotate_timing = TRUE,
   min_speakers = 2,
   max_speakers = 2,
-  hf_token = Sys.getenv("HF_TOKEN")
+  hf_token = Sys.getenv("HF_TOKEN"),
+  cache_dir = "transcripts"
 )
 
 # Anything else the recognizer takes.
 tuned <- prepare_audio(
   "hearing_04.wav",
-  extra = c("--no_speech_threshold", "0.4", "--beam_size", "10")
+  extra = c("--no_speech_threshold", "0.4", "--beam_size", "10"),
+  cache_dir = "transcripts"
 )
 } # }
 ```

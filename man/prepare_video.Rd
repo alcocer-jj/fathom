@@ -24,7 +24,7 @@ prepare_video(
   min_pause = 0.2,
   speakers = NULL,
   id = NULL,
-  cache_dir = NULL,
+  cache_dir,
   force = FALSE,
   verbosity = c("normal", "quiet", "verbose")
 )
@@ -106,7 +106,8 @@ rather than ignored. Default is \code{NULL}.}
 file names without their extensions, and must be unique.}
 
 \item{cache_dir}{A string giving the directory where frames, the wav and the
-transcript are written and looked for. Defaults to beside each recording.}
+transcript are written and looked for, or a character vector giving one
+per file. Required. \code{dirname(x)} keeps them beside each recording.}
 
 \item{force}{A logical value indicating whether to extract and transcribe
 again even where usable output is cached. Default is \code{FALSE}.}
@@ -190,7 +191,8 @@ a model would assert settings that produced no words.
 
 \section{Frame storage}{
 
-On disk beside the recording, in \verb{<stem>_frames/}, because \code{measure(image = )} reads paths.
+On disk in \verb{<stem>_frames/} inside \code{cache_dir}, because \code{measure(image = )}
+reads paths.
 
 The wav lands beside it, which is what lets \code{\link[=prepare_audio]{prepare_audio()}}'s cache work
 unchanged. The frames keep a record of their own, \verb{<stem>_frames.fathom.json}
@@ -208,7 +210,7 @@ ads <- list.files("campaign_ads", "[.]mp4$", full.names = TRUE)
 ins <- instrument(c(attack = "Does this advertisement attack an opponent?"))
 
 # Frames spread evenly, and whatever was said alongside them.
-d <- prepare_video(ads, frames = 8)
+d <- prepare_video(ads, frames = 8, cache_dir = "prepared")
 measure(
   d,
   backend = ollama_backend("gemma3:27b"),
@@ -224,7 +226,8 @@ d <- prepare_video(
   select = "change",
   diarize_names = TRUE,
   annotate_timing = TRUE,
-  hf_token = Sys.getenv("HF_TOKEN")
+  hf_token = Sys.getenv("HF_TOKEN"),
+  cache_dir = "prepared"
 )
 }
 }

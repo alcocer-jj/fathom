@@ -103,9 +103,9 @@ prepare_image <- function(paths, id = NULL) {
 #' than in wording that is the absence of the thing being measured.
 #'
 #' @section Caching:
-#' A transcript already on disk is read instead of transcribing again, so an
-#' interrupted run resumes and a hand-corrected transcript survives. `force =
-#' TRUE` returns to the recognizer.
+#' A transcript already in `cache_dir` is read instead of transcribing again,
+#' so an interrupted run resumes and a hand-corrected transcript survives.
+#' `force = TRUE` returns to the recognizer.
 #'
 #' What counts as already done is the question [measure()] asks of its
 #' checkpoints, which is whether the work was done under the settings now being
@@ -204,7 +204,8 @@ prepare_image <- function(paths, id = NULL) {
 #' @param id A character vector of identifiers, one per file. Defaults to the
 #'   file names without their extensions, and must be unique.
 #' @param cache_dir A string giving the directory where transcripts are written
-#'   and looked for. Defaults to beside each recording.
+#'   and looked for, or a character vector giving one per file. Required.
+#'   `dirname(x)` keeps each transcript beside its recording.
 #' @param force A logical value indicating whether to transcribe again even
 #'   where a usable transcript is cached. Default is `FALSE`.
 #' @param verbosity A string setting how much to report.
@@ -266,7 +267,7 @@ prepare_image <- function(paths, id = NULL) {
 #'
 #' # Everything off, which is a plain transcript and needs no token and no
 #' # optional package.
-#' plain <- prepare_audio("hearing_04.wav")
+#' plain <- prepare_audio("hearing_04.wav", cache_dir = "transcripts")
 #'
 #' # Two speakers known in advance, labeled turns with the silences marked.
 #' docs <- prepare_audio(
@@ -275,13 +276,15 @@ prepare_image <- function(paths, id = NULL) {
 #'   annotate_timing = TRUE,
 #'   min_speakers = 2,
 #'   max_speakers = 2,
-#'   hf_token = Sys.getenv("HF_TOKEN")
+#'   hf_token = Sys.getenv("HF_TOKEN"),
+#'   cache_dir = "transcripts"
 #' )
 #'
 #' # Anything else the recognizer takes.
 #' tuned <- prepare_audio(
 #'   "hearing_04.wav",
-#'   extra = c("--no_speech_threshold", "0.4", "--beam_size", "10")
+#'   extra = c("--no_speech_threshold", "0.4", "--beam_size", "10"),
+#'   cache_dir = "transcripts"
 #' )
 #' }
 #' @export
@@ -300,7 +303,7 @@ prepare_audio <- function(
   min_pause = 0.2,
   speakers = NULL,
   id = NULL,
-  cache_dir = NULL,
+  cache_dir,
   force = FALSE,
   verbosity = c("normal", "quiet", "verbose")
 ) {
@@ -314,6 +317,10 @@ prepare_audio <- function(
       call. = FALSE
     )
   }
+  # file.exists() expands a leading ~ and the recognizer would not, since it
+  # receives the path quoted and no shell sees it. Expanding it once here
+  # hands every tool the file R found.
+  x <- path.expand(x)
   ids <- if (is.null(id)) {
     tools::file_path_sans_ext(basename(x))
   } else {
@@ -352,6 +359,7 @@ prepare_audio <- function(
     )
   }
   refuse_blocked(extra)
+  dirs <- check_cache_dir(if (!missing(cache_dir)) cache_dir, length(x))
 
   keep <- file.exists(x)
   if (!any(keep)) {
@@ -374,7 +382,6 @@ prepare_audio <- function(
     ))
   }
 
-  dirs <- if (is.null(cache_dir)) dirname(x) else rep_len(cache_dir, length(x))
   jsons <- file.path(
     dirs,
     paste0(tools::file_path_sans_ext(basename(x)), ".json")
@@ -517,6 +524,53 @@ prepare_audio <- function(
     )
   })
   dplyr::bind_rows(rows)
+}
+
+#' Check the directory a prepare function writes into
+#'
+#' Where transcripts and frames go is the caller's to say. A default beside the
+#' recordings would write into a researcher's folders unasked, which CRAN
+#' policy rules out, and a temporary directory would discard a transcription
+#' that took minutes along with any correction made to it by hand.
+#'
+#' One string covers a corpus, and one per file covers recordings kept in
+#' several folders, which is how `dirname(x)` keeps each output beside its
+#' recording. A leading `~` is expanded here, since the recognizer receives
+#' the path quoted and no shell expands it there.
+#'
+#' @param cache_dir The caller's `cache_dir`, or `NULL` where none was given.
+#' @param n An integer giving the number of files.
+#' @return A character vector of `n` directories.
+#' @keywords internal
+#' @noRd
+check_cache_dir <- function(cache_dir, n) {
+  if (is.null(cache_dir)) {
+    stop(
+      fmt_err(
+        paste0(
+          "`cache_dir` is required. It names the directory the output is ",
+          "written to and read back from."
+        ),
+        paste0(
+          "Pass any directory, or `cache_dir = dirname(x)` to keep each ",
+          "file's output beside it."
+        )
+      ),
+      call. = FALSE
+    )
+  }
+  if (
+    !is.character(cache_dir) ||
+      !(length(cache_dir) %in% c(1L, n)) ||
+      anyNA(cache_dir) ||
+      !all(nzchar(cache_dir))
+  ) {
+    stop(
+      fmt_err("`cache_dir` must be one directory, or one per file."),
+      call. = FALSE
+    )
+  }
+  path.expand(rep_len(cache_dir, n))
 }
 
 #' Flags the caller may not pass through `extra`
@@ -1344,8 +1398,8 @@ render_turn <- function(p, timed, min_pause) {
 #' a model would assert settings that produced no words.
 #'
 #' @section Frame storage:
-#' On disk beside the recording, in `<stem>_frames/`, because `measure(image =
-#' )` reads paths.
+#' On disk in `<stem>_frames/` inside `cache_dir`, because `measure(image = )`
+#' reads paths.
 #'
 #' The wav lands beside it, which is what lets [prepare_audio()]'s cache work
 #' unchanged. The frames keep a record of their own, `<stem>_frames.fathom.json`
@@ -1380,7 +1434,8 @@ render_turn <- function(p, timed, min_pause) {
 #' @param quality An integer giving the JPEG quality passed to `ffmpeg` as
 #'   `-q:v`, 2 best to 31 worst. Default is 3.
 #' @param cache_dir A string giving the directory where frames, the wav and the
-#'   transcript are written and looked for. Defaults to beside each recording.
+#'   transcript are written and looked for, or a character vector giving one
+#'   per file. Required. `dirname(x)` keeps them beside each recording.
 #' @param force A logical value indicating whether to extract and transcribe
 #'   again even where usable output is cached. Default is `FALSE`.
 #' @inheritParams prepare_audio
@@ -1411,7 +1466,7 @@ render_turn <- function(p, timed, min_pause) {
 #' ins <- instrument(c(attack = "Does this advertisement attack an opponent?"))
 #'
 #' # Frames spread evenly, and whatever was said alongside them.
-#' d <- prepare_video(ads, frames = 8)
+#' d <- prepare_video(ads, frames = 8, cache_dir = "prepared")
 #' measure(
 #'   d,
 #'   backend = ollama_backend("gemma3:27b"),
@@ -1427,7 +1482,8 @@ render_turn <- function(p, timed, min_pause) {
 #'   select = "change",
 #'   diarize_names = TRUE,
 #'   annotate_timing = TRUE,
-#'   hf_token = Sys.getenv("HF_TOKEN")
+#'   hf_token = Sys.getenv("HF_TOKEN"),
+#'   cache_dir = "prepared"
 #' )
 #' }
 #' @export
@@ -1451,7 +1507,7 @@ prepare_video <- function(
   min_pause = 0.2,
   speakers = NULL,
   id = NULL,
-  cache_dir = NULL,
+  cache_dir,
   force = FALSE,
   verbosity = c("normal", "quiet", "verbose")
 ) {
@@ -1472,6 +1528,9 @@ prepare_video <- function(
       call. = FALSE
     )
   }
+  # As in prepare_audio(), so ffprobe and ffmpeg are handed the file R found
+  # rather than reading nothing and returning an empty row.
+  x <- path.expand(x)
   ids <- if (is.null(id)) {
     tools::file_path_sans_ext(basename(x))
   } else {
@@ -1493,6 +1552,7 @@ prepare_video <- function(
       call. = FALSE
     )
   }
+  dirs <- check_cache_dir(if (!missing(cache_dir)) cache_dir, length(x))
 
   keep <- file.exists(x)
   if (!any(keep)) {
@@ -1515,7 +1575,6 @@ prepare_video <- function(
     ))
   }
 
-  dirs <- if (is.null(cache_dir)) dirname(x) else rep_len(cache_dir, length(x))
   bin <- NULL
   probe <- NULL
   if (any(keep)) {
