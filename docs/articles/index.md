@@ -8,11 +8,11 @@ sentences, from pointing at a model to reading the results, and reads
 them against the codings the corpus carries rather than against nothing.
 
 - [Quick
-  start](https://alcocer-jj.github.io/fathom/articles/quick_start.md):
+  start](https://www.alcocerjj.com/fathom/articles/quick_start.md):
 - [A complete
-  run](https://alcocer-jj.github.io/fathom/articles/complete_run.md):
+  run](https://www.alcocerjj.com/fathom/articles/complete_run.md):
 
 ### Examples
 
 - [What Mexicans ask their government
-  for](https://alcocer-jj.github.io/fathom/articles/example_ati.md):
+  for](https://www.alcocerjj.com/fathom/articles/example_ati.md):

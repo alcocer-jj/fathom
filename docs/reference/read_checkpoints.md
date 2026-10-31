@@ -1,7 +1,7 @@
 # Read a checkpoint directory back into results
 
 Reconstructs the return value of
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 from disk without making any model calls. Use when a run completed but
 the return value was lost, or to inspect how far a killed run
 progressed.
@@ -21,7 +21,7 @@ read_checkpoints(dir)
 ## Value
 
 A `fathom_results` object, the two frames
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 returns and documents there. Rows arrive in whatever order the directory
 listing gives, so sort if order matters.
 
@@ -52,7 +52,7 @@ resolve a different one.
 
 ## See also
 
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md),
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md),
 whose `checkpoint` argument writes what this reads.
 
 ## Examples

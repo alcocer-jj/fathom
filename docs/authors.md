@@ -21,12 +21,12 @@
 
 Alcocer J (2026). *fathom: Qualitative Coding and Measurement with Local
 Language Models*. R package version 0.1.3,
-<https://alcocer-jj.github.io/fathom/>.
+<https://www.alcocerjj.com/fathom/>.
 
 @Manual{,\
   title = {fathom: Qualitative Coding and Measurement with Local Language Models},\
   author = {Jose J. Alcocer},\
   year = {2026},\
   note = {R package version 0.1.3},\
-  url = {https://alcocer-jj.github.io/fathom/},\
+  url = {https://www.alcocerjj.com/fathom/},\
 }

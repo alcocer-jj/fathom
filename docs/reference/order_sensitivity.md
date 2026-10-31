@@ -39,16 +39,16 @@ order_sensitivity(
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
   It supplies the instrument, the backend and the context ceiling the
   calls are made with.
 
 - docs:
 
   A character vector, or the data frame passed to
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
   Default is `NULL`, which uses the documents a character-vector run
   stored on the results.
 
@@ -62,14 +62,14 @@ order_sensitivity(
 
   Strings naming the text and identifier columns, if `docs` is a data
   frame. `id` defaults to the row position, as in
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
   `text` may be left out when `image` is given and the run sent no text.
 
 - image:
 
   A string naming the column in `docs` that holds each document's media,
   as passed to
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
   A run that sent media needs it here too, or every call asks about a
   prompt the run never sent. Default is `NULL`.
 
@@ -89,7 +89,7 @@ order_sensitivity(
 
   A string, `"nominal"` (the default) or `"ordinal"`, deciding how
   `alpha` charges a disagreement, as in
-  [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+  [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md).
 
 - labels:
 
@@ -170,10 +170,10 @@ refused.
 
 ## See also
 
-[`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+[`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
 for the other choice a measurement should not depend on, where the cut
 falls, and
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 for agreement with a human rather than with the model itself.
 
 ## Examples

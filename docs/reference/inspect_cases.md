@@ -27,9 +27,9 @@ inspect_cases(
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
 
 - item:
 
@@ -38,9 +38,9 @@ inspect_cases(
 - docs:
 
   A character vector of documents, or the data frame passed to
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
   Optional when
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   was given a character vector, since the documents are stored on the
   results in that case. Default is `NULL`.
 
@@ -117,9 +117,9 @@ drew on rather than a curated set.
 
 Any other columns the results carry travel through untouched, including
 anything passed to `keep` in
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-and the remaining diagnostic columns. A run that found no qualifying
-cases returns a tibble with no rows.
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) and
+the remaining diagnostic columns. A run that found no qualifying cases
+returns a tibble with no rows.
 
 ## The header line
 
@@ -133,11 +133,11 @@ opposite of what it means.
 ## Endorsement by label count
 
 On two labels it is the 0.5 cut on `prob_renorm`, which is what
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 counts as `endorse_renorm`. Above two the labels compete for one pool, a
 winner at 0.3 clears no cut, and endorsement is instead the label that
 took the most mass, which is what
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 counts as `n_won`.
 
 `"uncertain"` is a rank rather than a threshold in both cases, so it
@@ -153,9 +153,9 @@ negative when the item was working. Setting `chars` truncates and warns.
 
 ## See also
 
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 for the summary these documents sit behind.
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 for drawing cases to hand to a coder rather than reading a few.
 
 ## Examples

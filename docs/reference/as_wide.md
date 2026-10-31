@@ -23,9 +23,9 @@ as_wide(
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
 
 - ...:
 
@@ -46,7 +46,7 @@ as_wide(
   `"prob_renorm"`, the probability conditioned on the model having
   answered with one of your labels at all. That is the quantity a human
   coder given the same categories would have produced, and it is what
-  [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+  [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
   and the expected score read, so a matrix built here can be compared
   against either without changing quantity partway through.
 
@@ -54,7 +54,7 @@ as_wide(
   returns one column per item rather than one per label, since an
   expected score is one number per document and item. On an item whose
   `pct_extreme_renorm` in
-  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
   sits near 1 it bunches at the scores themselves, so it ranks documents
   more reliably than it measures the distances between them.
 
@@ -128,9 +128,9 @@ first token is an upper bound on the probability of the label it opens.
 
 ## See also
 
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-for the results it pivots and
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) for
+the results it pivots and
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 for a summary per item.
 
 ## Examples

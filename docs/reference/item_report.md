@@ -8,7 +8,7 @@ is usable.
 It is purely descriptive, meaning no column here reports whether an item
 is correct. A confident, low-leakage item can still be measuring
 something other than the construct.
-[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 is what answers that, by showing the documents.
 
 ## Usage
@@ -22,9 +22,9 @@ item_report(results, target = NULL, order = c("declared", "size"))
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
 
 - target:
 
@@ -150,7 +150,7 @@ the scale.
 `endorse_renorm` cuts `prob_renorm` at 0.5, which on a two-label
 instrument is the label the model ranked first. The cut is not
 configurable.
-[`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+[`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
 reports the rate at other cut points, and `pct_extreme_renorm` says in
 one number how far it can move, since a probability at or beyond 0.01
 and 0.99 sits on the same side of every cut between them.
@@ -184,7 +184,7 @@ Nothing here decides whether your labels are ordered, and nothing can.
 What `scores` says is that an average of those numbers is defined, which
 is why the shape is named for the argument rather than for a measurement
 level.
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 is where ordering is declared, by its `level`.
 
 The shapes differ in row granularity as well as in columns. Endorsement
@@ -201,9 +201,9 @@ whichever label sorted first is not a meaningful quantity.
 
 ## See also
 
-[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 for the documents behind an item, and
-[`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+[`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
 for how the rates move with the cut point.
 
 ## Examples

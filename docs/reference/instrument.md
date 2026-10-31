@@ -158,7 +158,7 @@ instrument(
 - backend:
 
   An
-  [`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+  [`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
   object, or `NULL` (the default). When supplied, each label is probed
   against a production-shaped prompt and its observed first token is
   recorded. Probing checks that the labels are distinguishable at
@@ -170,7 +170,7 @@ instrument(
 
 An object of class `fathom_instrument`, a list. Its print method shows
 the parts usually wanted, and
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 shows what the model will receive, before Ollama applies the model's
 chat template.
 
@@ -178,7 +178,7 @@ chat template.
 
 - `items` is the named list of questions, one per item, in the order
   declared. That order is the order
-  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
   and the results use, so an instrument reads as the questionnaire it
   was written as.
 
@@ -291,7 +291,7 @@ therefore has to be a word the model would plausibly open its answer
 with, likely enough to rank among the 20. An instrument of many labels
 risks some of them falling outside on every document. `pct_label_absent`
 in
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 reports the share of calls where any label did.
 
 ## Ordinal labels
@@ -329,7 +329,7 @@ exactamente una palabra: sí o no.* and labels its parts *Texto* and
 
 Two stems ship for `exclusive = TRUE`, in both languages, and unlike the
 item stems in
-[`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+[`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
 neither takes a `{label}`, since the categories arrive through
 `definitions` instead.
 
@@ -350,8 +350,8 @@ language it is written.
 A generated token is folded to upper case before it is compared to a
 label, so sí, Sí, and SÍ all count as one answer.
 
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
-and `check_backend()` fold the same way, which is what makes the preview
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md) and
+`check_backend()` fold the same way, which is what makes the preview
 table a reliable picture of what scoring will do.
 
 The first-character rule is therefore about characters and not bytes.
@@ -368,12 +368,12 @@ measurement tools for political science concepts. *Political Analysis*
 
 ## See also
 
-[`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+[`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
 for items built from one stem,
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
-for the prompt it assembles, and
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-for running it.
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md) for
+the prompt it assembles, and
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) for
+running it.
 
 ## Examples
 

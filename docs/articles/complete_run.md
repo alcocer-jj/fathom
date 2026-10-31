@@ -2,8 +2,8 @@
 
 This article provides an example of how to run the whole `fathom`
 package pipeline. The [**Quick
-start**](https://alcocer-jj.github.io/fathom/articles/quick_start.md)
-page covers package installation and Ollama setup.
+start**](https://www.alcocerjj.com/fathom/articles/quick_start.md) page
+covers package installation and Ollama setup.
 
 The pipeline uses a dataset available in the package (`parlasent`) of
 one hundred UK parliamentary sentences that were sampled from the
@@ -13,27 +13,27 @@ English portion of ParlaSent 1.0 by Mochtak, Rupnik, Meden, and Ljubešić
 ## Overview
 
 1.  **Select a model** with
-    [`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md).
+    [`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md).
 2.  **Code the qualitative instrument** with
-    [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+    [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
     and use
-    [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+    [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
     to see what the local large language model (LLM) will read.
 3.  **Extract response probabilities** with
-    [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+    [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
 4.  **Read the results** with
-    [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+    [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
     for descriptive summaries, use
-    [`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+    [`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
     to manually validate some entries, and apply
-    [`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
+    [`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)
     to hand off for downstream analyses.
 5.  **Validate the LLM results** with
-    [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+    [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
     and
-    [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+    [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md).
 6.  **Test the measurement** with
-    [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+    [`order_sensitivity()`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)
     to check whether the order of the labels drove the answers.
 
 ## The corpus
@@ -46,7 +46,7 @@ two. `annotator1` and `annotator2` are the two codings, and
 
 \
 [`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
-[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom/)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://www.alcocerjj.com/fathom/)`)`\
 [`library`](https://rdrr.io/r/base/library.html)`(`[`pander`](https://rapporter.github.io/pander/)`)`\
 \
 [`data`](https://rdrr.io/r/utils/data.html)`(``parlasent``)`\
@@ -80,12 +80,12 @@ sample of 100 documents holds around sixteen or seventeen of each.
 ## Step 1. Select a model
 
 The
-[`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+[`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
 function accepts an existing local model name and returns an object
 holding the settings that every model call will use.
 
 \
-`oll`` ``<-`` `[`ollama_backend`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)`(``"gemma4:31b"``)`\
+`oll`` ``<-`` `[`ollama_backend`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)`(``"gemma4:31b"``)`\
 \
 `oll`\
 `#> Ollama backend`\
@@ -98,18 +98,18 @@ holding the settings that every model call will use.
 ## Step 2. Code the qualitative instrument
 
 The
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 function constructs a codebook containing the question and response
 categories the local LLM may answer that question with, and it returns
 an object that the
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 function accepts. The annotators who coded the parliamentary speeches
 categorized each sentence on one of the previously discussed six ordinal
 levels, and the article uses `fathom` to ask a local LLM that same
 question using those same six categories.
 
 \
-`b`` ``<-`` `[`instrument`](https://alcocer-jj.github.io/fathom/reference/instrument.md)`(`\
+`b`` ``<-`` `[`instrument`](https://www.alcocerjj.com/fathom/reference/instrument.md)`(`\
 `  items ``=`` ``"Where does this sentence fall on the six-point sentiment scale?"``,`\
 `  labels ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"1"``, ``"2"``, ``"3"``, ``"4"``, ``"5"``, ``"6"``)``,`\
 `  definitions ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(`\
@@ -150,18 +150,17 @@ the labels that the local LLM reads in tandem with the question. Setting
 probabilities to share a single distribution.[^1] The other mechanism is
 independent binary items, which ask one question per category. The
 article [What Mexicans ask their government
-for](https://alcocer-jj.github.io/fathom/articles/example_ati.md) shows
+for](https://www.alcocerjj.com/fathom/articles/example_ati.md) shows
 that kind of example.
 
 ### Previewing the model call
 
-The
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+The [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 function prints what the local LLM would receive without executing the
 call, which is everything in between the dashed lines.[^2]
 
 \
-[`preview`](https://alcocer-jj.github.io/fathom/reference/preview.md)`(``b``, text ``=`` ``parlasent``$``sentence``[``1``]``)`\
+[`preview`](https://www.alcocerjj.com/fathom/reference/preview.md)`(``b``, text ``=`` ``parlasent``$``sentence``[``1``]``)`\
 `#> Prompt preview`\
 `#> `\
 `#> Item          category, exclusive, one answer from 6`\
@@ -195,9 +194,9 @@ call, which is everything in between the dashed lines.[^2]
 ## Step 3. Extract response probabilities
 
 Using the same prompt as the
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 function, the
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 function takes every document in the corpus and pairs it with each
 question and its labels from the codebook instrument, sending each
 pairing to the local LLM configured in Step 1. The function then
@@ -206,7 +205,7 @@ its first generated token, and returns an object holding all
 probabilities along with a record of each call.
 
 \
-`res`` ``<-`` `[`measure`](https://alcocer-jj.github.io/fathom/reference/measure.md)`(`\
+`res`` ``<-`` `[`measure`](https://www.alcocerjj.com/fathom/reference/measure.md)`(`\
 `  ``parlasent``,                     ``# the data frame`\
 `  backend    ``=`` ``oll``,              ``# the model, from Step 1`\
 `  instrument ``=`` ``b``,                ``# the codebook, from Step 2`\
@@ -231,12 +230,12 @@ probabilities along with a record of each call.
 `#> Elapsed             1.2 min, 0.7 s per document`
 
 Before the very first call,
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-by default establishes the context window that the run needs by
-measuring the token count of the longest document-question pair and
-rounding it up with headroom, so that no prompt is cut short and Ollama
-does not reset its cache between calls. The help page for
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) by
+default establishes the context window that the run needs by measuring
+the token count of the longest document-question pair and rounding it up
+with headroom, so that no prompt is cut short and Ollama does not reset
+its cache between calls. The help page for
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 covers setting the window by hand with `num_ctx`.
 
 ## Step 4. Read the results
@@ -290,20 +289,20 @@ Additionally, the `error` and `truncated` columns flag whether certain
 calls would benefit from further examination or a re-run.
 
 For further information, the documentation page for
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 outlines every column found in both data frames.
 
 ### Summarizing the results by question and label
 
 The
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 function summarizes the run
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 produced. On a forced-choice codebook instrument it returns one row per
 category and prints a header above the table.
 
 \
-[`item_report`](https://alcocer-jj.github.io/fathom/reference/item_report.md)`(``res``)`\
+[`item_report`](https://www.alcocerjj.com/fathom/reference/item_report.md)`(``res``)`\
 `#> Choice instrument`\
 `#> `\
 `#> Documents     100`\
@@ -334,14 +333,14 @@ first token the local LLM generated was not a category.
 ### Inspecting question-document pairs
 
 The
-[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 function can be used to print a question alongside the corpus documents
 it was answered on, by the codebook instrument label of interest and by
 whether that label won or the local LLM’s answer was a close call
 between two labels.
 
 \
-[`inspect_cases`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)`(`\
+[`inspect_cases`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)`(`\
 `  ``res``,                  ``# model results`\
 `  ``"category"``,           ``# which item to read`\
 `  ``parlasent``,            ``# data frame containing corpus`\
@@ -384,13 +383,13 @@ between two labels.
 ### The analysis matrix
 
 Finally, the
-[`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
+[`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)
 function takes the results object and creates a wide data frame where
 each document is one row and each category is a column, which is where
 the package hands off.
 
 \
-[`as_wide`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)`(``res``, prefix ``=`` ``"p_"``)`` `[`%>%`](https://magrittr.tidyverse.org/reference/pipe.html)\
+[`as_wide`](https://www.alcocerjj.com/fathom/reference/as_wide.md)`(``res``, prefix ``=`` ``"p_"``)`` `[`%>%`](https://magrittr.tidyverse.org/reference/pipe.html)\
 `  `[`head`](https://rdrr.io/r/utils/head.html)`(``6``)`\
 `#> `\
 `#> Note     Exclusive instrument. Rows are a distribution, sums 1.000 to 1.000.`\
@@ -408,12 +407,12 @@ the package hands off.
 
 An LLM cannot entirely discern whether its answers are right. Some
 degree of human validation is often necessary. To do this, the
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 function draws a sample of document-question pairs that a human coder
 can then fill out as the first step.
 
 \
-`sheet`` ``<-`` `[`coding_sample`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)`(`\
+`sheet`` ``<-`` `[`coding_sample`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)`(`\
 `  ``res``,                  ``# model results`\
 `  ``parlasent``,            ``# data frame containing corpus`\
 `  text   ``=`` ``"sentence"``,  ``# corpus documents`\
@@ -449,9 +448,9 @@ is left blank for human coders to fill in using the labels that the
 ### Validating the sample using two coders
 
 Handing the
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 function a named list of
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 sheets will get it to score the local LLM against each of the human
 coders, calculate the ceiling the coders set between themselves, and
 return the distance between the two. Because the categories are ordinal,
@@ -460,7 +459,7 @@ dataset already has two independent hand codings, this article uses
 those for validation.
 
 \
-`v`` ``<-`` `[`validate_sample`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)`(`\
+`v`` ``<-`` `[`validate_sample`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)`(`\
 `  `[`list`](https://rdrr.io/r/base/list.html)`(`\
 `    annotator1 ``=`` ``coding_sample1``,`\
 `    annotator2 ``=`` ``coding_sample2`\
@@ -532,18 +531,18 @@ alternative to human coders for this corpus.
 LLM classification responses have been shown to be sensitive to label
 ordering (e.g., Halterman and Keith 2026). To assess label order
 sensitivity, the
-[`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+[`order_sensitivity()`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)
 function runs
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 again (holding the original run’s parameters constant) on every document
 with the labels listed in reverse. When a codebook instrument uses three
 or more labels (such as this case), the function also runs
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 with the labels shuffled. These two runs are then compared with the
 original run.
 
 \
-`ord`` ``<-`` `[`order_sensitivity`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)`(`\
+`ord`` ``<-`` `[`order_sensitivity`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)`(`\
 `  ``res``,                         ``# model results`\
 `  ``parlasent``,                   ``# data frame containing corpus`\
 `  text   ``=`` ``"sentence"``,         ``# corpus documents`\
@@ -601,7 +600,7 @@ multilingual sentiment dataset of parliamentary debates ParlaSent 1.0.
     *category*, which is the name that appears in the results and in
     every table below.
 
-[^2]: [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[^2]: [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
     cosmetically trims the document at `truncate`, 300 characters by
     default, and marks where it cut. The actual run does not truncate
     the text.

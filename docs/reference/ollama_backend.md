@@ -7,7 +7,7 @@ forcing Ollama to reload the model.
 
 Scoring reads log probabilities, which need an Ollama server at version
 0.12.11 or later.
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 checks for them before a run and stops when none come back.
 
 ## Usage
@@ -70,13 +70,13 @@ ollama_backend(
 
   A character vector of what the server accepts, which is `text`,
   `image` or both. A fact about the server rather than the model.
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   refuses a column naming something absent here, locally and before any
   call, because Ollama returns HTTP 200 for a field it does not
   recognize. Audio and video are not among them.
-  [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+  [`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
   turns a recording into a transcript, and
-  [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+  [`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
   turns a video into frames plus a transcript when it has sound, which
   reach the model as `text` and `image`. Default is
   `c("text", "image")`.
@@ -99,7 +99,7 @@ no connection, so it is cheap to build and safe to keep.
 - `host` is the server address, normalized to include a scheme.
 
 - `modalities` holds what this server accepts.
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   refuses a column naming something absent here, before any call,
   because Ollama answers HTTP 200 to a field it does not recognize and
   an undeclared column would otherwise be discarded in silence.
@@ -108,7 +108,7 @@ no connection, so it is cheap to build and safe to keep.
   position. Ollama caps this at 20. A label whose token falls outside
   the returned set is scored as absent, with a `prob_renorm` of exactly
   0, so `prob_other` absorbs its mass, and
-  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
   reports how often that happened as `pct_label_absent`.
 
 - `think` is always `FALSE`, and not an argument. Reasoning is disabled
@@ -132,9 +132,8 @@ doubles as a way to confirm the server is running.
 
 The call contacts the server, prints the models installed there, and
 errors. It does not return `NULL` or a partial object, so
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
-and
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
+and [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 never receive a backend with no model attached.
 
 ## Temperature and seed
@@ -150,9 +149,9 @@ byte-identical token sequences. A seed has nothing to control.
 
 ## See also
 
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md),
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md),
 which takes the backend, and
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md),
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md),
 which can probe labels against it.
 
 ## Examples

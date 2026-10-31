@@ -30,14 +30,14 @@ coding_sample(
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
 
 - docs:
 
   A character vector, or the data frame passed to
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
   Default is `NULL`, which uses the documents a character-vector run
   stored on the results.
 
@@ -58,7 +58,7 @@ coding_sample(
   document, so the sheet carries it as well as any text. A character
   column is one file per document. A list column holds several, such as
   the frames
-  [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+  [`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
   returns, and they share one cell joined with `|`. Default is `NULL`.
 
 - n:
@@ -145,9 +145,9 @@ or above the number of pairs is a census.
 
 ## See also
 
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md),
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md),
 which reads the coded sheet, and
-[`coder_reference()`](https://alcocer-jj.github.io/fathom/reference/coder_reference.md)
+[`coder_reference()`](https://www.alcocerjj.com/fathom/reference/coder_reference.md)
 for collapsing several coders into one.
 
 ## Examples

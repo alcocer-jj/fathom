@@ -14,7 +14,7 @@ item and draw blinded samples for human coding. Requires a running
 
 Useful links:
 
-- <https://alcocer-jj.github.io/fathom/>
+- <https://www.alcocerjj.com/fathom/>
 
 - <https://github.com/alcocer-jj/fathom>
 

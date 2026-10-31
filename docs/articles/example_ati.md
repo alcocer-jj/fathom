@@ -1,7 +1,7 @@
 # What Mexicans ask their government for
 
 [A complete
-run](https://alcocer-jj.github.io/fathom/articles/complete_run.md) uses
+run](https://www.alcocerjj.com/fathom/articles/complete_run.md) uses
 `fathom` to build an exclusive coding instrument, where every label
 category is placed in the question itself and their probabilities share
 a single distribution. This article provides an example of how to build
@@ -17,20 +17,20 @@ INFOMEX, sampled from a corpus hand-coded by Erlich et al. (2022).
 1.  **Preprocess the corpus** by dropping the documents whose text
     contains no meaningful information.
 2.  **Code the qualitative instrument** with
-    [`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+    [`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
     and
-    [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md),
+    [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md),
     and use
-    [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+    [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
     to see what the local large language model (LLM) will read.
 3.  **Extract response probabilities** with
-    [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+    [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
 4.  **Read the results** with
-    [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+    [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
     and
-    [`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md).
+    [`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md).
 5.  **Check cut point sensitivity** with
-    [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md).
+    [`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md).
 
 ## The corpus
 
@@ -44,7 +44,7 @@ dataset carries no human codings, so the article does not validate the
 results against coders.
 
 \
-[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom/)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://www.alcocerjj.com/fathom/)`)`\
 [`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
 `#> `\
 `#> Attaching package: 'dplyr'`\
@@ -110,7 +110,7 @@ Article 7 of the 2002 Mexican transparency law, which lists what every
 federal agency must publish.
 
 The
-[`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+[`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
 function can build questions from a single question stem, slotting each
 category into the stem’s `{label}` placeholder so that the only thing
 varying across the questions is the category they name. While `fathom`
@@ -149,13 +149,13 @@ the stem.
 
 `fathom` ships with two prompt scaffolding languages, English and
 Spanish. The `lang = "es"` argument in the
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 function writes the scaffolding text around the question in the language
 chosen. The question text itself is not affected by this argument.
 
 \
-`b_topics`` ``<-`` `[`instrument`](https://alcocer-jj.github.io/fathom/reference/instrument.md)`(`\
-`  `[`template_items`](https://alcocer-jj.github.io/fathom/reference/template_items.md)`(``custom_stem``, ``topics``)``,`\
+`b_topics`` ``<-`` `[`instrument`](https://www.alcocerjj.com/fathom/reference/instrument.md)`(`\
+`  `[`template_items`](https://www.alcocerjj.com/fathom/reference/template_items.md)`(``custom_stem``, ``topics``)``,`\
 `  labels ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"sí"``, ``"no"``)``,`\
 `  lang ``=`` ``"es"`\
 `)`\
@@ -171,13 +171,12 @@ chosen. The question text itself is not affected by this argument.
 
 ### Previewing the model call
 
-The
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+The [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 function prints what the local LLM would receive without executing the
 call.[^2]
 
 \
-[`preview`](https://alcocer-jj.github.io/fathom/reference/preview.md)`(``b_topics``, text ``=`` ``ati``$``text``[``1``]``)`\
+[`preview`](https://www.alcocerjj.com/fathom/reference/preview.md)`(``b_topics``, text ``=`` ``ati``$``text``[``1``]``)`\
 `#> Prompt preview`\
 `#> `\
 `#> Item          actividades, 1 of 5`\
@@ -199,18 +198,17 @@ call.[^2]
 
 ## Step 3. Extract response probabilities
 
-The
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+The [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 function takes every document in the corpus and pairs it with each
 question and its labels from the codebook instrument, sending each
 pairing to the local LLM configured with
-[`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md).
+[`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md).
 The function then extracts the probability that the local LLM assigned
 to each label at its first generated token, and returns an object
 holding all probabilities along with a record of each call.
 
 \
-`oll`` ``<-`` `[`ollama_backend`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)`(``"gemma4:31b"``)`\
+`oll`` ``<-`` `[`ollama_backend`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)`(``"gemma4:31b"``)`\
 \
 `oll`\
 `#> Ollama backend`\
@@ -220,7 +218,7 @@ holding all probabilities along with a record of each call.
 `#> Logprobs      top 20`\
 `#> Modalities    text, image`\
 \
-`res_topics`` ``<-`` `[`measure`](https://alcocer-jj.github.io/fathom/reference/measure.md)`(`\
+`res_topics`` ``<-`` `[`measure`](https://www.alcocerjj.com/fathom/reference/measure.md)`(`\
 `  ``ati``,                    ``# the data frame`\
 `  backend ``=`` ``oll``,          ``# the model, from above`\
 `  instrument ``=`` ``b_topics``,  ``# the codebook, from Step 2`\
@@ -248,8 +246,8 @@ holding all probabilities along with a record of each call.
 ## Step 4. Read the results
 
 As explained in [A complete
-run](https://alcocer-jj.github.io/fathom/articles/complete_run.md), the
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+run](https://www.alcocerjj.com/fathom/articles/complete_run.md), the
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 function returns an object holding two data frames.
 
 - `$probs`, which contains the results themselves, these being the
@@ -263,13 +261,13 @@ function returns an object holding two data frames.
 ### Summarizing the results by question and label
 
 The
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 function summarizes each item across the corpus, and its shape depends
 on the results object that it receives. If the `target` parameter is
 left unset, it uses the instrument’s first label, which here is `sí`.
 
 \
-`report`` ``<-`` `[`item_report`](https://alcocer-jj.github.io/fathom/reference/item_report.md)`(``res_topics``)`\
+`report`` ``<-`` `[`item_report`](https://www.alcocerjj.com/fathom/reference/item_report.md)`(``res_topics``)`\
 [`pander`](https://rdrr.io/pkg/pander/man/pander.html)`(``report``, split.table ``=`` ``Inf``)`
 
 | item | n | endorse_renorm | pct_extreme_renorm | pct_both_absent | pct_label_absent | mean_prob_other | pct_off_label | n_failed |
@@ -288,21 +286,21 @@ share, which runs from 0.927 to 0.990 across the five questions, it can
 be said that the local LLM answered nearly every request with certainty.
 
 Visit the
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 documentation page for information that outlines every column for this
 shape.
 
 ### The analysis matrix
 
 Finally, the
-[`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
+[`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)
 function takes the results object and creates a wide data frame where
 each request is one row and each question is a column, which is where
 the package hands off. Setting `dichotomize = TRUE` turns each
 probability into a binary using a 0.5 cutoff.
 
 \
-`wide`` ``<-`` `[`as_wide`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)`(`\
+`wide`` ``<-`` `[`as_wide`](https://www.alcocerjj.com/fathom/reference/as_wide.md)`(`\
 `  ``res_topics``,`\
 `  prefix      ``=`` ``"t_"``,`\
 `  dichotomize ``=`` ``TRUE`\
@@ -322,12 +320,12 @@ probability into a binary using a 0.5 cutoff.
 ## Step 5. Check cut point sensitivity
 
 By default, `fathom` sets the endorsement cut point at 0.5. The
-[`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+[`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
 function conducts a grid search testing each cut point across the 0.1 to
 0.9 range and reports the endorsement rates at each.
 
 \
-`sens`` ``<-`` `[`threshold_sensitivity`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)`(``res_topics``)`\
+`sens`` ``<-`` `[`threshold_sensitivity`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)`(``res_topics``)`\
 `#> `\
 `#> Note     Endorsement swing across the range, widest first.`\
 `#>          actividades   0.02`\
@@ -366,7 +364,7 @@ Analysis*, 30(4), 463–480. <https://doi.org/10.1017/pan.2021.15>
 
 [^1]: Six is a mere arbitrary heuristic.
 
-[^2]: [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[^2]: [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
     cosmetically trims the document at `truncate`, 300 characters by
     default, and marks where it cut. The actual run does not truncate
     the text.

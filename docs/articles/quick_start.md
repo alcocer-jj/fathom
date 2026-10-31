@@ -32,9 +32,9 @@ The following Ollama models were tested for compatibility.
 Because Ollama does not broadly support native audio and video input
 yet, audio and video corpora rely on text and image capabilities through
 the
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 and
-[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
 functions.
 
 | Model | Parameter | Text | Image |
@@ -58,13 +58,13 @@ functions.
 ## Checking the server and the model
 
 With Ollama installed and models pulled,
-[`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+[`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
 confirms the server is answering and the model is there. If called
 without a model name, the function lists the models you have installed
 and their capabilities.
 
 \
-[`ollama_backend`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)`(``)`\
+[`ollama_backend`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)`(``)`\
 `#>`\
 `#> Models on http://localhost:11434`\
 `#>`\
@@ -95,9 +95,9 @@ input yet.
 ### ffmpeg
 
 Both
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 and
-[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
 need it. Video is read through it directly, and the recognizers below
 load audio through it, so a recording in any format, a bare .wav
 included, needs it too.
@@ -154,9 +154,9 @@ ffmpeg -version
 
 ### whisperx
 
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 and
-[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
 transcribe with [`whisperx`](https://github.com/m-bain/whisperX), which
 runs on macOS, Windows, or Linux. Alternatively, Apple Silicon users can
 use [`whispermlx`](https://github.com/KalebJS/whispermlx), the same tool
@@ -240,9 +240,9 @@ Then, in R, confirm your environment can see it, along with
 ### Hugging Face read token
 
 Both the
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 and
-[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
 functions require a Hugging Face (HF) API token when setting
 `diarize_names = TRUE`, as the diarization model the package uses is
 gated. However, transcription, alignment, and voice activity detection
@@ -273,40 +273,40 @@ corpus of interest is not text and if you want an additional diagnostic
 check.
 
 0.  **Prepare a corpus** with
-    [`prepare_image()`](https://alcocer-jj.github.io/fathom/reference/prepare_image.md),
-    [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md),
+    [`prepare_image()`](https://www.alcocerjj.com/fathom/reference/prepare_image.md),
+    [`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md),
     or
-    [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md).
+    [`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md).
 1.  **Select a model** with
-    [`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md).
+    [`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md).
 2.  **Code the qualitative instrument** with
-    [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md),
+    [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md),
     and use
-    [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+    [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
     to see what the local LLM will read.
 3.  **Extract response probabilities** with
-    [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+    [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
 4.  **Read the results** with
-    [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+    [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
     for descriptive summaries, use
-    [`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+    [`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
     to manually review some entries, and apply
-    [`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
+    [`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)
     to hand off for downstream analyses.
 5.  **Validate the LLM results** with
-    [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+    [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
     and
-    [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+    [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md).
 6.  **Test the measurement** with
-    [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+    [`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
     to assess if endorsement rates are sensitive to cut-point
     thresholds, and with
-    [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+    [`order_sensitivity()`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)
     to assess if the answers move with the order the labels are listed
     in.
 
 For an applied example, see [A complete
-run](https://alcocer-jj.github.io/fathom/articles/complete_run.md).
+run](https://www.alcocerjj.com/fathom/articles/complete_run.md).
 
 [^1]: Only the instruct model was tested.
 

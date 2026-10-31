@@ -122,17 +122,17 @@ Getting an LLM's response about a question provides no insight as to how confide
 
 </details>
 
-The [package website](https://alcocer-jj.github.io/fathom/) carries the reference index and several articles.
+The [package website](https://www.alcocerjj.com/fathom/) carries the reference index and several articles.
 
 ## Requirements
 
-A running [Ollama](https://ollama.com) server at version 0.12.11 or later, and a [compatible](https://alcocer-jj.github.io/fathom/articles/quick_start.html) Ollama instruction-following model.
+A running [Ollama](https://ollama.com) server at version 0.12.11 or later, and a [compatible](https://www.alcocerjj.com/fathom/articles/quick_start.html) Ollama instruction-following model.
 
 [`ffmpeg`](https://www.ffmpeg.org/) for measuring audio and video.
 
 [`whisperx`](https://github.com/m-bain/whisperx) or [`whispermlx`](https://github.com/KalebJS/whispermlx) (Apple Silicon optimized) for measuring audio and video, with a Hugging Face [User Access Token](https://huggingface.co/docs/hub/en/security-tokens) and access to the [Community-1](https://huggingface.co/pyannote/speaker-diarization-community-1) model to use speaker diarization.
 
-See the [Quick start](https://alcocer-jj.github.io/fathom/articles/quick_start.html) page for information on how to set each of these up.
+See the [Quick start](https://www.alcocerjj.com/fathom/articles/quick_start.html) page for information on how to set each of these up.
 
 ## Installation
 

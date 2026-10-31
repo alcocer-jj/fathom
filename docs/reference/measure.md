@@ -44,13 +44,13 @@ measure(
 - backend:
 
   An
-  [`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+  [`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
   object.
 
 - instrument:
 
   An
-  [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md).
+  [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md).
 
 - text:
 
@@ -71,7 +71,7 @@ measure(
   in order, which is how a video window arrives. Nothing is shared
   between calls, so a run costs documents times items at close to full
   price, and a window of K frames costs K encodes on every call.
-  [`prepare_image()`](https://alcocer-jj.github.io/fathom/reference/prepare_image.md)
+  [`prepare_image()`](https://www.alcocerjj.com/fathom/reference/prepare_image.md)
   builds a corpus in the character shape. Default is `NULL`.
 
 - keep:
@@ -178,7 +178,7 @@ describes the document rather than any one label.
   no label appeared anywhere in the returned distribution.
 
 - `margin` is the gap between the top two `prob_renorm` values. What
-  [`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+  [`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
   sorts on to find the closest calls above two labels.
 
 - `expected_score` is `prob_renorm` weighted by the instrument's
@@ -217,7 +217,7 @@ Rescaling an ordinal instrument changes no token the model sees, so
 re-extracting would be waste. The expected score is instead recomputed
 from the stored probabilities against whatever instrument is in hand, on
 this path and in
-[`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md),
+[`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md),
 so a rescaled resume returns the new arithmetic without spending a call.
 
 There is no schema tag. A change to scoring code that leaves prompts
@@ -247,7 +247,7 @@ opened with.
 
 Three causes are known. The cue may not name the labels clearly enough,
 which
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 shows. The chat template may open a reasoning block although reasoning
 is off on every call, which is a property of the model's template rather
 than of your instrument. Or the model may open with prose, a word such
@@ -283,17 +283,17 @@ arXiv:2610.06625.
 
 ## See also
 
-[`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+[`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
 and
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 for its two inputs,
-[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
-for the prompt it sends,
-[`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md)
+[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md) for
+the prompt it sends,
+[`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md)
 for a run cut short, and
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 and
-[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 for reading what comes back.
 
 ## Examples

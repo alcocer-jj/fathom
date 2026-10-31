@@ -3,7 +3,7 @@
 Takes the completed sheets and returns one sheet, so
 `validate_sample(coder_reference(ana, luis, bea), res)` composes without
 changing a signature. Read `$ceiling` from
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 given the same sheets first. It says whether collapsing is honest, since
 a high alpha means the coders were interchangeable and a low one means
 the reference is a consensus that never existed.
@@ -46,7 +46,7 @@ A tibble, one row per document-item pair that any coder saw. It carries
 Under `"soft"` the label column is replaced by `human_prop`, with
 `human_target` naming the label the proportion is of and `n_target` in
 place of `n_agree`.
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 branches on which of the two arrived.
 
 ## Collapse methods
@@ -72,7 +72,7 @@ coders who both said yes give 0.75 rather than 1. That is the honest
 reading of two observations, and it keeps the target off the boundaries,
 which matters because `prob_renorm` reaches exactly zero and a log score
 would then be infinite.
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
 scores it with Brier for the same reason.
 
 It needs exactly two labels. Above two the honest soft target is a
@@ -82,7 +82,7 @@ sheet is scored over all of them. Refused rather than silently rescaled.
 
 ## See also
 
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md),
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md),
 whose `$ceiling` says whether collapsing is honest and which reads the
 result.
 

@@ -70,7 +70,7 @@ Distributed under CC BY-SA 4.0, unlike the rest of this package. See
 Normalized for scoring, `Negative` and `Neutral` both begin with N.
 Prefix matching cannot tell them apart, since a split label often emits
 only its first character, so
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 refuses to build this label set that way and it can only be scored with
 `exact = TRUE` and a live backend. The collision is a property of a
 published coding scheme rather than something constructed to demonstrate

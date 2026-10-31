@@ -8,27 +8,27 @@ large language models (LLMs), where every answer comes back as a
 probability rather than a word.
 
 With the function
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md),
-R users can ask an Ollama-hosted LLM a constrained set of labeled
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md), R
+users can ask an Ollama-hosted LLM a constrained set of labeled
 questions about a corpus document and get back the model’s next-token
 probability distribution for those constrained labels. The questions
 themselves are built and bundled with the function
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md).
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md).
 The function
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 provides a clear summary of how each question behaved across the entire
 corpus, while the function
-[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 displays documents that the model answered with a specific label. The
 function
-[`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
+[`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)
 prepares the output for any downstream analysis by pivoting the results
 so that each row is one document and each question becomes a column. To
 audit the model’s answers, the function
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 samples a random set of document-question pairs for human validation,
 which is then executed through the function
-[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md).
 
 ## Motivation
 
@@ -47,17 +47,17 @@ category, or a bad prompt.
 
 **0. Prepare the corpus (non-text corpora)**
 
-**[`prepare_image()`](https://alcocer-jj.github.io/fathom/reference/prepare_image.md)**
+**[`prepare_image()`](https://www.alcocerjj.com/fathom/reference/prepare_image.md)**
 
 - Turns a set of image files into a valid corpus, where each row is one
   image filepath alongside its file size.
 
-**[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)**
+**[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)**
 
 - Turns a set of audio files into a valid corpus by using an Automatic
   Speech Recognition (ASR) model to transcribe each recording to text.
 
-**[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)**
+**[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)**
 
 - Turns a set of video files into a valid corpus, where each row is one
   video holding its extracted frames alongside an ASR transcript of its
@@ -65,7 +65,7 @@ category, or a bad prompt.
 
 **1. Prepare a local model**
 
-**[`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)**
+**[`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)**
 
 - Connects to a local [Ollama](https://ollama.com) server and confirms
   the model is installed.
@@ -77,7 +77,7 @@ category, or a bad prompt.
 
 **2. Write the coding instrument**
 
-**[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)**
+**[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)**
 
 - Bundles the questions with the single-word labels the model may answer
   with.
@@ -94,7 +94,7 @@ category, or a bad prompt.
   defined against each other, since the model then needs to see all of
   them to tell them apart.
 
-**[`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+**[`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
 (optional)**
 
 - Builds the questions for an instrument of independent items by
@@ -103,7 +103,7 @@ category, or a bad prompt.
   that comes in English and Spanish for each type of corpus (text,
   image, audio, and video).
 
-**[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+**[`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md)
 (optional)**
 
 - Prints a preview of the exact string that the model will receive,
@@ -111,7 +111,7 @@ category, or a bad prompt.
 
 **3. Extract response probabilities**
 
-**[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)**
+**[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)**
 
 - Calls the LLM with an instrument of questions and labels over a data
   frame or a character vector of documents, where each call processes
@@ -128,7 +128,7 @@ category, or a bad prompt.
 
 **4. Summarize the results**
 
-**[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)**
+**[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)**
 
 - Summarizes how each question was answered by the model across the
   corpus.
@@ -141,7 +141,7 @@ category, or a bad prompt.
 - For questions with more than two labels, such as most exclusive items,
   it reports how often each label won.
 
-**[`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+**[`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
 (optional)**
 
 - Prints the full text of a sample of documents where a question’s
@@ -151,10 +151,10 @@ category, or a bad prompt.
   between the top and runner-up labels was the smallest (e.g., text
   where the model put nearly equal probability on “yes” and “no”).
 
-**[`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)**
+**[`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md)**
 
 - Pivots the first table from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   into one row per document and one column per question, each holding
   the probability of the target label (e.g., the probability of “yes”).
   For exclusive items or a single question, each label gets its own
@@ -167,47 +167,47 @@ category, or a bad prompt.
 
 **5. Validate response probabilities**
 
-**[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)**
+**[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)**
 
 - Draws a seeded random sample of document-question pairs into an
   exportable data frame coding sheet.
 - Every pair has a uniform chance of being drawn.
 
-**[`coder_reference()`](https://alcocer-jj.github.io/fathom/reference/coder_reference.md)
+**[`coder_reference()`](https://www.alcocerjj.com/fathom/reference/coder_reference.md)
 (optional)**
 
 - Consolidates two or more completed
-  [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+  [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
   sheets into one, allowing a group of coders to serve as the single
   reference for
-  [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+  [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md).
 - Its default method of consolidation is majority rule, but it can also
   consolidate based on unanimous agreement (`method = "unanimous"`) or
   instead report the smoothed share of coders who chose the target label
   (`method = "soft"`).
 - Ties are left blank.
 
-**[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)**
+**[`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)**
 
 - Validates the model’s answers from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   against a completed
-  [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+  [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
   sheet in terms of discrimination and ranking, with calibration on
   request.
 - If given a named list of
-  [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+  [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
   sheets, it also reports intercoder reliability and how far the model’s
   responses are from the coders, the latter with a bootstrap confidence
   interval.
 
 **6. Get measurement diagnostics (optional)**
 
-**[`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)**
+**[`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)**
 
 - Reports endorsement rates at a range of cut points.
 
-**[`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)**
+**[`order_sensitivity()`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)**
 
 - Measures every document (or a seeded sample of them) again with the
   labels reversed, and reports how often the responses changed.
@@ -218,7 +218,7 @@ category, or a bad prompt.
 
 A running [Ollama](https://ollama.com) server at version 0.12.11 or
 later, and a
-[compatible](https://alcocer-jj.github.io/fathom/articles/quick_start.md)
+[compatible](https://www.alcocerjj.com/fathom/articles/quick_start.md)
 Ollama instruction-following model.
 
 [`ffmpeg`](https://www.ffmpeg.org/) for measuring audio and video.
@@ -232,7 +232,7 @@ access to the
 model to use speaker diarization.
 
 See the [Quick
-start](https://alcocer-jj.github.io/fathom/articles/quick_start.md) page
+start](https://www.alcocerjj.com/fathom/articles/quick_start.md) page
 for information on how to set each of these up.
 
 ## Installation
@@ -265,13 +265,13 @@ and the validation components.
 An instrument bundles the questions with the labels the model may answer
 with. Read the assembled prompt before spending anything on a run.
 
-- [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+- [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
   : Construct a validated instrument of items
-- [`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
+- [`template_items()`](https://www.alcocerjj.com/fathom/reference/template_items.md)
   : Build items by substituting categories into one question stem
-- [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
-  : Print the assembled prompt
-- [`ollama_backend()`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)
+- [`preview()`](https://www.alcocerjj.com/fathom/reference/preview.md) :
+  Print the assembled prompt
+- [`ollama_backend()`](https://www.alcocerjj.com/fathom/reference/ollama_backend.md)
   : Configure an Ollama backend
 
 ## Extracting
@@ -279,9 +279,9 @@ with. Read the assembled prompt before spending anything on a run.
 One unconstrained call per document-item, reading the probability
 distribution at generated position 1.
 
-- [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-  : Measure documents against an instrument
-- [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md)
+- [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) :
+  Measure documents against an instrument
+- [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md)
   : Read a checkpoint directory back into results
 
 ## Reading the results
@@ -290,9 +290,9 @@ Aggregate statistics cannot tell you whether an item measures what you
 intended. These describe; only inspect_cases() answers that question, by
 showing you the documents.
 
-- [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+- [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
   : Summarize how each item behaved
-- [`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
+- [`inspect_cases()`](https://www.alcocerjj.com/fathom/reference/inspect_cases.md)
   : Read the documents that fired on an item
 
 ## Preparing a corpus
@@ -300,11 +300,11 @@ showing you the documents.
 A corpus of files rather than a column of text. One row per document,
 with the columns measure() and the audit functions expect.
 
-- [`prepare_image()`](https://alcocer-jj.github.io/fathom/reference/prepare_image.md)
+- [`prepare_image()`](https://www.alcocerjj.com/fathom/reference/prepare_image.md)
   : Turn a folder of images into a corpus measure() can take
-- [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+- [`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
   : Turn recordings into a corpus of annotated transcripts
-- [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+- [`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
   : Turn videos into a corpus carrying both what was shown and what was
   said
 
@@ -316,21 +316,21 @@ corpus, whether its answers move with the order the labels are listed
 in, whether the model agreed with a human, how far two humans agreed
 with each other, and whether its probabilities were honest.
 
-- [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
+- [`threshold_sensitivity()`](https://www.alcocerjj.com/fathom/reference/threshold_sensitivity.md)
   : Compute endorsement rates across a range of thresholds
-- [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+- [`order_sensitivity()`](https://www.alcocerjj.com/fathom/reference/order_sensitivity.md)
   : Ask again with the labels in another order
-- [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+- [`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
   : Draw a blinded sample for human coding
-- [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)
+- [`validate_sample()`](https://www.alcocerjj.com/fathom/reference/validate_sample.md)
   : Validate a completed coding sheet against the model
-- [`coder_reference()`](https://alcocer-jj.github.io/fathom/reference/coder_reference.md)
+- [`coder_reference()`](https://www.alcocerjj.com/fathom/reference/coder_reference.md)
   : Collapse several coders into one reference sheet
 
 ## Downstream
 
-- [`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)
-  : Pivot results into an analysis matrix
+- [`as_wide()`](https://www.alcocerjj.com/fathom/reference/as_wide.md) :
+  Pivot results into an analysis matrix
 
 ## Data
 
@@ -340,15 +340,15 @@ so it is the only one against which a model can be read at a human
 ceiling rather than against perfect agreement. It ships under CC BY-SA
 4.0 rather than MIT, see LICENSE.note.
 
-- [`ati`](https://alcocer-jj.github.io/fathom/reference/ati.md) :
-  Mexican access-to-information requests
-- [`parlasent`](https://alcocer-jj.github.io/fathom/reference/parlasent.md)
+- [`ati`](https://www.alcocerjj.com/fathom/reference/ati.md) : Mexican
+  access-to-information requests
+- [`parlasent`](https://www.alcocerjj.com/fathom/reference/parlasent.md)
   : UK parliamentary sentences, coded for sentiment on a six-level scale
 
 ## Package
 
-- [`fathom`](https://alcocer-jj.github.io/fathom/reference/fathom-package.md)
-  [`fathom-package`](https://alcocer-jj.github.io/fathom/reference/fathom-package.md)
+- [`fathom`](https://www.alcocerjj.com/fathom/reference/fathom-package.md)
+  [`fathom-package`](https://www.alcocerjj.com/fathom/reference/fathom-package.md)
   : fathom: Qualitative Coding and Measurement with Local Language
   Models
 
@@ -362,11 +362,11 @@ sentences, from pointing at a model to reading the results, and reads
 them against the codings the corpus carries rather than against nothing.
 
 - [Quick
-  start](https://alcocer-jj.github.io/fathom/articles/quick_start.md):
+  start](https://www.alcocerjj.com/fathom/articles/quick_start.md):
 - [A complete
-  run](https://alcocer-jj.github.io/fathom/articles/complete_run.md):
+  run](https://www.alcocerjj.com/fathom/articles/complete_run.md):
 
 ### Examples
 
 - [What Mexicans ask their government
-  for](https://alcocer-jj.github.io/fathom/articles/example_ati.md):
+  for](https://www.alcocerjj.com/fathom/articles/example_ati.md):

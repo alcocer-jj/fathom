@@ -189,7 +189,7 @@ an interrupted run resumes and a hand-corrected transcript survives.
 `force = TRUE` returns to the recognizer.
 
 What counts as already done is the question
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 asks of its checkpoints, which is whether the work was done under the
 settings now being requested rather than merely done. `tool`,
 `asr_model`, `diarize_names`, `language` and `extra` are recorded in a
@@ -243,7 +243,7 @@ they hold with `annotate_timing` off, where the text shows nothing. Only
 `text` and `annotate_timing` change with the rendering.
 
 None of them reaches the model, since
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 reads `id` and `text` and nothing else.
 
 `n_pauses` also moves with diarization on the same words, because
@@ -265,11 +265,11 @@ Sciences* 106(26), 10587–10592.
 
 ## See also
 
-[`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
+[`prepare_video()`](https://www.alcocerjj.com/fathom/reference/prepare_video.md)
 for recordings with pictures, and
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md),
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md),
 which reads the `text` column.
-[`vignette("quick_start", package = "fathom")`](https://alcocer-jj.github.io/fathom/articles/quick_start.md)
+[`vignette("quick_start", package = "fathom")`](https://www.alcocerjj.com/fathom/articles/quick_start.md)
 for installing the recognizer and the diarization token.
 
 ## Examples

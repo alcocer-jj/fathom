@@ -27,7 +27,7 @@ template_items(stem, categories, lang = c("en", "es"), medium = NULL)
   A string giving the language for the named stems, `"en"` (the default)
   or `"es"`. Ignored for a custom string, which is used exactly as
   written. This sets the question only. The scaffolding around it is
-  [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)'s
+  [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)'s
   own `lang`, and leaving that at its default gives a Spanish question
   under an English cue.
 
@@ -42,12 +42,12 @@ template_items(stem, categories, lang = c("en", "es"), medium = NULL)
 ## Value
 
 A named list of questions, one per category, ready to pass to
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 as its first argument.
 
 Names are the names of `categories`, so they become the item names in
 the results and in
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md).
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md).
 Pass a named vector to control them. An unnamed vector uses the values
 themselves, which rarely suits a category that runs to a phrase.
 
@@ -57,7 +57,7 @@ declared rather than alphabetically.
 
 The result is an ordinary list, so an item can be edited before it
 reaches
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 when one category needs wording the stem cannot give it.
 
 ## The named stems
@@ -97,12 +97,12 @@ translations of one another rather than separate instruments.
 A custom string ignores `lang` entirely, so a Spanish question written
 by hand is passed through as typed. The scaffolding around it is a
 separate setting, on
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md),
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md),
 and the two can disagree. See its `lang` argument.
 
 ## See also
 
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md),
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md),
 which takes the items.
 
 ## Examples

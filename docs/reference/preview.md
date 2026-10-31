@@ -3,7 +3,7 @@
 Prints the exact string the model will receive, before Ollama applies
 the model's chat template. Makes no model calls. Prompt failures do not
 appear in the output of
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md).
 
 ## Usage
 
@@ -22,7 +22,7 @@ preview(
 - instrument:
 
   An
-  [`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md).
+  [`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md).
 
 - text:
 
@@ -51,7 +51,7 @@ preview(
 ## Value
 
 Invisibly, the assembled prompt string for the item shown, exactly as
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
 sends it, before Ollama applies the model's chat template. It carries
 the whole document and leaves out the bracketed media line. A single
 character scalar.
@@ -81,10 +81,10 @@ is in force.
 
 ## See also
 
-[`instrument()`](https://alcocer-jj.github.io/fathom/reference/instrument.md)
+[`instrument()`](https://www.alcocerjj.com/fathom/reference/instrument.md)
 for the prompt's parts and
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-for sending it.
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md) for
+sending it.
 
 ## Examples
 

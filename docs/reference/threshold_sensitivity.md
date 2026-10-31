@@ -3,7 +3,7 @@
 Computes the endorsement rate per item at each cut point, which shows
 how much of an item's rate is a property of the documents and how much
 is a property of where the cut falls. `pct_extreme_renorm` in
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 gives the short answer in one number, since a probability at or beyond
 0.01 and 0.99 sits on the same side of every cut between them.
 
@@ -22,9 +22,9 @@ threshold_sensitivity(
 - results:
 
   A `fathom_results` object from
-  [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+  [`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md)
   or
-  [`read_checkpoints()`](https://alcocer-jj.github.io/fathom/reference/read_checkpoints.md).
+  [`read_checkpoints()`](https://www.alcocerjj.com/fathom/reference/read_checkpoints.md).
 
 - target:
 
@@ -57,7 +57,7 @@ is a ranking rather than a table and stays widest swing first.
   cut. A document where no label appeared has none, so it leaves this
   denominator, and `endorse` is `n_endorse` over `n` only when no such
   document exists.
-  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  [`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
   treats `endorse_renorm` the same way. This is the column to read down,
   and the spread from its smallest to largest value within an item is
   what the message ranks on.
@@ -79,7 +79,7 @@ whatever you pass and the figures will be arithmetically correct.
 
 ## See also
 
-[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+[`item_report()`](https://www.alcocerjj.com/fathom/reference/item_report.md)
 for the winner distribution, and for `mean_expected` on a scored
 instrument, which needs no cut.
 

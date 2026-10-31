@@ -6,7 +6,7 @@ the same call, since they are two columns of one row rather than two
 objects to align.
 
 The audio half is
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 unchanged, running on a wav `ffmpeg` extracts.
 
 ## Usage
@@ -118,7 +118,7 @@ prepare_video(
 - min_speakers, max_speakers:
 
   Passed to
-  [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+  [`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
   on the extracted audio, behaving there exactly as on a recording
   handed to it directly.
 
@@ -183,7 +183,7 @@ prepare_video(
 ## Value
 
 A tibble of one row per file, carrying every column
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)
 returns plus these.
 
 - `video` is the recording, and `has_audio` says whether it had a sound
@@ -247,7 +247,7 @@ On disk beside the recording, in `<stem>_frames/`, because
 `measure(image = )` reads paths.
 
 The wav lands beside it, which is what lets
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)'s
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md)'s
 cache work unchanged. The frames keep a record of their own,
 `<stem>_frames.fathom.json` in the frames directory, holding the times
 they were cut at and the JPEG quality. Changing `frames`, `select`,
@@ -257,9 +257,9 @@ transcript is read back from its own cache.
 
 ## See also
 
-[`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md),
+[`prepare_audio()`](https://www.alcocerjj.com/fathom/reference/prepare_audio.md),
 which transcribes the sound track, and
-[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md),
+[`measure()`](https://www.alcocerjj.com/fathom/reference/measure.md),
 which reads both columns.
 
 ## Examples

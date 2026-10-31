@@ -1,7 +1,7 @@
 # Validate a completed coding sheet against the model
 
 Takes the sheet
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 wrote, with `human_label` filled in, and reports how well the model
 agreed with the coder.
 
@@ -9,7 +9,7 @@ The sheet carries no probabilities, which is what makes it blind. This
 joins back to the results on `id` and `item` to recover them, so pass
 the same results object the sample came from.
 
-[`vignette("complete_run")`](https://alcocer-jj.github.io/fathom/articles/complete_run.md)
+[`vignette("complete_run")`](https://www.alcocerjj.com/fathom/articles/complete_run.md)
 works a run end to end.
 
 ## Usage
@@ -218,7 +218,7 @@ both sides on that draw, because the two share the documents they rest
 on.
 
 A list of one is refused. A sheet
-[`coder_reference()`](https://alcocer-jj.github.io/fathom/reference/coder_reference.md)
+[`coder_reference()`](https://www.alcocerjj.com/fathom/reference/coder_reference.md)
 consolidated warns when it is placed in a list, since agreeing with a
 consensus is easier than agreeing with one person.
 
@@ -262,9 +262,9 @@ Measures* 1(1), 77–89.
 
 ## See also
 
-[`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
+[`coding_sample()`](https://www.alcocerjj.com/fathom/reference/coding_sample.md)
 for drawing the sheet, and
-[`coder_reference()`](https://alcocer-jj.github.io/fathom/reference/coder_reference.md)
+[`coder_reference()`](https://www.alcocerjj.com/fathom/reference/coder_reference.md)
 for consolidating several coders into one sheet.
 
 ## Examples

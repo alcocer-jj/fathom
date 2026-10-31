@@ -11,7 +11,7 @@ Qualitatively code a corpus by asking a local language model a set of questions 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://alcocer-jj.github.io/fathom/}
+  \item \url{https://www.alcocerjj.com/fathom/}
   \item \url{https://github.com/alcocer-jj/fathom}
   \item Report bugs at \url{https://github.com/alcocer-jj/fathom/issues}
 }
