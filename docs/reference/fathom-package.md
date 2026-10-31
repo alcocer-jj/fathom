@@ -8,13 +8,13 @@ reports the probability mass the model placed outside the label set.
 Includes the auditing steps that separate usable annotation from
 plausible-looking output. These inspect the documents that fired on an
 item and draw blinded samples for human coding. Requires a running
-Ollama server.
+'Ollama' server.
 
 ## See also
 
 Useful links:
 
-- <https://alcocer-jj.github.io/fathom>
+- <https://alcocer-jj.github.io/fathom/>
 
 - <https://github.com/alcocer-jj/fathom>
 
@@ -23,12 +23,12 @@ Useful links:
 ## Author
 
 **Maintainer**: Jose J. Alcocer <alcocer@protonmail.com>
-([ORCID](https://orcid.org/0009-0005-0469-3689))
+([ORCID](https://orcid.org/0009-0005-0469-3689)) \[copyright holder\]
 
 Authors:
 
 - Jose J. Alcocer <alcocer@protonmail.com>
-  ([ORCID](https://orcid.org/0009-0005-0469-3689))
+  ([ORCID](https://orcid.org/0009-0005-0469-3689)) \[copyright holder\]
 
 Other contributors:
 

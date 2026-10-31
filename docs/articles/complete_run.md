@@ -46,7 +46,7 @@ two. `annotator1` and `annotator2` are the two codings, and
 
 \
 [`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
-[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom/)`)`\
 [`library`](https://rdrr.io/r/base/library.html)`(`[`pander`](https://rapporter.github.io/pander/)`)`\
 \
 [`data`](https://rdrr.io/r/utils/data.html)`(``parlasent``)`\
@@ -594,7 +594,7 @@ Methodology* (4th ed.). Sage. <https://doi.org/10.4135/9781071878781>
 Mochtak, M., Rupnik, P., Meden, K., & Ljubešić, N. (2023). The
 multilingual sentiment dataset of parliamentary debates ParlaSent 1.0.
 *Slovenian language resource repository CLARIN.SI*.
-<http://hdl.handle.net/11356/1868>
+<https://hdl.handle.net/11356/1868>
 
 [^1]: When `exclusive = TRUE`, the `items` argument must be a single
     string, and passing more than one is refused. That question is named

@@ -318,4 +318,4 @@ Sage. <https://doi.org/10.4135/9781071878781>
 Mochtak, M., Rupnik, P., Meden, K., & Ljubešić, N. (2023).
 The multilingual sentiment dataset of parliamentary debates ParlaSent 1.0.
 *Slovenian language resource repository CLARIN.SI*.
-<http://hdl.handle.net/11356/1868>
+<https://hdl.handle.net/11356/1868>

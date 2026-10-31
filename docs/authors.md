@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Jose J. Alcocer**. Author, maintainer.
+- **Jose J. Alcocer**. Author, maintainer, copyright holder.
   [](https://orcid.org/0009-0005-0469-3689)
 
 - **Ewon Baik**. Contributor. [](https://orcid.org/0000-0002-4811-9401)
@@ -20,13 +20,13 @@
 ## Citation
 
 Alcocer J (2026). *fathom: Qualitative Coding and Measurement with Local
-Language Models*. R package version 0.1.2,
-<https://alcocer-jj.github.io/fathom>.
+Language Models*. R package version 0.1.3,
+<https://alcocer-jj.github.io/fathom/>.
 
 @Manual{,\
   title = {fathom: Qualitative Coding and Measurement with Local Language Models},\
   author = {Jose J. Alcocer},\
   year = {2026},\
-  note = {R package version 0.1.2},\
-  url = {https://alcocer-jj.github.io/fathom},\
+  note = {R package version 0.1.3},\
+  url = {https://alcocer-jj.github.io/fathom/},\
 }

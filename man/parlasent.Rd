@@ -34,7 +34,7 @@ stratum.
 Mochtak, M., Rupnik, P., Meden, K., and Ljubesic, N. (2023). The
 multilingual sentiment dataset of parliamentary debates ParlaSent 1.0.
 Slovenian language resource repository CLARIN.SI.
-\url{http://hdl.handle.net/11356/1868}
+\url{https://hdl.handle.net/11356/1868}
 
 Distributed under CC BY-SA 4.0, unlike the rest of this package. See
 \code{LICENSE.note}. Drawn from the English training file with seed 444.
@@ -127,7 +127,7 @@ mean(parlasent$annotator1 == parlasent$annotator2)
 Kuzman Pungersek, T., Ljubesic, N., Erjavec, T., et al. (2025).
 Linguistically annotated multilingual comparable corpora of parliamentary
 debates ParlaMint-en.ana 5.0. CLARIN.SI.
-\url{http://hdl.handle.net/11356/2006}
+\url{https://hdl.handle.net/11356/2006}
 
 Mochtak, M., Rupnik, P., and Ljubesic, N. (2024). The ParlaSent
 multilingual training dataset for sentiment identification in parliamentary

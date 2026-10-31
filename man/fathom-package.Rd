@@ -6,23 +6,23 @@
 \alias{fathom-package}
 \title{fathom: Qualitative Coding and Measurement with Local Language Models}
 \description{
-Qualitatively code a corpus by asking a local language model a set of questions about each document and reading the answer from the model's next-token probability distribution rather than parsing its text. Extraction never fails to parse, returns a probability per label, and reports the probability mass the model placed outside the label set. Includes the auditing steps that separate usable annotation from plausible-looking output. These inspect the documents that fired on an item and draw blinded samples for human coding. Requires a running Ollama server.
+Qualitatively code a corpus by asking a local language model a set of questions about each document and reading the answer from the model's next-token probability distribution rather than parsing its text. Extraction never fails to parse, returns a probability per label, and reports the probability mass the model placed outside the label set. Includes the auditing steps that separate usable annotation from plausible-looking output. These inspect the documents that fired on an item and draw blinded samples for human coding. Requires a running 'Ollama' server.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://alcocer-jj.github.io/fathom}
+  \item \url{https://alcocer-jj.github.io/fathom/}
   \item \url{https://github.com/alcocer-jj/fathom}
   \item Report bugs at \url{https://github.com/alcocer-jj/fathom/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Jose J. Alcocer \email{alcocer@protonmail.com} (\href{https://orcid.org/0009-0005-0469-3689}{ORCID})
+\strong{Maintainer}: Jose J. Alcocer \email{alcocer@protonmail.com} (\href{https://orcid.org/0009-0005-0469-3689}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Jose J. Alcocer \email{alcocer@protonmail.com} (\href{https://orcid.org/0009-0005-0469-3689}{ORCID})
+  \item Jose J. Alcocer \email{alcocer@protonmail.com} (\href{https://orcid.org/0009-0005-0469-3689}{ORCID}) [copyright holder]
 }
 
 Other contributors:

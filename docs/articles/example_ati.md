@@ -44,7 +44,7 @@ dataset carries no human codings, so the article does not validate the
 results against coders.
 
 \
-[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`fathom`](https://alcocer-jj.github.io/fathom/)`)`\
 [`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
 `#> `\
 `#> Attaching package: 'dplyr'`\
