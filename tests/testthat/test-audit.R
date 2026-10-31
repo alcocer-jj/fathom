@@ -32,7 +32,6 @@ graded <- function(
   q <- rep((1 + margins) / 2, each = 2)
   win <- res$probs$label == "YES"
   res$probs$prob_renorm <- ifelse(win, q, 1 - q)
-  res$probs$prob <- res$probs$prob_renorm
   list(res = res, docs = docs)
 }
 
@@ -106,8 +105,8 @@ test_that("the budget splits across questions by supply", {
   )
   # Item z scored on half the corpus and item a on all of it, so the two
   # questions reach the allocation with different supply.
-  thin <- res$probs$item == "z" & res$probs$id %in% sprintf("d%02d", 11:20)
-  res$probs$call_ok[thin] <- FALSE
+  thin <- res$calls$item == "z" & res$calls$id %in% sprintf("d%02d", 11:20)
+  res$calls$error[thin] <- "request error. connection refused"
 
   s <- sample_quiet(res, docs, text = "body", id = "id", n = 15, seed = 99)
 
@@ -147,7 +146,7 @@ test_that("the model's answer is withheld from the coder", {
   s <- sample_quiet(g$res, g$docs, text = "body", id = "id", n = 6, seed = 99)
 
   expect_false(any(
-    c("prob", "prob_renorm", "label", "margin") %in% names(s)
+    c("prob_renorm", "label", "margin") %in% names(s)
   ))
   expect_true(all(is.na(s$human_label)))
 
@@ -259,10 +258,23 @@ test_that("the binary report describes each item's behavior", {
   expect_setequal(rep$item, c("a", "z"))
   expect_true(all(rep$n == 10L))
   # The stub answers YES every time, so every document endorses.
-  expect_true(all(rep$endorse == 1))
-  expect_true(all(rep$n_endorse == 10L))
+  expect_true(all(rep$endorse_renorm == 1))
   expect_true(all(rep$pct_both_absent == 0))
   expect_true(all(rep$n_failed == 0))
+  expect_named(
+    rep,
+    c(
+      "item",
+      "n",
+      "endorse_renorm",
+      "pct_extreme_renorm",
+      "pct_both_absent",
+      "pct_label_absent",
+      "mean_prob_other",
+      "pct_off_label",
+      "n_failed"
+    )
+  )
 })
 
 test_that("off-label is judged by the rule scoring uses", {
@@ -280,7 +292,57 @@ test_that("off-label is judged by the rule scoring uses", {
     num_ctx = NULL
   )
 
-  expect_equal(suppressMessages(item_report(res))$n_off_label, 0L)
+  expect_equal(suppressMessages(item_report(res))$pct_off_label, 0)
+})
+
+test_that("a label outside the alternatives is counted apart from certainty", {
+  # The stub never returns NO, so NO scores exactly 0 and YES exactly 1 on every
+  # document. That reads as saturation, and pct_label_absent says the cap on
+  # alternatives produced it rather than the model.
+  local_offline(stub_generate(c("YES", "Sure"), c(-0.05, -3)))
+  docs <- tibble::tibble(id = sprintf("d%d", 1:4), body = rep("doc", 4))
+  res <- quiet_measure(
+    docs,
+    stub_backend(),
+    ab_instrument(),
+    text = "body",
+    id = "id",
+    num_ctx = NULL
+  )
+  rep <- suppressMessages(item_report(res))
+
+  expect_equal(rep$pct_extreme_renorm, c(1, 1))
+  expect_equal(rep$pct_label_absent, c(1, 1))
+  expect_equal(rep$pct_both_absent, c(0, 0))
+  expect_equal(rep$pct_off_label, c(0, 0))
+  expect_equal(rep$mean_prob_other, rep(1 - exp(-0.05), 2), tolerance = 1e-8)
+})
+
+test_that("the call columns repeat down the label rows of a choice", {
+  # The first token answers outside the labels and hi never appears, so every
+  # document is off-label and missing a label, and what leaked is everything lo
+  # and mid did not take.
+  local_offline(stub_generate(c("Sure", "mid", "lo"), c(-0.1, -2, -3)))
+  docs <- tibble::tibble(id = sprintf("d%d", 1:4), body = rep("doc", 4))
+  b <- instrument(list(a = "Q?"), labels = c("lo", "mid", "hi"))
+  res <- quiet_measure(
+    docs,
+    stub_backend(),
+    b,
+    text = "body",
+    id = "id",
+    num_ctx = NULL
+  )
+  rep <- suppressMessages(item_report(res))
+
+  expect_equal(nrow(rep), 3L)
+  expect_equal(rep$pct_label_absent, rep(1, 3))
+  expect_equal(rep$pct_off_label, rep(1, 3))
+  expect_equal(
+    rep$mean_prob_other,
+    rep(1 - exp(-2) - exp(-3), 3),
+    tolerance = 1e-8
+  )
 })
 
 test_that("more than two labels reports the winner distribution instead", {
@@ -301,7 +363,7 @@ test_that("more than two labels reports the winner distribution instead", {
   rep <- suppressMessages(item_report(res))
 
   expect_true(all(c("n_won", "share_won") %in% names(rep)))
-  expect_false("endorse" %in% names(rep))
+  expect_false("endorse_renorm" %in% names(rep))
   expect_equal(rep$n_won[rep$label == "mid"], 4L)
   expect_equal(rep$share_won[rep$label == "mid"], 1)
   # A label that is present but never dominant shows zero rather than dropping.
@@ -367,9 +429,9 @@ test_that("endorsed is the 0.5 cut on two labels and the winner above two", {
 })
 
 test_that("two labels report as endorsement even when the instrument scores", {
-  # On two labels the scored shape reports one number and drops a dozen
-  # diagnostics to do it. The label count is tested before the scores, so the
-  # number arrives as a column and the diagnostics stay.
+  # On two labels the scored shape would report one number and lose the
+  # endorsement diagnostics to do it. The label count is tested before the
+  # scores, so the number arrives as a column and the diagnostics stay.
   local_offline(stub_generate(c("YES", "NO"), c(-0.2, -1.6)))
   docs <- tibble::tibble(id = sprintf("d%d", 1:4), body = rep("doc", 4))
   b <- instrument(
@@ -389,7 +451,9 @@ test_that("two labels report as endorsement even when the instrument scores", {
 
   # One row per item, not one per label, and the diagnostics survive.
   expect_equal(nrow(rep), 1L)
-  expect_true(all(c("endorse", "mean_prob", "max_prob_other") %in% names(rep)))
+  expect_true(
+    all(c("endorse_renorm", "mean_prob_other", "pct_off_label") %in% names(rep))
+  )
   expect_false("n_won" %in% names(rep))
 
   # The score reaches it as a column instead of as a shape. With YES = 1 and
@@ -402,9 +466,6 @@ test_that("two labels report as endorsement even when the instrument scores", {
     mean(pr$prob_renorm[pr$label == "YES"]),
     tolerance = 1e-8
   )
-  # And it is not mean_prob, which is the raw probability. The stub's two
-  # labels sum above 1, so renormalizing moves the number.
-  expect_false(isTRUE(all.equal(rep$mean_expected, rep$mean_prob)))
 })
 
 test_that("an unscored two-label instrument carries no mean_expected", {
@@ -500,8 +561,10 @@ test_that("DECISION. item_report() heads its report with aligned fields", {
   expect_match(choice, "Documents     4\n", fixed = TRUE)
   expect_match(choice, "Items         1\n", fixed = TRUE)
   expect_match(choice, "Labels        3\n", fixed = TRUE)
-  expect_match(choice, "Leaked mass   max ", fixed = TRUE)
-  expect_match(choice, "Winning       probability min ", fixed = TRUE)
+  # The leaked-mass and winning-probability lines left the header, since
+  # leaked mass is a column now.
+  expect_false(grepl("Leaked mass", choice, fixed = TRUE))
+  expect_false(grepl("Winning", choice, fixed = TRUE))
 
   scored <- head_of(instrument(
     list(a = "Q?"),
@@ -511,7 +574,7 @@ test_that("DECISION. item_report() heads its report with aligned fields", {
   expect_match(scored, "^Scored instrument\n\n")
   expect_match(scored, "Score         expected mean ", fixed = TRUE)
   expect_match(scored, "Entropy       mean ", fixed = TRUE)
-  expect_match(scored, "Leaked mass   max ", fixed = TRUE)
+  expect_false(grepl("Leaked mass", scored, fixed = TRUE))
 })
 
 # --- the rest of the audit surface -------------------------------------------
@@ -523,9 +586,6 @@ test_that("threshold sensitivity separates the corpus from the cut point", {
   g <- graded()
   res <- g$res
   spread <- seq(0.05, 0.95, length.out = 20)
-  # Both columns, so the sweep is asserted on the default and on the alternative
-  # rather than on whichever one happens to be the default today.
-  res$probs$prob[res$probs$label == "YES"] <- rep(spread)
   res$probs$prob_renorm[res$probs$label == "YES"] <- rep(spread)
   ts <- suppressMessages(threshold_sensitivity(
     res,
@@ -536,13 +596,6 @@ test_that("threshold sensitivity separates the corpus from the cut point", {
   expect_equal(ts$threshold, c(0.1, 0.5, 0.9))
   expect_true(all(diff(ts$endorse) <= 0))
   expect_equal(ts$n_endorse[ts$threshold == 0.1], sum(spread >= 0.1))
-
-  # The default is prob_renorm. `value` reaches the raw column, and on this
-  # frame the two are set alike, so the sweep agrees.
-  raw <- suppressMessages(
-    threshold_sensitivity(res, thresholds = c(0.1, 0.5, 0.9), value = "prob")
-  )
-  expect_equal(raw$n_endorse, ts$n_endorse)
 })
 
 test_that("coding_sample copies media beside the CSV and relativizes paths", {
@@ -797,13 +850,13 @@ test_that("inspect_cases prints the probability it selected on", {
   expect_true(any(grepl("P(YES) = 0.7143", out, fixed = TRUE)))
   expect_false(any(grepl("P(YES) = 0.5000", out, fixed = TRUE)))
   expect_false(any(grepl("\u2014", out, fixed = TRUE)))
-  expect_true(all(c("prob_renorm", "prob") %in% names(sel)))
+  expect_true("prob_renorm" %in% names(sel))
+  expect_false("prob" %in% names(sel))
 })
 
 test_that("threshold_sensitivity divides the way it says it does", {
   # A document where no label appeared has no prob_renorm, so it leaves the
-  # denominator of `endorse` under the default and stays in it under `prob`,
-  # the same split item_report() makes between endorse_renorm and endorse.
+  # denominator of `endorse`. item_report() treats endorse_renorm the same way.
   toks <- c("YES", "Res", "NO", "YES")
   i <- 0L
   local_offline(
@@ -831,11 +884,12 @@ test_that("threshold_sensitivity divides the way it says it does", {
   expect_equal(renorm$n_endorse, 2L)
   expect_equal(renorm$endorse, 2 / 3)
 
-  raw <- suppressMessages(
-    threshold_sensitivity(res, thresholds = 0.5, value = "prob")
+  # With prob gone from the results the argument had one legal value, so it
+  # went rather than staying as a setting nobody can change.
+  expect_error(
+    suppressMessages(threshold_sensitivity(res, value = "prob")),
+    "unused argument"
   )
-  expect_equal(raw$n, 4L)
-  expect_equal(raw$endorse, raw$n_endorse / raw$n)
 })
 
 test_that("a seed reaches its own draw and nothing after it", {
@@ -999,4 +1053,379 @@ test_that("a target that is not a label is refused rather than read as empty", {
     suppressMessages(inspect_cases(res, "a", target = "yes")),
     "not\\s+a\\s+label"
   )
+})
+
+# ---- order_sensitivity() -----------------------------------------------------
+
+# Two stubs with ollama_generate()'s signature. The first answers from the
+# document and never from the order, the second answers with whichever label
+# the cue lists first and never from the document.
+order_blind_gen <- function() {
+  function(prompt, backend, num_ctx = NULL, image = NULL) {
+    yes <- grepl("good", prompt, fixed = TRUE)
+    list(
+      response = if (yes) "YES" else "NO",
+      prompt_eval_count = 10L,
+      prompt_eval_duration = 1e6,
+      wall_ms = 1,
+      logprobs = list(list(
+        top_logprobs = lp(
+          if (yes) c("YES", "NO") else c("NO", "YES"),
+          c(-0.1, -2.4)
+        )
+      ))
+    )
+  }
+}
+
+first_listed_gen <- function() {
+  function(prompt, backend, num_ctx = NULL, image = NULL) {
+    hit <- regmatches(prompt, regexpr("one word: [^ ,.]+", prompt))
+    tok <- sub("one word: ", "", hit, fixed = TRUE)
+    list(
+      response = tok,
+      prompt_eval_count = 10L,
+      prompt_eval_duration = 1e6,
+      wall_ms = 1,
+      logprobs = list(list(top_logprobs = lp(c(tok, "Hmm"), c(-0.05, -3))))
+    )
+  }
+}
+
+# Every text distinct, so two draws of different documents cannot send the
+# same prompts.
+order_docs <- function() {
+  tibble::tibble(
+    id = sprintf("d%d", 1:6),
+    body = sprintf("%s news %d", rep(c("good", "bad"), 3), 1:6)
+  )
+}
+
+order_run <- function(b = ab_instrument(), docs = order_docs(), ...) {
+  quiet_measure(
+    docs,
+    stub_backend(),
+    b,
+    text = "body",
+    id = "id",
+    num_ctx = NULL,
+    ...
+  )
+}
+
+test_that("order_sensitivity reads nothing into a model the order does not move", {
+  local_offline(order_blind_gen())
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  out <- suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 6L)
+  )
+  expect_named(
+    out,
+    c("item", "order", "n", "agreement", "alpha")
+  )
+  expect_equal(out$item, c("a", "z"))
+  expect_equal(out$order, c("reversed", "reversed"))
+  expect_equal(out$n, c(6L, 6L))
+  expect_equal(out$agreement, c(1, 1))
+  expect_equal(out$alpha, c(1, 1))
+  expect_equal(
+    attr(out, "orders"),
+    list(declared = c("YES", "NO"), reversed = c("NO", "YES"))
+  )
+})
+
+test_that("order_sensitivity finds a model that answers with the first label", {
+  local_offline(first_listed_gen())
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  out <- suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 6L)
+  )
+  expect_equal(out$agreement, c(0, 0))
+  expect_true(all(out$alpha < 0))
+})
+
+test_that("order_sensitivity asks once per drawn document and order, and never without one", {
+  prompts <- character(0)
+  gen <- order_blind_gen()
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    prompts <<- c(prompts, prompt)
+    gen(prompt, backend, num_ctx, image)
+  })
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  prompts <- character(0)
+  suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 4L)
+  )
+  # Two items, four documents each under one reordering, and every call
+  # carries its document.
+  expect_length(prompts, 2L * 4L)
+  expect_true(all(startsWith(prompts, "Text: ")))
+  expect_equal(sum(grepl("one word: NO or YES", prompts, fixed = TRUE)), 8L)
+})
+
+test_that("order_sensitivity asks about every document by default, and draws when n is a number", {
+  local_offline(order_blind_gen())
+  # More than 50 documents, so a default that drew a sample of 50 would show
+  # in what comes back.
+  docs <- tibble::tibble(
+    id = sprintf("d%d", 1:60),
+    body = sprintf("%s news %d", rep(c("good", "bad"), 30), 1:60)
+  )
+  res <- order_run(docs = docs)
+  every <- suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id")
+  )
+  expect_equal(every$n, c(60L, 60L))
+  drawn <- suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 50L)
+  )
+  expect_equal(drawn$n, c(50L, 50L))
+})
+
+test_that("order_sensitivity adds a shuffled order on three or more labels", {
+  local_offline(first_listed_gen())
+  b <- instrument(list(q = "Q?"), labels = c("ALPHA", "BETA", "GAMMA"))
+  docs <- order_docs()
+  res <- order_run(b, docs)
+  out <- suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 4L)
+  )
+  o <- attr(out, "orders")
+  expect_equal(out$order, c("reversed", "shuffled"))
+  expect_setequal(o$shuffled, o$declared)
+  expect_false(identical(o$shuffled, o$declared))
+  expect_false(identical(o$shuffled, o$reversed))
+
+  # No scores, so the ordinal scale has to be given.
+  expect_error(
+    order_sensitivity(res, docs, text = "body", id = "id", level = "ordinal"),
+    "no\\s+place\\s+for"
+  )
+  out <- suppressMessages(order_sensitivity(
+    res,
+    docs,
+    text = "body",
+    id = "id",
+    n = 4L,
+    level = "ordinal",
+    labels = c("ALPHA", "BETA", "GAMMA")
+  ))
+  expect_identical(attr(out, "level"), "ordinal")
+})
+
+test_that("order_sensitivity reverses an exclusive listing as well as its cue", {
+  prompts <- character(0)
+  gen <- first_listed_gen()
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    prompts <<- c(prompts, prompt)
+    gen(prompt, backend, num_ctx, image)
+  })
+  b <- instrument(
+    "Which category?",
+    labels = c("ECON", "HEALTH"),
+    definitions = c(ECON = "the economy", HEALTH = "health care"),
+    exclusive = TRUE
+  )
+  docs <- order_docs()
+  res <- order_run(b, docs)
+  prompts <- character(0)
+  suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 2L)
+  )
+  flipped <- prompts[grepl("HEALTH or ECON", prompts, fixed = TRUE)]
+  expect_length(flipped, 2L)
+  expect_true(all(grepl(
+    "HEALTH = health care\nECON = the economy",
+    flipped,
+    fixed = TRUE
+  )))
+})
+
+test_that("order_sensitivity leaves the run's checkpoints as they were", {
+  local_offline(first_listed_gen())
+  dir <- tempfile("ckpt")
+  docs <- order_docs()
+  res <- order_run(docs = docs, checkpoint = dir)
+  files <- list.files(dir, full.names = TRUE, recursive = TRUE)
+  expect_true(length(files) > 0L)
+  before <- tools::md5sum(files)
+  suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 4L)
+  )
+  expect_identical(list.files(dir, full.names = TRUE, recursive = TRUE), files)
+  expect_identical(tools::md5sum(files), before)
+})
+
+test_that("order_sensitivity refuses what it cannot audit", {
+  local_offline(order_blind_gen())
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  expect_error(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 1),
+    "at\\s+least\\s+2"
+  )
+  expect_error(
+    order_sensitivity(res, docs, text = "body", id = "id", n = "all"),
+    "or\\s+`NULL`\\s+for\\s+every\\s+document"
+  )
+  expect_error(
+    order_sensitivity(res, docs, text = "body", id = "id", items = "b"),
+    "does\\s+not\\s+have"
+  )
+  # The ids default to row positions, which match none of the run's.
+  expect_error(
+    order_sensitivity(res, docs, text = "body", n = 4L),
+    "no\\s+document\\s+on"
+  )
+  bare <- res
+  attr(bare, "backend") <- NULL
+  expect_error(
+    order_sensitivity(bare, docs, text = "body", id = "id"),
+    "no\\s+instrument\\s+or\\s+no\\s+backend"
+  )
+
+  local_offline(stub_generate(tokens = c("SI", "NO"), logprobs = c(-0.1, -2.4)))
+  hand <- order_run(acc_instrument(), docs)
+  expect_error(
+    order_sensitivity(hand, docs, text = "body", id = "id"),
+    "written\\s+by\\s+hand"
+  )
+})
+
+test_that("order_sensitivity warns when a reordered call returns no label", {
+  gen <- order_blind_gen()
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    if (
+      startsWith(prompt, "Text: ") &&
+        grepl("one word: NO or YES", prompt, fixed = TRUE)
+    ) {
+      return(list(
+        response = "Well",
+        logprobs = list(list(top_logprobs = lp(c("Well", "So"), c(-0.1, -2.4))))
+      ))
+    }
+    gen(prompt, backend, num_ctx, image)
+  })
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  expect_warning(
+    out <- suppressMessages(order_sensitivity(
+      res,
+      docs,
+      text = "body",
+      id = "id",
+      n = 4L,
+      items = "a"
+    )),
+    "left\\s+out\\s+of\\s+`n`"
+  )
+  expect_equal(out$n, 0L)
+  expect_true(is.na(out$agreement))
+})
+
+test_that("order_sensitivity stops when its first call fails", {
+  local_offline(order_blind_gen())
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  calls <- 0L
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    calls <<- calls + 1L
+    stop("connection refused")
+  })
+  expect_error(
+    suppressMessages(order_sensitivity(res, docs, text = "body", id = "id")),
+    "first\\s+call\\s+failed"
+  )
+  expect_equal(calls, 1L)
+})
+
+test_that("order_sensitivity puts each interval beside its figure", {
+  local_offline(order_blind_gen())
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  out <- suppressMessages(order_sensitivity(
+    res,
+    docs,
+    text = "body",
+    id = "id",
+    n = 6L,
+    ci = "bootstrap",
+    bootstrap_n = 200L
+  ))
+  expect_named(
+    out,
+    c(
+      "item",
+      "order",
+      "n",
+      "agreement",
+      "agreement_ci",
+      "alpha",
+      "alpha_ci"
+    )
+  )
+  expect_equal(out$agreement_ci, c("[1.00, 1.00]", "[1.00, 1.00]"))
+  expect_identical(attr(out, "conf_level"), 0.95)
+})
+
+test_that("order_sensitivity draws the same documents and leaves the caller's stream alone", {
+  prompts <- character(0)
+  gen <- order_blind_gen()
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    prompts <<- c(prompts, prompt)
+    gen(prompt, backend, num_ctx, image)
+  })
+  docs <- order_docs()
+  res <- order_run(docs = docs)
+  set.seed(7)
+  before <- .Random.seed
+  prompts <- character(0)
+  suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 3L)
+  )
+  first <- prompts
+  expect_identical(.Random.seed, before)
+  prompts <- character(0)
+  suppressMessages(
+    order_sensitivity(res, docs, text = "body", id = "id", n = 3L)
+  )
+  expect_identical(prompts, first)
+})
+
+test_that("order_sensitivity sends each document's media with it", {
+  img <- vapply(
+    1:3,
+    function(i) {
+      p <- tempfile(fileext = ".png")
+      writeBin(as.raw(rep(i, 10)), p)
+      p
+    },
+    character(1)
+  )
+  docs <- tibble::tibble(id = sprintf("d%d", 1:3), pic = img)
+  seen <- list()
+  gen <- order_blind_gen()
+  local_offline(function(prompt, backend, num_ctx = NULL, image = NULL) {
+    seen[[length(seen) + 1L]] <<- if (is.null(image)) NA_character_ else image
+    gen(prompt, backend, num_ctx, image)
+  })
+  res <- quiet_measure(
+    docs,
+    stub_backend(),
+    ab_instrument(),
+    image = "pic",
+    id = "id",
+    num_ctx = NULL
+  )
+  seen <- list()
+  suppressMessages(
+    order_sensitivity(res, docs, image = "pic", id = "id", n = 3L, items = "a")
+  )
+  sent <- unlist(seen)
+  expect_length(sent, 3L)
+  expect_true(all(file.exists(sent)))
+  expect_setequal(sent, img)
 })

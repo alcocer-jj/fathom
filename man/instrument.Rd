@@ -130,7 +130,7 @@ its own label and so is matched by prefix regardless.}
 \value{
 An object of class \code{fathom_instrument}, a list. Its print method
 shows the parts usually wanted, and \code{\link[=preview]{preview()}} shows what the model will
-actually receive.
+receive, before Ollama applies the model's chat template.
 \subsection{The instrument}{
 \itemize{
 \item \code{items} is the named list of questions, one per item, in the order
@@ -222,6 +222,34 @@ instruments store them without putting them in the prompt, since their
 question is yours to write.
 }
 
+\section{Items or one exclusive question}{
+
+An instrument of items asks about each category on its own, so a document
+can carry several categories or none, and each question is answered without
+the others in view. \code{exclusive = TRUE} asks one question that lists every
+category, so the categories share one distribution and each document takes
+one of them.
+
+The exclusive form is the one to use when a document should take exactly
+one category, such as a level on a scale, and whenever the categories are
+defined against each other. Halterman and Keith (2026) found no accuracy
+gain in preliminary experiments from asking about one category at a time,
+and argue that their codebooks need every category in view to separate
+them. A drone strike can meet a codebook's definition of an assassination
+for a model that never sees the drone assassination category beside it.
+}
+
+\section{Twenty alternatives}{
+
+Ollama returns at most the 20 most likely first tokens. A label the model
+does not rank among those 20 on a document scores exactly 0 there, and on
+two labels its partner then scores exactly 1. Every label therefore has to
+be a word the model would plausibly open its answer with, likely enough to
+rank among the 20. An instrument of many labels risks some of them falling
+outside on every document. \code{pct_label_absent} in \code{\link[=item_report]{item_report()}} reports the
+share of calls where any label did.
+}
+
 \section{Ordinal labels}{
 
 \code{scores} attaches a numeric value to each label. The values are metadata.
@@ -292,6 +320,11 @@ b <- instrument(
   labels = c("YES", "NO")
 )
 b
+}
+\references{
+Halterman, A. and Keith, K. A. (2026). Codebook LLMs. Evaluating LLMs as
+measurement tools for political science concepts. \emph{Political
+Analysis} 34, 188--204. \doi{10.1017/pan.2025.10017}
 }
 \seealso{
 \code{\link[=template_items]{template_items()}} for items built from one stem, \code{\link[=preview]{preview()}} for

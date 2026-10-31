@@ -19,7 +19,7 @@ the documents."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,65 +112,39 @@ instrument sorts after the declared ones.</p><div class="section">
 this can sit below the corpus size.</p></li>
 <li><p><code>endorse_renorm</code> is the share of those documents where <code>target</code> reached 0.5
 on <code>prob_renorm</code>, the probability after the labels have been rescaled to
-sum to 1. Reaching it means the label beat the other one.</p></li>
-<li><p><code>n_endorse_renorm</code> is the count behind <code>endorse_renorm</code>. Its denominator is
-<code>n</code> minus the documents where no label appeared, which have no renormalized
-probability. That count is <code>pct_both_absent</code> times <code>n</code>, and is 0 whenever
-<code>pct_both_absent</code> is.</p></li>
-<li><p><code>endorse</code> is the same cut on <code>prob</code>, the probability against everything the
-model could have written. Reaching it means the model committed to the
-label.</p></li>
-<li><p><code>n_endorse</code> is the count behind <code>endorse</code>. Its denominator is <code>n</code>.</p></li>
-<li><p><code>mean_prob</code> is the mean <code>prob</code> on <code>target</code>, so it belongs to <code>endorse</code>
-rather than to <code>endorse_renorm</code>. It separates from <code>endorse</code> only when the
-probabilities cluster near the 0.5 cut. When they all sit near 0 or 1 the
-two agree almost exactly, so the gap between them says how far the
-endorsements were from being coin flips.</p></li>
+sum to 1. Reaching it means the label beat the other one. Its denominator
+leaves out the documents where no label appeared, which have no
+renormalized probability, and <code>pct_both_absent</code> says how many those were.</p></li>
 <li><p><code>pct_extreme_renorm</code> is the share of renormalized probabilities at or
 beyond 0.01 and 0.99, so it asks how the on-label mass was shaped rather
-than how much of it there was. This is the substantive one, for the same
-reason <code>endorse_renorm</code> is. It is not unconditionally the safer one. A
-document that answered almost entirely outside the label set can leave this
-denominator, read as graded, or read as certain, depending on how its
-residue fell.</p></li>
-<li><p><code>pct_extreme</code> is the share of raw probabilities at or beyond 0.01 and 0.99.
-Reads <code>prob</code>, so it cannot separate a decisive answer from one that never
-entered the label set, since both put every label at the floor or the
-ceiling. Read it against <code>pct_extreme_renorm</code> and <code>max_prob_other</code> rather
-than alone. Near 1 means almost every answer came back at one end or the
-other, so these are labels in numeric clothing. Reporting them as degrees
-of confidence would claim more than they carry.</p></li>
+than how much of it there was. Near 1 means almost every answer came back
+at one end or the other, so these are labels in numeric clothing, and
+reporting them as degrees of confidence would claim more than they carry.</p></li>
 <li><p><code>pct_both_absent</code> is the share of documents where no label appeared at
 position 1. That is a template or prompt failure rather than a low score. A
-broken chat template registers in <code>n_off_label</code> rather than here, because
+broken chat template registers in <code>pct_off_label</code> rather than here, because
 the labels stay in the distribution at trace mass underneath whatever the
 template wrote first, which leaves <code>pct_both_absent</code> at 0 while every
 answer is unusable.</p></li>
-<li><p><code>max_prob_other</code> is the most probability the model ever placed on tokens
-that were none of your labels, anywhere in the corpus. Leaked mass, in the
-term used elsewhere in these docs.</p></li>
-<li><p><code>min_top1</code> is the least confident single answer in the corpus. For each
-document, take the probability of whichever token the model was most likely
-to write, label or not. This is the smallest of those. High values do not
-mean the item is correct.</p></li>
-<li><p><code>n_off_label</code> counts the documents where the emitted token matched no
-label. It is judged by the same rule scoring uses, so a token that opens a
-label counts as that label and a split label is not reported as off-label.</p></li>
-<li><p><code>n_failed</code> counts the documents whose call failed. Divided by the label
-count, so it counts documents rather than rows.</p></li>
-<li><p><code>other_vs_median</code> is <code>max_prob_other</code> divided by the middle value of that
-column across the instrument, so 2 means this item placed twice as much
-probability outside the labels as the typical item did. Present only for an
-instrument of three or more items, since a middle value across one or two
-carries nothing. This is the one column the item count decides. Absolute
-leaked mass varies by model, by language, and by how close to 0 and 1 the
-instrument's probabilities sit, so values are not comparable across
-instruments.</p></li>
+<li><p><code>pct_label_absent</code> is the share of documents where at least one label was
+missing from the <code>top_logprobs</code> alternatives the backend returned, so it
+includes <code>pct_both_absent</code>. A label missing beside one that appeared has a
+probability of exactly 0 and puts its partner at exactly 1, so on those
+documents <code>pct_extreme_renorm</code> records the cap on alternatives rather than
+the model.</p></li>
+<li><p><code>mean_prob_other</code> is the average probability the model placed on tokens
+that were none of your labels. Leaked mass, in the term used elsewhere in
+these docs. It compares across the items of one instrument and not across
+instruments, since absolute leaked mass varies by model, by language, and
+by how close to 0 and 1 the instrument's probabilities sit.</p></li>
+<li><p><code>pct_off_label</code> is the share of documents where the emitted token matched
+no label. It is judged by the same rule scoring uses, so a token that opens
+a label counts as that label and a split label is not reported as
+off-label.</p></li>
+<li><p><code>n_failed</code> counts the documents whose call failed.</p></li>
 <li><p><code>mean_expected</code> is the average expected score across documents, which on
 two labels is the mean of <code>prob_renorm</code> on <code>target</code> rescaled onto the
-scores. Present only when the instrument carries <code>scores</code>. Note that
-<code>mean_prob</code> is the raw probability, so the two differ by whatever mass fell
-outside the labels.</p></li>
+scores. Present only when the instrument carries <code>scores</code>.</p></li>
 </ul></div>
 
 <div class="section">
@@ -183,6 +157,9 @@ A document whose distribution held none of the labels wins nothing.</p></li>
 <li><p><code>share_won</code> is <code>n_won</code> over the documents scored on that item, so the
 shares of an item fall short of 1 by the share that answered outside the
 labels.</p></li>
+<li><p><code>pct_label_absent</code>, <code>mean_prob_other</code> and <code>pct_off_label</code> are as in the
+endorsement shape. They describe the item's calls rather than the label,
+so they repeat down its label rows.</p></li>
 </ul></div>
 
 <div class="section">
@@ -200,21 +177,21 @@ been rescaled to sum to 1 across the labels. Because it uses every label
 rather than only the winner, a document the model split between two
 neighboring levels lands between them.</p></li>
 <li><p><code>sd_expected</code> is the standard deviation of the same, across documents.</p></li>
+<li><p><code>pct_label_absent</code>, <code>mean_prob_other</code> and <code>pct_off_label</code> are as in the
+choice shape.</p></li>
 </ul></div>
 
     </div>
     <div class="section level2">
-    <h2 id="two-endorsement-rates">Two endorsement rates<a class="anchor" aria-label="anchor" href="#two-endorsement-rates"></a></h2>
+    <h2 id="the-endorsement-cut">The endorsement cut<a class="anchor" aria-label="anchor" href="#the-endorsement-cut"></a></h2>
 
 
-<p><code>endorse</code> and <code>endorse_renorm</code> count the same documents at the same cut of
-0.5, and differ only in which probability they cut. Do not read the gap
-between them as measurement error or as disagreement between two estimates of
-one quantity. It is two quantities.</p>
-<p>Neither cut is configurable. 0.5 on <code>prob_renorm</code> is the argmax on a
-two-label instrument, and <code><a href="threshold_sensitivity.html">threshold_sensitivity()</a></code> exists to show how little
-the cut point matters on <code>prob</code>. Both are reported so the choice does not
-have to be made in advance.</p>
+<p><code>endorse_renorm</code> cuts <code>prob_renorm</code> at 0.5, which on a two-label instrument
+is the label the model ranked first. The cut is not configurable.
+<code><a href="threshold_sensitivity.html">threshold_sensitivity()</a></code> reports the rate at other cut points, and
+<code>pct_extreme_renorm</code> says in one number how far it can move, since a
+probability at or beyond 0.01 and 0.99 sits on the same side of every cut
+between them.</p>
     </div>
     <div class="section level2">
     <h2 id="output-shapes">Output shapes<a class="anchor" aria-label="anchor" href="#output-shapes"></a></h2>
@@ -227,10 +204,11 @@ which columns. The test runs in this order.</p>
 <li><p>Otherwise, the instrument carries <code>scores</code>. <strong>Scored shape.</strong></p></li>
 <li><p>Otherwise, more than two labels. <strong>Choice shape.</strong></p></li>
 </ol><p>The label count is tested first because on two labels the scored shape
-reports one number, the average expected score, and drops a dozen
-diagnostics to do it. There is no reason to choose between them. A scored
-instrument of two labels reports as endorsement and gains <code>mean_expected</code> as
-a column, so the number arrives without the diagnostics leaving.</p>
+would report one number, the average expected score, and lose the
+endorsement diagnostics to do it. There is no reason to choose between them.
+A scored instrument of two labels reports as endorsement and gains
+<code>mean_expected</code> as a column, so the number arrives without the diagnostics
+leaving.</p>
 <p><code>exclusive = TRUE</code> is not itself the test. An exclusive instrument lands in
 the choice or scored shape because it usually has more than two labels or a
 scale, and an exclusive instrument of two labels reports as endorsement like
@@ -243,8 +221,8 @@ the shape is named for the argument rather than for a measurement level.
 <p>The shapes differ in row granularity as well as in columns. Endorsement gives
 one row per item. Choice and scored give one row per item <strong>and label</strong>,
 because a shared distribution has no single number per question to report.
-Choice and scored report a winner distribution, and leaked mass reaches them
-as a message rather than as a column.</p>
+Choice and scored report a winner distribution, and the columns describing
+an item's calls rather than any one label repeat down its label rows.</p>
 <p><code>target</code> applies to the endorsement shape only, and is ignored by the other
 two. There is no per-label endorsement rate for a forced choice, since the
 labels all compete for one pool of probability, and a rate for whichever
@@ -262,15 +240,14 @@ label sorted first is not a meaningful quantity.</p>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"vignette_results.rds"</span>, package <span class="op">=</span> <span class="st">"fathom"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">baked</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">item_report</span><span class="op">(</span><span class="va">baked</span><span class="op">$</span><span class="va">res_indep</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 15</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   item         n endorse_renorm n_endorse_renorm endorse n_endorse mean_prob</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> negative   100           0.47               47    0.47        47     0.464</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> positive   100           0.42               42    0.42        42     0.420</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> mixed      100           0.31               31    0.31        31     0.310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 8 more variables: pct_extreme_renorm &lt;dbl&gt;, pct_extreme &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   pct_both_absent &lt;dbl&gt;, max_prob_other &lt;dbl&gt;, min_top1 &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   n_off_label &lt;int&gt;, n_failed &lt;dbl&gt;, other_vs_median &lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   item      n endorse_renorm pct_extreme_renorm pct_both_absent pct_label_absent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> nega…   100           0.47               0.97               0             0.64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> posi…   100           0.42               0.97               0             0.69</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> mixed   100           0.31               0.95               0             0.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: mean_prob_other &lt;dbl&gt;, pct_off_label &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   n_failed &lt;int&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

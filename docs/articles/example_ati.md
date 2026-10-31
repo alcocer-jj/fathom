@@ -29,7 +29,7 @@ INFOMEX, sampled from a corpus hand-coded by Erlich et al. (2022).
     [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
     and
     [`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md).
-5.  **Check sensitivity to the cut point** with
+5.  **Check cut point sensitivity** with
     [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md).
 
 ## The corpus
@@ -71,11 +71,11 @@ results against coders.
 
 ## Step 1. Preprocess the corpus
 
-As described by Erlich et al. (2022), about one in eight document
-requests arrived with an attachment, and for many of those the text
-field contains only pointer language, which makes it noise for this
-analysis. Given this, the pipeline drops those documents, along with any
-request shorter than six words.
+Around 13% of the corpus documents consisted of requests with an
+attachment. As a result, the text found in these requests contained only
+pointer language. Given that this is just noise, the first step consists
+of dropping those documents along with requests shorter than six
+words.[^1]
 
 \
 `vocab`` ``<-`` `[`paste0`](https://rdrr.io/r/base/paste.html)`(`\
@@ -174,7 +174,7 @@ chosen. The question text itself is not affected by this argument.
 The
 [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
 function prints what the local LLM would receive without executing the
-call.[^1]
+call.[^2]
 
 \
 [`preview`](https://alcocer-jj.github.io/fathom/reference/preview.md)`(``b_topics``, text ``=`` ``ati``$``text``[``1``]``)`\
@@ -272,13 +272,13 @@ left unset, it uses the instrument’s first label, which here is `sí`.
 `report`` ``<-`` `[`item_report`](https://alcocer-jj.github.io/fathom/reference/item_report.md)`(``res_topics``)`\
 [`pander`](https://rdrr.io/pkg/pander/man/pander.html)`(``report``, split.table ``=`` ``Inf``)`
 
-| item | n | endorse_renorm | n_endorse_renorm | endorse | n_endorse | mean_prob | pct_extreme_renorm | pct_extreme | pct_both_absent | max_prob_other | min_top1 | n_off_label | n_failed | other_vs_median |
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| actividades | 286 | 0.2413 | 69 | 0.2413 | 69 | 0.2441 | 0.9266 | 0.9266 | 0 | 8.224e-06 | 0.4853 | 0 | 0 | 1.065 |
-| presupuesto | 286 | 0.2937 | 84 | 0.2937 | 84 | 0.2954 | 0.979 | 0.979 | 0 | 6.586e-06 | 0.5141 | 0 | 0 | 0.8525 |
-| contratos | 286 | 0.2378 | 68 | 0.2378 | 68 | 0.2376 | 0.965 | 0.965 | 0 | 7.525e-06 | 0.4494 | 0 | 0 | 0.9741 |
-| estructura | 286 | 0.2168 | 62 | 0.2168 | 62 | 0.2153 | 0.986 | 0.986 | 0 | 1.228e-05 | 0.5094 | 0 | 0 | 1.589 |
-| normatividad | 286 | 0.09091 | 26 | 0.09091 | 26 | 0.09283 | 0.9895 | 0.9895 | 0 | 7.725e-06 | 0.5254 | 0 | 0 | 1 |
+| item | n | endorse_renorm | pct_extreme_renorm | pct_both_absent | pct_label_absent | mean_prob_other | pct_off_label | n_failed |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| actividades | 286 | 0.2413 | 0.9266 | 0 | 0.06993 | 1.377e-06 | 0 | 0 |
+| presupuesto | 286 | 0.2937 | 0.979 | 0 | 0.1993 | 1.035e-06 | 0 | 0 |
+| contratos | 286 | 0.2378 | 0.965 | 0 | 0.1503 | 8.275e-07 | 0 | 0 |
+| estructura | 286 | 0.2168 | 0.986 | 0 | 0.07343 | 9.752e-07 | 0 | 0 |
+| normatividad | 286 | 0.09091 | 0.9895 | 0 | 0.03846 | 1.202e-06 | 0 | 0 |
 
 Here, the `endorse_renorm` column depicts the proportion of requests
 where `sí` had the highest probability mass, whereas
@@ -319,7 +319,7 @@ probability into a binary using a 0.5 cutoff.
 `#> 5 1093              0             0           0            0              1`\
 `#> 6 11                1             0           0            0              0`
 
-## Step 5. Check sensitivity to the cut point
+## Step 5. Check cut point sensitivity
 
 By default, `fathom` sets the endorsement cut point at 0.5. The
 [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
@@ -364,7 +364,9 @@ Erlich, A., Dantas, S. G., Bagozzi, B. E., Berliner, D., & Palmer-Rubin,
 B. (2022). Multi-label prediction for political text-as-data. *Political
 Analysis*, 30(4), 463–480. <https://doi.org/10.1017/pan.2021.15>
 
-[^1]: [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+[^1]: Six is a mere arbitrary heuristic.
+
+[^2]: [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
     cosmetically trims the document at `truncate`, 300 characters by
     default, and marks where it cut. The actual run does not truncate
     the text.

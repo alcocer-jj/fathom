@@ -11,7 +11,7 @@ $calls, one row per document and item."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -193,16 +193,11 @@ a character vector.</p></li>
 
 <ul><li><p><code>label</code> is the label this row scores, in the order the instrument declares
 them.</p></li>
-<li><p><code>prob_renorm</code> is <code>prob</code> rescaled so the labels sum to 1. The measure. <code>NA</code>
-when no label appeared at all, since there is nothing to condition on.</p></li>
-<li><p><code>prob</code> is the raw probability, against every token the model could have
-written. Does not sum to 1 down the labels.</p></li>
-<li><p><code>present</code> says whether any token counting as this label appeared in the
-returned distribution. A <code>prob</code> of zero means the label was measured at
-zero when this is <code>TRUE</code>, and fell below <code>top_logprobs</code> when it is <code>FALSE</code>.</p></li>
-<li><p><code>call_ok</code> is <code>FALSE</code> when the call failed. One fact per call, kept here
-rather than only in <code>$calls</code> because it guards almost every filter over
-these rows.</p></li>
+<li><p><code>prob_renorm</code> is the probability of this label rescaled so the labels sum
+to 1. The measure. <code>NA</code> when no label appeared at all, since there is
+nothing to condition on, and exactly 0 for a label that fell outside the
+<code>top_logprobs</code> alternatives. The raw probability, against every token the
+model could have written, is <code>prob_renorm * (1 - prob_other)</code>.</p></li>
 </ul></div>
 
 <div class="section">
@@ -210,18 +205,15 @@ these rows.</p></li>
 
 
 <p>Anything named in <code>keep</code> rides here too, since a carried column describes the
-document rather than any one label.</p><ul><li><p><code>error</code> is the message when the call failed, otherwise <code>NA</code>. Non-<code>NA</code>
-exactly when <code>call_ok</code> is <code>FALSE</code>.</p></li>
+document rather than any one label.</p><ul><li><p><code>error</code> is the message when the call failed, otherwise <code>NA</code>, so a call
+succeeded exactly when <code>error</code> is <code>NA</code>.</p></li>
 <li><p><code>truncated</code> is <code>TRUE</code> when the prompt came within 64 tokens of <code>num_ctx</code>,
 so the document may have lost its opening.</p></li>
 <li><p><code>top1_token</code> is the token the model actually generated, whether or not it
 counts as a label.</p></li>
-<li><p><code>top1_prob</code> is the probability of that token. When it is not a label, this
-is the only record of how much mass the winning non-label held.</p></li>
 <li><p><code>prob_other</code> is the mass on tokens counting as no label. The diagnostic
-that says whether the question landed.</p></li>
-<li><p><code>all_absent</code> is <code>TRUE</code> when no label appeared anywhere in the returned
-distribution.</p></li>
+that says whether the question landed. It is exactly 1 when no label
+appeared anywhere in the returned distribution.</p></li>
 <li><p><code>margin</code> is the gap between the top two <code>prob_renorm</code> values. What
 <code><a href="inspect_cases.html">inspect_cases()</a></code> sorts on to find the closest calls above two labels.</p></li>
 <li><p><code>expected_score</code> is <code>prob_renorm</code> weighted by the instrument's <code>scores</code>.
@@ -283,9 +275,30 @@ Passing an integer once the corpus is known skips it.</p>
     <h2 id="retrying-failures">Retrying failures<a class="anchor" aria-label="anchor" href="#retrying-failures"></a></h2>
 
 
-<p>A failed item is stored with <code>call_ok = FALSE</code> and is therefore stale on the
-next pass, so re-running retries exactly those. There is no separate retry
+<p>A failed item is stored with its reason in <code>error</code> and is therefore stale on
+the next pass, so re-running retries exactly those. There is no separate retry
 sweep, which would run against a cold cache.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="when-the-check-before-the-first-document-fails">When the check before the first document fails<a class="anchor" aria-label="anchor" href="#when-the-check-before-the-first-document-fails"></a></h2>
+
+
+<p>Before any document, <code>measure()</code> sends one prompt built from your instrument
+and the corpus document nearest the median word count, or a built-in
+question when the corpus has no text. Among other checks, the run starts
+only if the first generated token is one of your labels. When it is not,
+nothing is measured and the message names the token the model opened with.</p>
+<p>Three causes are known. The cue may not name the labels clearly enough,
+which <code><a href="preview.html">preview()</a></code> shows. The chat template may open a reasoning block
+although reasoning is off on every call, which is a property of the model's
+template rather than of your instrument. Or the model may open with prose, a
+word such as <code>The</code> or <code>Okay</code> before its answer.</p>
+<p>Worked examples in the question, each a short document followed by its
+one-word answer, are the known fix for prose. Without them Qwen3.8-27B
+answered 941 of 945 tweets in full sentences in Denney and DiGiuseppe's
+(2026) replication of a tweet-sentiment study, and with them its answers
+could be scored. Examples become part of the instrument, so validate and
+audit the instrument that carries them.</p>
     </div>
     <div class="section level2">
     <h2 id="character-input">Character input<a class="anchor" aria-label="anchor" href="#character-input"></a></h2>
@@ -300,6 +313,11 @@ Carrying the text instead would put a copy of the corpus in <code>$calls</code>,
 per item, and the results are the object that gets saved.</p>
 <p>Naming that column in <code>keep</code> carries it deliberately, and then it is a kept
 column like any other rather than something the schema promises.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Denney, S. and DiGiuseppe, M. (2026). JEV versus LLMs. Accuracy, cost and
+calibration on seven political science replications. arXiv:2610.06625.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

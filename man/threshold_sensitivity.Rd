@@ -7,8 +7,7 @@
 threshold_sensitivity(
   results,
   target = NULL,
-  thresholds = seq(0.1, 0.9, by = 0.1),
-  value = c("prob_renorm", "prob")
+  thresholds = seq(0.1, 0.9, by = 0.1)
 )
 }
 \arguments{
@@ -20,18 +19,6 @@ the first.}
 
 \item{thresholds}{A numeric vector of cut points to evaluate. Default is
 \code{seq(0.1, 0.9, by = 0.1)}.}
-
-\item{value}{A string naming the probability column to threshold. Defaults to
-\code{"prob_renorm"}, the figure after the label probabilities have been
-rescaled to sum to 1. That is the question a cut point is usually being
-asked to answer, which is whether documents pile up near the boundary
-between your labels, and it is the quantity everything downstream compares
-against.
-
-\code{"prob"} is the raw probability, so a sweep over it also moves with mass
-the model spent outside your labels. That confounds two things, and a rate
-that shifts under it may be reporting compliance rather than the corpus.
-Use it when the claim is about whether the model committed.}
 }
 \value{
 A tibble with one row per item and threshold, items in instrument
@@ -43,21 +30,22 @@ is a ranking rather than a table and stays widest swing first.
 \item \code{n} counts the documents scored on this item. The same on every row of an
 item, since the cut point changes which documents count as endorsing and
 not how many were asked.
-\item \code{n_endorse} counts the documents whose \code{value} for \code{target} reached the
-cut.
-\item \code{endorse} is \code{n_endorse} over the documents with a \code{value} to cut. A
-document where no label appeared has no \code{prob_renorm}, so under the default
-it leaves this denominator, and \code{endorse} is \code{n_endorse} over \code{n} only when
-no such document exists. That is the split \code{\link[=item_report]{item_report()}} makes between
-\code{endorse_renorm} and \code{endorse}. This is the column to read down, and the
-spread from its smallest to largest value within an item is what the
-message ranks on.
+\item \code{n_endorse} counts the documents whose \code{prob_renorm} for \code{target} reached
+the cut.
+\item \code{endorse} is \code{n_endorse} over the documents with a \code{prob_renorm} to cut. A
+document where no label appeared has none, so it leaves this denominator,
+and \code{endorse} is \code{n_endorse} over \code{n} only when no such document exists.
+\code{\link[=item_report]{item_report()}} treats \code{endorse_renorm} the same way. This is the column to
+read down, and the spread from its smallest to largest value within an item
+is what the message ranks on.
 }
 }
 \description{
 Computes the endorsement rate per item at each cut point, which shows how
 much of an item's rate is a property of the documents and how much is a
-property of where the cut falls.
+property of where the cut falls. \code{pct_extreme_renorm} in \code{\link[=item_report]{item_report()}}
+gives the short answer in one number, since a probability at or beyond 0.01
+and 0.99 sits on the same side of every cut between them.
 }
 \section{More than two labels}{
 

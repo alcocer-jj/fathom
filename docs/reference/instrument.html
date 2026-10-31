@@ -9,7 +9,7 @@ and the instruction that elicits them."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -210,7 +210,7 @@ its own label and so is matched by prefix regardless.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>fathom_instrument</code>, a list. Its print method
 shows the parts usually wanted, and <code><a href="preview.html">preview()</a></code> shows what the model will
-actually receive.</p><div class="section">
+receive, before Ollama applies the model's chat template.</p><div class="section">
 <h3 id="the-instrument">The instrument<a class="anchor" aria-label="anchor" href="#the-instrument"></a></h3>
 
 <ul><li><p><code>items</code> is the named list of questions, one per item, in the order
@@ -299,6 +299,35 @@ instruments store them without putting them in the prompt, since their
 question is yours to write.</p>
     </div>
     <div class="section level2">
+    <h2 id="items-or-one-exclusive-question">Items or one exclusive question<a class="anchor" aria-label="anchor" href="#items-or-one-exclusive-question"></a></h2>
+
+
+<p>An instrument of items asks about each category on its own, so a document
+can carry several categories or none, and each question is answered without
+the others in view. <code>exclusive = TRUE</code> asks one question that lists every
+category, so the categories share one distribution and each document takes
+one of them.</p>
+<p>The exclusive form is the one to use when a document should take exactly
+one category, such as a level on a scale, and whenever the categories are
+defined against each other. Halterman and Keith (2026) found no accuracy
+gain in preliminary experiments from asking about one category at a time,
+and argue that their codebooks need every category in view to separate
+them. A drone strike can meet a codebook's definition of an assassination
+for a model that never sees the drone assassination category beside it.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="twenty-alternatives">Twenty alternatives<a class="anchor" aria-label="anchor" href="#twenty-alternatives"></a></h2>
+
+
+<p>Ollama returns at most the 20 most likely first tokens. A label the model
+does not rank among those 20 on a document scores exactly 0 there, and on
+two labels its partner then scores exactly 1. Every label therefore has to
+be a word the model would plausibly open its answer with, likely enough to
+rank among the 20. An instrument of many labels risks some of them falling
+outside on every document. <code>pct_label_absent</code> in <code><a href="item_report.html">item_report()</a></code> reports the
+share of calls where any label did.</p>
+    </div>
+    <div class="section level2">
     <h2 id="ordinal-labels">Ordinal labels<a class="anchor" aria-label="anchor" href="#ordinal-labels"></a></h2>
 
 
@@ -340,6 +369,12 @@ preview table a reliable picture of what scoring will do.</p>
 <p>The first-character rule is therefore about characters and not bytes. Two
 labels differing only in an accent still collide once folded, and this
 function refuses them. Where a coding scheme forces that collision, <code>exact = TRUE</code> is the escape.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Halterman, A. and Keith, K. A. (2026). Codebook LLMs. Evaluating LLMs as
+measurement tools for political science concepts. <em>Political
+Analysis</em> 34, 188–204. <a href="https://doi.org/10.1017/pan.2025.10017" class="external-link">doi:10.1017/pan.2025.10017</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

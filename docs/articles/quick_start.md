@@ -3,13 +3,13 @@
 The `fathom` package allows R users to qualitatively code and measure a
 corpus of text, images, audio, or video with local large language models
 (LLMs), where every answer comes back as a probability rather than a
-word. This page helps you install the package, confirm that your Ollama
-server is up and running, and configure the additional software tools
-required to evaluate an audio or video corpus.
+word. This page helps you install the package as well as confirm that
+your Ollama server is up and running and configure the additional
+software tools required to evaluate an audio or video corpus.
 
 ## Installation
 
-`fathom` is distributed through R-Universe.
+`fathom` is distributed through R-universe.
 
 \
 [`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(`\
@@ -65,22 +65,23 @@ and their capabilities.
 
 \
 [`ollama_backend`](https://alcocer-jj.github.io/fathom/reference/ollama_backend.md)`(``)`\
+`#>`\
 `#> Models on http://localhost:11434`\
 `#>`\
-`#>   deepseek-llm:7b           4.0 GB   7B Q4_0        text`\
-`#>   deepseek-r1:32b          19.9 GB   32.8B Q4_K_M   text`\
-`#>   deepseek-v2:16b           8.9 GB   15.7B Q4_0     text`\
-`#>   gemma3:27b               17.4 GB   27.4B Q4_K_M   text, image`\
-`#>   gemma4:31b               19.9 GB   31.3B Q4_K_M   text, image`\
-`#>   granite4.1:30b           17.5 GB   28.9B Q4_K_M   text`\
-`#>   ministral-3:14b           9.1 GB   13.9B Q4_K_M   text, image`\
-`#>   mistral-small:24b        14.3 GB   23.6B Q4_K_M   text`\
-`#>   mistral-small3.2:24b     15.2 GB   24.0B Q4_K_M   text, image`\
-`#>   nemotron3:33b            27.6 GB   33.0B Q4_K_M   text, image`\
-`#>   olmo-3:32b               19.5 GB   32.2B Q4_K_M   text`\
-`#>   olmo-3.1:32b-instruct    19.5 GB   32.2B Q4_K_M   text`\
-`#>   qwen3.5:27b              17.4 GB   27.8B Q4_K_M   text, image`\
-`#>   qwen3.6:35b              23.9 GB   36.0B Q4_K_M   text, image`\
+`#>   deepseek-llm:7b          4.0 GB   7B Q4_0        text`\
+`#>   deepseek-r1:32b         19.9 GB   32.8B Q4_K_M   text`\
+`#>   deepseek-v2:16b          8.9 GB   15.7B Q4_0     text`\
+`#>   gemma3:27b              17.4 GB   27.4B Q4_K_M   text, image`\
+`#>   gemma4:31b              19.9 GB   31.3B Q4_K_M   text, image`\
+`#>   granite4.1:30b          17.5 GB   28.9B Q4_K_M   text`\
+`#>   ministral-3:14b          9.1 GB   13.9B Q4_K_M   text, image`\
+`#>   mistral-small:24b       14.3 GB   23.6B Q4_K_M   text`\
+`#>   mistral-small3.2:24b    15.2 GB   24.0B Q4_K_M   text, image`\
+`#>   nemotron3:33b           27.6 GB   33.0B Q4_K_M   text, image`\
+`#>   olmo-3:32b              19.5 GB   32.2B Q4_K_M   text`\
+`#>   olmo-3.1:32b-instruct   19.5 GB   32.2B Q4_K_M   text`\
+`#>   qwen3.5:27b             17.4 GB   27.8B Q4_K_M   text, image`\
+`#>   qwen3.6:35b             23.9 GB   36.0B Q4_K_M   text, image`\
 `#>`\
 `` #> Error: `model` is required. Paste one of the tags above, e.g. ``\
 `#>         ollama_backend("deepseek-llm:7b")`
@@ -236,13 +237,13 @@ Then, in R, confirm your environment can see it, along with
 [`Sys.which`](https://rdrr.io/r/base/Sys.which.html)`(``"whisperx"``)`\
 [`Sys.which`](https://rdrr.io/r/base/Sys.which.html)`(``"ffmpeg"``)`
 
-### HuggingFace read token
+### Hugging Face read token
 
 Both the
 [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
 and
 [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md)
-functions require a HuggingFace (HF) API token when setting
+functions require a Hugging Face (HF) API token when setting
 `diarize_names = TRUE`, as the diarization model the package uses is
 gated. However, transcription, alignment, and voice activity detection
 all run from ungated weights, so only the labeling of speakers requires
@@ -273,7 +274,7 @@ check.
 
 0.  **Prepare a corpus** with
     [`prepare_image()`](https://alcocer-jj.github.io/fathom/reference/prepare_image.md),
-    [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md)
+    [`prepare_audio()`](https://alcocer-jj.github.io/fathom/reference/prepare_audio.md),
     or
     [`prepare_video()`](https://alcocer-jj.github.io/fathom/reference/prepare_video.md).
 1.  **Select a model** with
@@ -299,7 +300,10 @@ check.
 6.  **Test the measurement** with
     [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
     to assess if endorsement rates are sensitive to cut-point
-    thresholds.
+    thresholds, and with
+    [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+    to assess if the answers move with the order the labels are listed
+    in.
 
 For an applied example, see [A complete
 run](https://alcocer-jj.github.io/fathom/articles/complete_run.md).
@@ -319,7 +323,7 @@ run](https://alcocer-jj.github.io/fathom/articles/complete_run.md).
     Installation** steps in this [external
     guide](https://github.com/oop7/ffmpeg-install-guide).
 
-[^4]: Other distributions use their own package manager; see this [guide
+[^4]: Other distributions use their own package manager. See this [guide
     to the other distributions](https://itsfoss.com/ffmpeg/) for more
     information.
 
@@ -329,9 +333,9 @@ run](https://alcocer-jj.github.io/fathom/articles/complete_run.md).
     above.
 
 [^6]: An empty string in your console means R was started without that
-    directory on its `PATH`. `uv tool dir --bin` in a terminal window
-    prints where `uv` put the command; paste that path to `~/.Renviron`,
-    which R reads at startup, as `PATH=${PATH}:/the/directory`.
+    directory on its `PATH`. Running `uv tool dir --bin` in a terminal
+    window prints the path where `uv` put the command. Add the path to
+    `~/.Renviron` as `PATH=${PATH}:/the/directory`.
     [`usethis::edit_r_environ()`](https://usethis.r-lib.org/reference/edit.html)
     in an R session opens the file wherever it lives. Restart R
     afterwards.
@@ -342,27 +346,27 @@ run](https://alcocer-jj.github.io/fathom/articles/complete_run.md).
     command-line window if you already have WinGet from the section
     above. For GPU acceleration, install the [CUDA toolkit
     12.8](https://developer.nvidia.com/cuda-12-8-1-download-archive)
-    before `whisperx`; CPU-only installs skip it.
+    before `whisperx`. CPU-only installs skip it.
 
 [^8]: An empty string in your console means R was started without that
-    directory on its `PATH`. `uv tool dir --bin` in a PowerShell window
-    prints where `uv` put the command; paste that path to `~/.Renviron`,
-    which R reads at startup, as `PATH=${PATH};"C:\the\directory"`.
+    directory on its `PATH`. Running `uv tool dir --bin` in a PowerShell
+    window prints the path where `uv` put the command. Add the path to
+    `~/.Renviron` as `PATH="${PATH};C:\the\directory"`.
     [`usethis::edit_r_environ()`](https://usethis.r-lib.org/reference/edit.html)
     in an R session opens the file wherever it lives. Restart R
     afterwards.
 
 [^9]: `uv` is not in the Debian or Ubuntu repositories, so the
-    standalone installer is the usual route; see their [installation
+    standalone installer is the usual route. See their [installation
     guide](https://docs.astral.sh/uv/getting-started/installation/). For
     GPU acceleration, install the [CUDA toolkit
     12.8](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
-    before `whisperx`; CPU-only installs skip it.
+    before `whisperx`. CPU-only installs skip it.
 
 [^10]: An empty string in your console means R was started without that
-    directory on its `PATH`. `uv tool dir --bin` in a terminal window
-    prints where uv put the command; add it to `~/.Renviron`, which R
-    reads at startup, as `PATH=${PATH}:/the/directory`.
+    directory on its `PATH`. Running `uv tool dir --bin` in a terminal
+    window prints the path where uv put the command. Add the path to
+    `~/.Renviron` as `PATH=${PATH}:/the/directory`.
     [`usethis::edit_r_environ()`](https://usethis.r-lib.org/reference/edit.html)
     in an R session opens the file wherever it lives. Restart R
     afterwards.

@@ -106,8 +106,10 @@ no connection, so it is cheap to build and safe to keep.
 
 - `top_logprobs` says how many alternatives are requested at the answer
   position. Ollama caps this at 20. A label whose token falls outside
-  the returned set is scored as absent, so `prob` is a lower bound and
-  `prob_other` absorbs the difference.
+  the returned set is scored as absent, with a `prob_renorm` of exactly
+  0, so `prob_other` absorbs its mass, and
+  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  reports how often that happened as `pct_label_absent`.
 
 - `think` is always `FALSE`, and not an argument. Reasoning is disabled
   on every call, because scoring reads generated position 1 and a model

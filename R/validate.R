@@ -229,7 +229,7 @@ validate_sample <- function(
   seed = 1234L
 ) {
   no_dots(..., .fn = "validate_sample")
-  results <- flat_results(results, c("error", "top1_prob"))
+  results <- flat_results(results, "error")
   metric <- match.arg(level)
   ci <- match.arg(ci)
   check_conf_level(conf_level)
@@ -256,19 +256,7 @@ validate_sample <- function(
       call = match.call()
     ))
   }
-  if (
-    !is.numeric(bootstrap_n) || length(bootstrap_n) != 1L || bootstrap_n < 100
-  ) {
-    stop(
-      fmt_err(paste0(
-        "`bootstrap_n` must be a single number of at least 100. A percentile ",
-        "interval reads the tails of the resampled distribution, and below a ",
-        "hundred replicates the tail is a handful of draws."
-      )),
-      call. = FALSE
-    )
-  }
-  bootstrap_n <- as.integer(bootstrap_n)
+  bootstrap_n <- check_bootstrap_n(bootstrap_n)
   if (is.character(sheet) && length(sheet) == 1L) {
     sheet <- read_sheet(sheet)
   }
@@ -430,7 +418,7 @@ validate_sample <- function(
   }
 
   # The probabilities live on the results, never on the sheet.
-  scored <- results[results$call_ok, , drop = FALSE]
+  scored <- results[is.na(results$error), , drop = FALSE]
   keys <- c("id", "item")
   sheet$id <- as.character(sheet$id)
   scored$id <- as.character(scored$id)
@@ -489,7 +477,7 @@ validate_sample <- function(
   # aside, the way coding_sample() never draws one and item_report() leaves
   # such a document out of its renormalized figures.
   winner <- winning_rows(scored) %>%
-    dplyr::select(dplyr::all_of(c(keys, "label", "top1_prob"))) %>%
+    dplyr::select(dplyr::all_of(c(keys, "label"))) %>%
     dplyr::rename(model_label = "label")
   unanswered <- sheet %>%
     dplyr::semi_join(scored, by = keys) %>%

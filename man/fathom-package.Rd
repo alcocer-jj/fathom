@@ -29,6 +29,8 @@ Other contributors:
 \itemize{
   \item Ewon Baik \email{ebaik@usc.edu} (\href{https://orcid.org/0000-0002-4811-9401}{ORCID}) [contributor]
   \item Karen Borglund \email{borglund@usc.edu} [contributor]
+  \item Rachel Chavez \email{rachel.chavez@austin.utexas.edu} [contributor]
+  \item Bailey Inglish \email{bei246@my.utexas.edu} [contributor]
   \item Alain S. Muñoz \email{santiago.mc1106@gmail.com} [contributor]
   \item Sandra S. Muñoz \email{saandramc2@gmail.com} [contributor]
 }

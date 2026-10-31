@@ -114,16 +114,11 @@ a character vector.
 \itemize{
 \item \code{label} is the label this row scores, in the order the instrument declares
 them.
-\item \code{prob_renorm} is \code{prob} rescaled so the labels sum to 1. The measure. \code{NA}
-when no label appeared at all, since there is nothing to condition on.
-\item \code{prob} is the raw probability, against every token the model could have
-written. Does not sum to 1 down the labels.
-\item \code{present} says whether any token counting as this label appeared in the
-returned distribution. A \code{prob} of zero means the label was measured at
-zero when this is \code{TRUE}, and fell below \code{top_logprobs} when it is \code{FALSE}.
-\item \code{call_ok} is \code{FALSE} when the call failed. One fact per call, kept here
-rather than only in \verb{$calls} because it guards almost every filter over
-these rows.
+\item \code{prob_renorm} is the probability of this label rescaled so the labels sum
+to 1. The measure. \code{NA} when no label appeared at all, since there is
+nothing to condition on, and exactly 0 for a label that fell outside the
+\code{top_logprobs} alternatives. The raw probability, against every token the
+model could have written, is \code{prob_renorm * (1 - prob_other)}.
 }
 }
 
@@ -132,18 +127,15 @@ these rows.
 Anything named in \code{keep} rides here too, since a carried column describes the
 document rather than any one label.
 \itemize{
-\item \code{error} is the message when the call failed, otherwise \code{NA}. Non-\code{NA}
-exactly when \code{call_ok} is \code{FALSE}.
+\item \code{error} is the message when the call failed, otherwise \code{NA}, so a call
+succeeded exactly when \code{error} is \code{NA}.
 \item \code{truncated} is \code{TRUE} when the prompt came within 64 tokens of \code{num_ctx},
 so the document may have lost its opening.
 \item \code{top1_token} is the token the model actually generated, whether or not it
 counts as a label.
-\item \code{top1_prob} is the probability of that token. When it is not a label, this
-is the only record of how much mass the winning non-label held.
 \item \code{prob_other} is the mass on tokens counting as no label. The diagnostic
-that says whether the question landed.
-\item \code{all_absent} is \code{TRUE} when no label appeared anywhere in the returned
-distribution.
+that says whether the question landed. It is exactly 1 when no label
+appeared anywhere in the returned distribution.
 \item \code{margin} is the gap between the top two \code{prob_renorm} values. What
 \code{\link[=inspect_cases]{inspect_cases()}} sorts on to find the closest calls above two labels.
 \item \code{expected_score} is \code{prob_renorm} weighted by the instrument's \code{scores}.
@@ -206,9 +198,31 @@ Passing an integer once the corpus is known skips it.
 
 \section{Retrying failures}{
 
-A failed item is stored with \code{call_ok = FALSE} and is therefore stale on the
-next pass, so re-running retries exactly those. There is no separate retry
+A failed item is stored with its reason in \code{error} and is therefore stale on
+the next pass, so re-running retries exactly those. There is no separate retry
 sweep, which would run against a cold cache.
+}
+
+\section{When the check before the first document fails}{
+
+Before any document, \code{measure()} sends one prompt built from your instrument
+and the corpus document nearest the median word count, or a built-in
+question when the corpus has no text. Among other checks, the run starts
+only if the first generated token is one of your labels. When it is not,
+nothing is measured and the message names the token the model opened with.
+
+Three causes are known. The cue may not name the labels clearly enough,
+which \code{\link[=preview]{preview()}} shows. The chat template may open a reasoning block
+although reasoning is off on every call, which is a property of the model's
+template rather than of your instrument. Or the model may open with prose, a
+word such as \code{The} or \code{Okay} before its answer.
+
+Worked examples in the question, each a short document followed by its
+one-word answer, are the known fix for prose. Without them Qwen3.8-27B
+answered 941 of 945 tweets in full sentences in Denney and DiGiuseppe's
+(2026) replication of a tweet-sentiment study, and with them its answers
+could be scored. Examples become part of the instrument, so validate and
+audit the instrument that carries them.
 }
 
 \section{Character input}{
@@ -239,6 +253,10 @@ res <- measure(parlasent, instrument = b, backend = oll, text = "sentence",
   id = "id")
 res$probs
 }
+}
+\references{
+Denney, S. and DiGiuseppe, M. (2026). JEV versus LLMs. Accuracy, cost and
+calibration on seven political science replications. arXiv:2610.06625.
 }
 \seealso{
 \code{\link[=ollama_backend]{ollama_backend()}} and \code{\link[=instrument]{instrument()}} for its two inputs,

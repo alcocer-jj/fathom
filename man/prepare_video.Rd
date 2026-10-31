@@ -85,7 +85,7 @@ exactly as on a recording handed to it directly.}
 \item{language}{A string giving the spoken language, detected per file when
 \code{NULL} (the default).}
 
-\item{hf_token}{A string giving a HuggingFace read token, required when
+\item{hf_token}{A string giving a Hugging Face read token, required when
 \code{diarize_names} is on. Default is \code{NULL}.}
 
 \item{extra}{A character vector of further flags for the recognizer, passed

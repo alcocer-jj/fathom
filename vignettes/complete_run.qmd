@@ -13,23 +13,13 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
 library(dplyr)
 library(fathom)
 library(pander)
 
 p <- system.file("extdata", "vignette_results.rds", package = "fathom")
-if (!nzchar(p)) {
-  stop("baked results not found. Run bake_results.R, then devtools::install().")
-}
 baked <- readRDS(p)
-need <- c("res_six")
-missing <- setdiff(need, names(baked))
-if (length(missing)) {
-  stop(
-    "vignette_results.rds is missing ", paste(missing, collapse = ", "),
-    ". Re-run data-raw/bake_results.R and reinstall."
-  )
-}
 ```
 
 This article provides an example of how to run the whole `fathom` package pipeline. The [**Quick start**](quick_start.html) page covers package installation and Ollama setup.
@@ -43,10 +33,11 @@ The pipeline uses a dataset available in the package (`parlasent`) of one hundre
 3. **Extract response probabilities** with `measure()`.
 4. **Read the results** with `item_report()` for descriptive summaries, use `inspect_cases()` to manually validate some entries, and apply `as_wide()` to hand off for downstream analyses.
 5. **Validate the LLM results** with `coding_sample()` and `validate_sample()`.
+6. **Test the measurement** with `order_sensitivity()` to check whether the order of the labels drove the answers.
 
 ## The corpus
 
-`parlasent` contains data on two annotators who coded every parliamentary sentence independently based on a six-level ordered scale. In addition, it contains a reconciliation column resulting from those two. `annotator1` and `annotator2` are the two codings, `reconciliation` is what they settled on.
+`parlasent` contains data on two annotators who coded every parliamentary sentence independently based on a six-level ordered scale. In addition, it contains a reconciliation column resulting from those two. `annotator1` and `annotator2` are the two codings, and `reconciliation` is what they settled on.
 
 ```{r data}
 library(dplyr)
@@ -59,7 +50,7 @@ parlasent %>% select(id, sentence, annotator1, annotator2, reconciliation)
 levels(parlasent$reconciliation)
 ```
 
-The `Positive` and `Negative` labels are used for sentences that emit these emotions entirely or predominantly. The `M_Positive` and `M_Negative` labels are used for sentences that emit these emotions in a mixed or leaning manner. The `P_Neutral` and `N_Neutral` labels carry no sentiment and differ only in which way they tilt. Overall, the sample of 100 documents holds around sixteen or seventeen of each.
+The `Positive` and `Negative` labels are used for sentences that emit these emotions entirely or predominantly. The `M_Positive` and `M_Negative` labels are used for sentences that emit these emotions in an ambiguous or mixed manner. The `P_Neutral` and `N_Neutral` labels carry no sentiment and differ only in which way they tilt. Overall, the sample of 100 documents holds around sixteen or seventeen of each.
 
 ## Step 1. Select a model
 
@@ -103,7 +94,7 @@ The `items` argument holds the question that the local LLM reads exactly as writ
 
 ### Previewing the model call
 
-The `preview()` function prints what the local LLM would receive without executing the call.^[`preview()` cosmetically trims the document at `truncate`, 300 characters by default, and marks where it cut. The actual run does not truncate the text.]
+The `preview()` function prints what the local LLM would receive without executing the call, which is everything in between the dashed lines.^[`preview()` cosmetically trims the document at `truncate`, 300 characters by default, and marks where it cut. The actual run does not truncate the text.]
 
 ```{r preview}
 preview(b, text = parlasent$sentence[1])
@@ -111,7 +102,7 @@ preview(b, text = parlasent$sentence[1])
 
 ## Step 3. Extract response probabilities
 
-As in the `preview()` function, the `measure()` function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured in Step 1. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.
+Using the same prompt as the `preview()` function, the `measure()` function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured in Step 1. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.
 
 ```{r run, eval=FALSE}
 res <- measure(
@@ -149,7 +140,7 @@ Before the very first call, `measure()` by default establishes the context windo
 
 The results object holds two data frames.
 
-- `$probs` is one row per document, item and label, and contains the results themselves, the probability that the local LLM assigned to each label of each document-question pair.
+- `$probs` is one row per document, item, and label, and contains the results themselves, the probability that the local LLM assigned to each label of each document-question pair.
 
 - `$calls` is one row per document and item, and contains call-level information for checking the run, along with any columns `keep` carried through.
 
@@ -159,7 +150,7 @@ The results object holds two data frames.
 pander(head(res$probs), n = 6)
 ```
 
-Here, the `prob_renorm` and `prob` columns convey the probabilities that the local LLM assigned to a label. However, `prob_renorm` is renormalized to the codebook instrument's label set, making it the main measure of interest.
+Here, the `prob_renorm` column conveys the probability that the local LLM assigned to a label, renormalized to the codebook instrument's label set, making it the main measure of interest.
 
 ### Calls (`$calls`)
 
@@ -173,7 +164,7 @@ For further information, the documentation page for `measure()` outlines every c
 
 ### Summarizing the results by question and label
 
-The `item_report()` function summarizes the run `measure()` produced. On a forced choice codebook instrument it returns one row per category and prints a header above the table.
+The `item_report()` function summarizes the run `measure()` produced. On a forced-choice codebook instrument it returns one row per category and prints a header above the table.
 
 ```{r report}
 item_report(res)
@@ -181,7 +172,7 @@ item_report(res)
 
 Here, the `n_won` column counts the number of documents where each label had the highest probability, whereas the `share_won` column expresses it as a proportion of the documents scored.
 
-The console also outputs two diagnostics, *Leaked mass* and *Winning*. Leaked mass depicts the max and mean probability mass that landed on no category at all, while *Winning* depicts the lowest probability that any winning category received, conveying the floor of the local LLM's confidence.
+The last three columns describe each question's calls rather than any one category, so they repeat down its rows. The `pct_label_absent` column is the share of documents where at least one category fell outside the alternatives the local LLM returned, the `mean_prob_other` column is the average probability mass that landed on no category at all, and the `pct_off_label` column is the share of documents where the first token the local LLM generated was not a category.
 
 ### Inspecting question-document pairs
 
@@ -227,7 +218,7 @@ sheet <- coding_sample(
 pander(head(sheet, n = 2), split.table = Inf)
 ```
 
-Here, each row of the sample sheet pairs a corpus document with one of the codebook instrument's questions, named in the `item` column and written out with its label definitions in the `question` column. Since this coding instrument asks a single question, every row carries the same question and each pair is simply a document. However, on a coding instrument of several questions, a document appears once per question and `n` counts pairs either way. The `human_label` column is left blank for human coders to fill in using the labels that the `allowed` column lists.
+Here, each row of the sample sheet pairs a corpus document with one of the codebook instrument's questions, named in the `item` column and written out with its label definitions in the `question` column. Since this coding instrument asks a single question, every row carries the same question and each pair is simply a document. However, on a coding instrument of several questions, a document appears once per question it was drawn on and `n` counts pairs either way. The `human_label` column is left blank for human coders to fill in using the labels that the `allowed` column lists.
 
 ```{r fill-hidden, echo=FALSE}
 labels <- c(
@@ -280,9 +271,45 @@ The `v$ceiling$pairs` table establishes a ceiling between the two coders on the 
 pander(v$gap, split.table = Inf)
 ```
 
-The `v$gap` table compares the model with the ceiling the coders set, with one row per question. The `model_alpha` column is the model's average alpha with each of the coders, while the `coder_alpha` column is the coders' average alpha with each other, which with two coders is simply their one pairwise alpha. The `gap` column subtracts the second from the first, so it reads in the same units as alpha (see `v$discrimination` table for individual level comparisons between the model and each coder). A gap value below zero would indicate that the model on average disagrees with the coders more than they on average disagree with each other. Conversely, a gap value above zero would indicate that the model had a higher average agreement with the coders than the coders had with each other. The `gap_ci` column holds a percentile confidence interval around the gap (default of 95 percent), built from an empirical bootstrap. Here, the local LLM's average alpha of `r round(v$gap$model_alpha[1], 3)` against the human coders' average alpha of `r round(v$gap$coder_alpha[1], 3)` has a gap of `r round(v$gap$gap[1], 3)` with an interval of `r v$gap$gap_ci[1]`. Both alpha values sitting at or near Krippendorff's 0.80 threshold along with its gap interval crossing zero suggest that the local LLM's judgment matched the annotators' about as closely as their judgments match each other, further suggesting that the LLM's coding can serve as a viable alternative to human coders for this corpus.
+The `v$gap` table compares the model with the ceiling the coders set, with one row per question. The `model_alpha` column is the model's average alpha with each of the coders, while the `coder_alpha` column is the coders' average alpha with each other, which with two coders is simply their one pairwise alpha. The `gap` column subtracts the second from the first, so it reads in the same units as alpha (see the `v$discrimination` table for individual-level comparisons between the model and each coder). A gap value below zero would indicate that the model on average disagrees with the coders more than they on average disagree with each other. Conversely, a gap value above zero would indicate that the model had a higher average agreement with the coders than the coders had with each other. The `gap_ci` column holds a percentile confidence interval around the gap (default of 95 percent), built from a nonparametric bootstrap. Here, the local LLM's average alpha of `r round(v$gap$model_alpha[1], 3)` against the human coders' average alpha of `r round(v$gap$coder_alpha[1], 3)` has a gap of `r round(v$gap$gap[1], 3)` with an interval of `r v$gap$gap_ci[1]`. Both alpha values sitting at or near Krippendorff's 0.80 threshold along with its gap interval crossing zero suggest that the local LLM's judgment matched the annotators' about as closely as their judgments matched each other, further suggesting that the LLM's coding can serve as a viable alternative to human coders for this corpus.
+
+## Step 6. Test the measurement
+
+LLM classification responses have been shown to be sensitive to label ordering (e.g., Halterman and Keith 2026). To assess label order sensitivity, the `order_sensitivity()` function runs `measure()` again (holding the original run's parameters constant) on every document with the labels listed in reverse. When a codebook instrument uses three or more labels (such as this case), the function also runs `measure()` with the labels shuffled. These two runs are then compared with the original run.
+
+```{r order, eval=FALSE}
+ord <- order_sensitivity(
+  res,                         # model results
+  parlasent,                   # data frame containing corpus
+  text   = "sentence",         # corpus documents
+  id     = "id",               # document ids
+  level  = "ordinal",          # weight disagreements by distance
+  labels = as.character(1:6),  # the scale, least to greatest
+  seed   = 444                 # fixed seed
+)
+```
+
+```{r order-hidden, echo=FALSE}
+ord <- baked$order_six
+reversed <- ord[ord$order == "reversed", ]
+shuffled <- ord[ord$order == "shuffled", ]
+```
+
+```{r order-table}
+pander(ord, split.table = Inf)
+
+attr(ord, "orders")
+```
+
+Here, each row compares a reordering method model run with the original order model run on the same documents.
+Like with the `v$ceiling$pairs` table, the `agreement` column denotes the proportion of documents where both model runs wrote the same label, while the `alpha` column corresponds to the Krippendorff’s alpha between both model runs.
+Under both methods of reordering, the model's share of agreement and high alpha scores suggest the model was still labeling documents similarly, suggesting that the main results are stable and consistent.
 
 ## References
+
+Halterman, A., & Keith, K. A. (2026).
+Codebook LLMs: Evaluating LLMs as Measurement Tools for Political Science Concepts.
+*Political Analysis*, 34(2), 188–204. <https://doi.org/10.1017/pan.2025.10017>
 
 Krippendorff, K. (2019).
 *Content Analysis: An Introduction to Its Methodology* (4th ed.).

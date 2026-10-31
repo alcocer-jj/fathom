@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,13 +82,14 @@
 <p>The <code>fathom</code> package allows R users to qualitatively code
 and measure a corpus of text, images, audio, or video with local large
 language models (LLMs), where every answer comes back as a probability
-rather than a word. This page helps you install the package, confirm
-that your Ollama server is up and running, and configure the additional
-software tools required to evaluate an audio or video corpus.</p>
+rather than a word. This page helps you install the package as well as
+confirm that your Ollama server is up and running and configure the
+additional software tools required to evaluate an audio or video
+corpus.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p><code>fathom</code> is distributed through R-Universe.</p>
+<p><code>fathom</code> is distributed through R-universe.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
 <span>  <span class="st">"fathom"</span>,</span>
@@ -225,22 +226,23 @@ model is there. If called without a model name, the function lists the
 models you have installed and their capabilities.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ollama_backend.html">ollama_backend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; Models on http://localhost:11434</span></span>
 <span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt;   deepseek-llm:7b           4.0 GB   7B Q4_0        text</span></span>
-<span><span class="co">#&gt;   deepseek-r1:32b          19.9 GB   32.8B Q4_K_M   text</span></span>
-<span><span class="co">#&gt;   deepseek-v2:16b           8.9 GB   15.7B Q4_0     text</span></span>
-<span><span class="co">#&gt;   gemma3:27b               17.4 GB   27.4B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   gemma4:31b               19.9 GB   31.3B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   granite4.1:30b           17.5 GB   28.9B Q4_K_M   text</span></span>
-<span><span class="co">#&gt;   ministral-3:14b           9.1 GB   13.9B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   mistral-small:24b        14.3 GB   23.6B Q4_K_M   text</span></span>
-<span><span class="co">#&gt;   mistral-small3.2:24b     15.2 GB   24.0B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   nemotron3:33b            27.6 GB   33.0B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   olmo-3:32b               19.5 GB   32.2B Q4_K_M   text</span></span>
-<span><span class="co">#&gt;   olmo-3.1:32b-instruct    19.5 GB   32.2B Q4_K_M   text</span></span>
-<span><span class="co">#&gt;   qwen3.5:27b              17.4 GB   27.8B Q4_K_M   text, image</span></span>
-<span><span class="co">#&gt;   qwen3.6:35b              23.9 GB   36.0B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   deepseek-llm:7b          4.0 GB   7B Q4_0        text</span></span>
+<span><span class="co">#&gt;   deepseek-r1:32b         19.9 GB   32.8B Q4_K_M   text</span></span>
+<span><span class="co">#&gt;   deepseek-v2:16b          8.9 GB   15.7B Q4_0     text</span></span>
+<span><span class="co">#&gt;   gemma3:27b              17.4 GB   27.4B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   gemma4:31b              19.9 GB   31.3B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   granite4.1:30b          17.5 GB   28.9B Q4_K_M   text</span></span>
+<span><span class="co">#&gt;   ministral-3:14b          9.1 GB   13.9B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   mistral-small:24b       14.3 GB   23.6B Q4_K_M   text</span></span>
+<span><span class="co">#&gt;   mistral-small3.2:24b    15.2 GB   24.0B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   nemotron3:33b           27.6 GB   33.0B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   olmo-3:32b              19.5 GB   32.2B Q4_K_M   text</span></span>
+<span><span class="co">#&gt;   olmo-3.1:32b-instruct   19.5 GB   32.2B Q4_K_M   text</span></span>
+<span><span class="co">#&gt;   qwen3.5:27b             17.4 GB   27.8B Q4_K_M   text, image</span></span>
+<span><span class="co">#&gt;   qwen3.6:35b             23.9 GB   36.0B Q4_K_M   text, image</span></span>
 <span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; Error: `model` is required. Paste one of the tags above, e.g.</span></span>
 <span><span class="co">#&gt;         ollama_backend("deepseek-llm:7b")</span></span></code></pre></div>
@@ -295,7 +297,7 @@ worked.</p>
 <div class="tab-pane" id="linux" role="tabpanel" aria-labelledby="linux-tab">
 
 <p><code>ffmpeg</code> can be installed via <a href="https://wiki.debian.org/Apt" class="external-link">APT</a>, the command-line package
-manager that Debian and Ubuntu ship with.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Other distributions use their own package manager; see
+manager that Debian and Ubuntu ship with.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Other distributions use their own package manager. See
 this &lt;a href="https://itsfoss.com/ffmpeg/" class="external-link"&gt;guide to the other
 distributions&lt;/a&gt; for more information.&lt;/p&gt;'><sup>4</sup></a></p>
 <p>Run this in a terminal window.</p>
@@ -336,11 +338,10 @@ Homebrew from the section above.&lt;/p&gt;'><sup>5</sup></a></p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode zsh"><code class="sourceCode zsh"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="ex">whisperx</span> <span class="at">--version</span> <span class="co"># or swap with whispermlx</span></span></code></pre></div>
 <p>Then, in R, confirm your environment can see it, along with
 <code>ffmpeg</code>.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;An empty string in your console means R was started
-without that directory on its &lt;code&gt;PATH&lt;/code&gt;.
-&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a terminal window prints where
-&lt;code&gt;uv&lt;/code&gt; put the command; paste that path to
-&lt;code&gt;~/.Renviron&lt;/code&gt;, which R reads at startup, as
-&lt;code&gt;PATH=${PATH}:/the/directory&lt;/code&gt;.
+without that directory on its &lt;code&gt;PATH&lt;/code&gt;. Running
+&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a terminal window prints the path
+where &lt;code&gt;uv&lt;/code&gt; put the command. Add the path to
+&lt;code&gt;~/.Renviron&lt;/code&gt; as &lt;code&gt;PATH=${PATH}:/the/directory&lt;/code&gt;.
 &lt;code&gt;&lt;a href="https://usethis.r-lib.org/reference/edit.html" class="external-link"&gt;usethis::edit_r_environ()&lt;/a&gt;&lt;/code&gt; in an R session opens the file
 wherever it lives. Restart R afterwards.&lt;/p&gt;'><sup>6</sup></a></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -354,7 +355,7 @@ installs Python command-line tools into isolated environments.<a class="footnote
 guide&lt;/a&gt;, or run &lt;code&gt;winget install --id=astral-sh.uv -e&lt;/code&gt; and
 restart the command-line window if you already have WinGet from the
 section above. For GPU acceleration, install the &lt;a href="https://developer.nvidia.com/cuda-12-8-1-download-archive" class="external-link"&gt;CUDA
-toolkit 12.8&lt;/a&gt; before &lt;code&gt;whisperx&lt;/code&gt;; CPU-only installs skip
+toolkit 12.8&lt;/a&gt; before &lt;code&gt;whisperx&lt;/code&gt;. CPU-only installs skip
 it.&lt;/p&gt;'><sup>7</sup></a></p>
 <p>Run this in a PowerShell window.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>uv tool install whisperx</span></code></pre></div>
@@ -362,11 +363,11 @@ it.&lt;/p&gt;'><sup>7</sup></a></p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>whisperx <span class="op">--</span>version</span></code></pre></div>
 <p>Then, in R, confirm your environment can see it, along with
 <code>ffmpeg</code>.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;An empty string in your console means R was started
-without that directory on its &lt;code&gt;PATH&lt;/code&gt;.
-&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a PowerShell window prints where
-&lt;code&gt;uv&lt;/code&gt; put the command; paste that path to
-&lt;code&gt;~/.Renviron&lt;/code&gt;, which R reads at startup, as
-&lt;code&gt;PATH=${PATH};"C:\the\directory"&lt;/code&gt;.
+without that directory on its &lt;code&gt;PATH&lt;/code&gt;. Running
+&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a PowerShell window prints the path
+where &lt;code&gt;uv&lt;/code&gt; put the command. Add the path to
+&lt;code&gt;~/.Renviron&lt;/code&gt; as
+&lt;code&gt;PATH="${PATH};C:\the\directory"&lt;/code&gt;.
 &lt;code&gt;&lt;a href="https://usethis.r-lib.org/reference/edit.html" class="external-link"&gt;usethis::edit_r_environ()&lt;/a&gt;&lt;/code&gt; in an R session opens the file
 wherever it lives. Restart R afterwards.&lt;/p&gt;'><sup>8</sup></a></p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
@@ -377,10 +378,10 @@ wherever it lives. Restart R afterwards.&lt;/p&gt;'><sup>8</sup></a></p>
 
 <p><code>whisperx</code> can be installed via <a href="https://docs.astral.sh/uv/" class="external-link">uv</a>, a package manager that
 installs Python command-line tools into isolated environments.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;&lt;code&gt;uv&lt;/code&gt; is not in the Debian or Ubuntu
-repositories, so the standalone installer is the usual route; see their
+repositories, so the standalone installer is the usual route. See their
 &lt;a href="https://docs.astral.sh/uv/getting-started/installation/" class="external-link"&gt;installation
 guide&lt;/a&gt;. For GPU acceleration, install the &lt;a href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/" class="external-link"&gt;CUDA
-toolkit 12.8&lt;/a&gt; before &lt;code&gt;whisperx&lt;/code&gt;; CPU-only installs skip
+toolkit 12.8&lt;/a&gt; before &lt;code&gt;whisperx&lt;/code&gt;. CPU-only installs skip
 it.&lt;/p&gt;'><sup>9</sup></a></p>
 <p>Run this in a terminal window.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="ex">uv</span> tool install whisperx</span></code></pre></div>
@@ -388,10 +389,10 @@ it.&lt;/p&gt;'><sup>9</sup></a></p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="ex">whisperx</span> <span class="at">--version</span></span></code></pre></div>
 <p>Then, in R, confirm your environment can see it, along with
 <code>ffmpeg</code>.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;An empty string in your console means R was started
-without that directory on its &lt;code&gt;PATH&lt;/code&gt;.
-&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a terminal window prints where uv put
-the command; add it to &lt;code&gt;~/.Renviron&lt;/code&gt;, which R reads at
-startup, as &lt;code&gt;PATH=${PATH}:/the/directory&lt;/code&gt;.
+without that directory on its &lt;code&gt;PATH&lt;/code&gt;. Running
+&lt;code&gt;uv tool dir --bin&lt;/code&gt; in a terminal window prints the path
+where uv put the command. Add the path to &lt;code&gt;~/.Renviron&lt;/code&gt; as
+&lt;code&gt;PATH=${PATH}:/the/directory&lt;/code&gt;.
 &lt;code&gt;&lt;a href="https://usethis.r-lib.org/reference/edit.html" class="external-link"&gt;usethis::edit_r_environ()&lt;/a&gt;&lt;/code&gt; in an R session opens the file
 wherever it lives. Restart R afterwards.&lt;/p&gt;'><sup>10</sup></a></p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -401,10 +402,10 @@ wherever it lives. Restart R afterwards.&lt;/p&gt;'><sup>10</sup></a></p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="huggingface-read-token">HuggingFace read token<a class="anchor" aria-label="anchor" href="#huggingface-read-token"></a>
+<h3 id="hugging-face-read-token">Hugging Face read token<a class="anchor" aria-label="anchor" href="#hugging-face-read-token"></a>
 </h3>
 <p>Both the <code><a href="../reference/prepare_audio.html">prepare_audio()</a></code> and
-<code><a href="../reference/prepare_video.html">prepare_video()</a></code> functions require a HuggingFace (HF) API
+<code><a href="../reference/prepare_video.html">prepare_video()</a></code> functions require a Hugging Face (HF) API
 token when setting <code>diarize_names = TRUE</code>, as the diarization
 model the package uses is gated. However, transcription, alignment, and
 voice activity detection all run from ungated weights, so only the
@@ -431,7 +432,7 @@ diagnostic check.</p>
 <ol start="0" style="list-style-type: decimal">
 <li>
 <strong>Prepare a corpus</strong> with <code><a href="../reference/prepare_image.html">prepare_image()</a></code>,
-<code><a href="../reference/prepare_audio.html">prepare_audio()</a></code> or <code><a href="../reference/prepare_video.html">prepare_video()</a></code>.</li>
+<code><a href="../reference/prepare_audio.html">prepare_audio()</a></code>, or <code><a href="../reference/prepare_video.html">prepare_video()</a></code>.</li>
 <li>
 <strong>Select a model</strong> with
 <code><a href="../reference/ollama_backend.html">ollama_backend()</a></code>.</li>
@@ -453,7 +454,9 @@ downstream analyses.</li>
 <li>
 <strong>Test the measurement</strong> with
 <code><a href="../reference/threshold_sensitivity.html">threshold_sensitivity()</a></code> to assess if endorsement rates are
-sensitive to cut-point thresholds.</li>
+sensitive to cut-point thresholds, and with
+<code><a href="../reference/order_sensitivity.html">order_sensitivity()</a></code> to assess if the answers move with the
+order the labels are listed in.</li>
 </ol>
 <p>For an applied example, see <a href="complete_run.html">A complete
 run</a>.</p>

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,9 +97,11 @@
 <strong>Read the results</strong> with <code><a href="../reference/item_report.html">item_report()</a></code> for descriptive summaries, use <code><a href="../reference/inspect_cases.html">inspect_cases()</a></code> to manually validate some entries, and apply <code><a href="../reference/as_wide.html">as_wide()</a></code> to hand off for downstream analyses.</li>
 <li>
 <strong>Validate the LLM results</strong> with <code><a href="../reference/coding_sample.html">coding_sample()</a></code> and <code><a href="../reference/validate_sample.html">validate_sample()</a></code>.</li>
+<li>
+<strong>Test the measurement</strong> with <code><a href="../reference/order_sensitivity.html">order_sensitivity()</a></code> to check whether the order of the labels drove the answers.</li>
 </ol></section><section class="level2"><h2 id="the-corpus">The corpus<a class="anchor" aria-label="anchor" href="#the-corpus"></a>
 </h2>
-<p><code>parlasent</code> contains data on two annotators who coded every parliamentary sentence independently based on a six-level ordered scale. In addition, it contains a reconciliation column resulting from those two. <code>annotator1</code> and <code>annotator2</code> are the two codings, <code>reconciliation</code> is what they settled on.</p>
+<p><code>parlasent</code> contains data on two annotators who coded every parliamentary sentence independently based on a six-level ordered scale. In addition, it contains a reconciliation column resulting from those two. <code>annotator1</code> and <code>annotator2</code> are the two codings, and <code>reconciliation</code> is what they settled on.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
@@ -127,7 +129,7 @@
 <span><span class="co">#&gt; [1] "Negative"   "M_Negative" "N_Neutral"  "P_Neutral"  "M_Positive"</span></span>
 <span><span class="co">#&gt; [6] "Positive"</span></span></code></pre></div>
 </div>
-<p>The <code>Positive</code> and <code>Negative</code> labels are used for sentences that emit these emotions entirely or predominantly. The <code>M_Positive</code> and <code>M_Negative</code> labels are used for sentences that emit these emotions in a mixed or leaning manner. The <code>P_Neutral</code> and <code>N_Neutral</code> labels carry no sentiment and differ only in which way they tilt. Overall, the sample of 100 documents holds around sixteen or seventeen of each.</p>
+<p>The <code>Positive</code> and <code>Negative</code> labels are used for sentences that emit these emotions entirely or predominantly. The <code>M_Positive</code> and <code>M_Negative</code> labels are used for sentences that emit these emotions in an ambiguous or mixed manner. The <code>P_Neutral</code> and <code>N_Neutral</code> labels carry no sentiment and differ only in which way they tilt. Overall, the sample of 100 documents holds around sixteen or seventeen of each.</p>
 </section><section class="level2"><h2 id="step-1--select-a-model">Step 1. Select a model<a class="anchor" aria-label="anchor" href="#step-1--select-a-model"></a>
 </h2>
 <p>The <code><a href="../reference/ollama_backend.html">ollama_backend()</a></code> function accepts an existing local model name and returns an object holding the settings that every model call will use.</p>
@@ -180,7 +182,7 @@
 <p>The <code>items</code> argument holds the question that the local LLM reads exactly as written. The <code>labels</code> argument holds the one-word labels that the local LLM is instructed to answer with. Because scoring reads a single token, the labels chosen must have differing first characters. Given that the actual scheme’s own names do not meet this requirement (e.g., <code>Negative</code> and <code>N_Neutral</code> both start with N), the codebook uses numerals instead. The <code>definitions</code> argument holds the definitions of the labels that the local LLM reads in tandem with the question. Setting <code>exclusive = TRUE</code> places every category in one question, causing their probabilities to share a single distribution.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;When &lt;code&gt;exclusive = TRUE&lt;/code&gt;, the &lt;code&gt;items&lt;/code&gt; argument must be a single string, and passing more than one is refused. That question is named &lt;em&gt;category&lt;/em&gt;, which is the name that appears in the results and in every table below.&lt;/p&gt;"><sup>1</sup></a> The other mechanism is independent binary items, which ask one question per category. The article <a href="example_ati.html">What Mexicans ask their government for</a> shows that kind of example.</p>
 <section class="level3"><h3 id="previewing-the-model-call">Previewing the model call<a class="anchor" aria-label="anchor" href="#previewing-the-model-call"></a>
 </h3>
-<p>The <code><a href="../reference/preview.html">preview()</a></code> function prints what the local LLM would receive without executing the call.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;&lt;code&gt;&lt;a href="../reference/preview.html"&gt;preview()&lt;/a&gt;&lt;/code&gt; cosmetically trims the document at &lt;code&gt;truncate&lt;/code&gt;, 300 characters by default, and marks where it cut. The actual run does not truncate the text.&lt;/p&gt;'><sup>2</sup></a></p>
+<p>The <code><a href="../reference/preview.html">preview()</a></code> function prints what the local LLM would receive without executing the call, which is everything in between the dashed lines.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;&lt;code&gt;&lt;a href="../reference/preview.html"&gt;preview()&lt;/a&gt;&lt;/code&gt; cosmetically trims the document at &lt;code&gt;truncate&lt;/code&gt;, 300 characters by default, and marks where it cut. The actual run does not truncate the text.&lt;/p&gt;'><sup>2</sup></a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/preview.html">preview</a></span><span class="op">(</span><span class="va">b</span>, text <span class="op">=</span> <span class="va">parlasent</span><span class="op">$</span><span class="va">sentence</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
@@ -216,7 +218,7 @@
 </div>
 </section></section><section class="level2"><h2 id="step-3--extract-response-probabilities">Step 3. Extract response probabilities<a class="anchor" aria-label="anchor" href="#step-3--extract-response-probabilities"></a>
 </h2>
-<p>As in the <code><a href="../reference/preview.html">preview()</a></code> function, the <code><a href="../reference/measure.html">measure()</a></code> function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured in Step 1. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.</p>
+<p>Using the same prompt as the <code><a href="../reference/preview.html">preview()</a></code> function, the <code><a href="../reference/measure.html">measure()</a></code> function takes every document in the corpus and pairs it with each question and its labels from the codebook instrument, sending each pairing to the local LLM configured in Step 1. The function then extracts the probability that the local LLM assigned to each label at its first generated token, and returns an object holding all probabilities along with a record of each call.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/measure.html">measure</a></span><span class="op">(</span></span>
@@ -248,7 +250,7 @@
 </h2>
 <p>The results object holds two data frames.</p>
 <ul>
-<li><p><code>$probs</code> is one row per document, item and label, and contains the results themselves, the probability that the local LLM assigned to each label of each document-question pair.</p></li>
+<li><p><code>$probs</code> is one row per document, item, and label, and contains the results themselves, the probability that the local LLM assigned to each label of each document-question pair.</p></li>
 <li><p><code>$calls</code> is one row per document and item, and contains call-level information for checking the run, along with any columns <code>keep</code> carried through.</p></li>
 </ul>
 <section class="level3"><h3 id="probabilities-probs">Probabilities (<code>$probs</code>)<a class="anchor" aria-label="anchor" href="#probabilities-probs"></a>
@@ -257,24 +259,18 @@
 <div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/pander/man/pander.html" class="external-link">pander</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">probs</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<table class="table caption-top">
+<table class="table caption-top" style="width:58%;">
 <colgroup>
 <col style="width: 12%">
-<col style="width: 14%">
-<col style="width: 10%">
-<col style="width: 18%">
-<col style="width: 16%">
-<col style="width: 13%">
-<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 11%">
+<col style="width: 19%">
 </colgroup>
 <thead><tr class="header">
 <th style="text-align: center;">id</th>
 <th style="text-align: center;">item</th>
 <th style="text-align: center;">label</th>
 <th style="text-align: center;">prob_renorm</th>
-<th style="text-align: center;">prob</th>
-<th style="text-align: center;">present</th>
-<th style="text-align: center;">call_ok</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -282,60 +278,42 @@
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">uk_001</td>
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">uk_001</td>
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">3</td>
 <td style="text-align: center;">6.648e-06</td>
-<td style="text-align: center;">6.648e-06</td>
-<td style="text-align: center;">TRUE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">uk_001</td>
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">4</td>
 <td style="text-align: center;">1</td>
-<td style="text-align: center;">1</td>
-<td style="text-align: center;">TRUE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">uk_001</td>
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">5</td>
 <td style="text-align: center;">1.473e-08</td>
-<td style="text-align: center;">1.473e-08</td>
-<td style="text-align: center;">TRUE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">uk_001</td>
 <td style="text-align: center;">category</td>
 <td style="text-align: center;">6</td>
 <td style="text-align: center;">3.169e-07</td>
-<td style="text-align: center;">3.169e-07</td>
-<td style="text-align: center;">TRUE</td>
-<td style="text-align: center;">TRUE</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>Here, the <code>prob_renorm</code> and <code>prob</code> columns convey the probabilities that the local LLM assigned to a label. However, <code>prob_renorm</code> is renormalized to the codebook instrument’s label set, making it the main measure of interest.</p>
+<p>Here, the <code>prob_renorm</code> column conveys the probability that the local LLM assigned to a label, renormalized to the codebook instrument’s label set, making it the main measure of interest.</p>
 </section><section class="level3"><h3 id="calls-calls">Calls (<code>$calls</code>)<a class="anchor" aria-label="anchor" href="#calls-calls"></a>
 </h3>
 <div class="cell">
@@ -344,18 +322,16 @@
 <div class="cell-output-display">
 <table class="table caption-top">
 <colgroup>
-<col style="width: 6%">
 <col style="width: 7%">
-<col style="width: 5%">
-<col style="width: 8%">
-<col style="width: 8%">
-<col style="width: 8%">
-<col style="width: 8%">
 <col style="width: 8%">
 <col style="width: 6%">
-<col style="width: 11%">
+<col style="width: 9%">
 <col style="width: 10%">
-<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 7%">
+<col style="width: 13%">
+<col style="width: 12%">
+<col style="width: 13%">
 </colgroup>
 <thead><tr class="header">
 <th style="text-align: center;">id</th>
@@ -363,9 +339,7 @@
 <th style="text-align: center;">error</th>
 <th style="text-align: center;">truncated</th>
 <th style="text-align: center;">top1_token</th>
-<th style="text-align: center;">top1_prob</th>
 <th style="text-align: center;">prob_other</th>
-<th style="text-align: center;">all_absent</th>
 <th style="text-align: center;">margin</th>
 <th style="text-align: center;">expected_score</th>
 <th style="text-align: center;">prompt_hash</th>
@@ -378,9 +352,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">4</td>
-<td style="text-align: center;">1</td>
 <td style="text-align: center;">2.924e-07</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -392,9 +364,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
-<td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -406,9 +376,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">6</td>
-<td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -420,9 +388,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">5</td>
-<td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -434,9 +400,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">4</td>
-<td style="text-align: center;">0.8997</td>
 <td style="text-align: center;">5.1e-05</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">0.7994</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -448,9 +412,7 @@
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
-<td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">FALSE</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">NA</td>
 <td style="text-align: center;">e80af6d394fe</td>
@@ -464,7 +426,7 @@
 <p>For further information, the documentation page for <code><a href="../reference/measure.html">measure()</a></code> outlines every column found in both data frames.</p>
 </section><section class="level3"><h3 id="summarizing-the-results-by-question-and-label">Summarizing the results by question and label<a class="anchor" aria-label="anchor" href="#summarizing-the-results-by-question-and-label"></a>
 </h3>
-<p>The <code><a href="../reference/item_report.html">item_report()</a></code> function summarizes the run <code><a href="../reference/measure.html">measure()</a></code> produced. On a forced choice codebook instrument it returns one row per category and prints a header above the table.</p>
+<p>The <code><a href="../reference/item_report.html">item_report()</a></code> function summarizes the run <code><a href="../reference/measure.html">measure()</a></code> produced. On a forced-choice codebook instrument it returns one row per category and prints a header above the table.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/item_report.html">item_report</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
@@ -473,20 +435,18 @@
 <span><span class="co">#&gt; Documents     100</span></span>
 <span><span class="co">#&gt; Items         1</span></span>
 <span><span class="co">#&gt; Labels        6</span></span>
-<span><span class="co">#&gt; Leaked mass   max 0.0001, mean 0.0000</span></span>
-<span><span class="co">#&gt; Winning       probability min 0.686</span></span>
-<span><span class="co">#&gt; # A tibble: 6 × 4</span></span>
-<span><span class="co">#&gt;   item     label n_won share_won</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt; &lt;int&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 category 1        17      0.17</span></span>
-<span><span class="co">#&gt; 2 category 2        15      0.15</span></span>
-<span><span class="co">#&gt; 3 category 3        13      0.13</span></span>
-<span><span class="co">#&gt; 4 category 4        18      0.18</span></span>
-<span><span class="co">#&gt; 5 category 5        18      0.18</span></span>
-<span><span class="co">#&gt; 6 category 6        19      0.19</span></span></code></pre></div>
+<span><span class="co">#&gt; # A tibble: 6 × 7</span></span>
+<span><span class="co">#&gt;   item     label n_won share_won pct_label_absent mean_prob_other pct_off_label</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt; &lt;int&gt;     &lt;dbl&gt;            &lt;dbl&gt;           &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 category 1        17      0.17             0.72      0.00000346             0</span></span>
+<span><span class="co">#&gt; 2 category 2        15      0.15             0.72      0.00000346             0</span></span>
+<span><span class="co">#&gt; 3 category 3        13      0.13             0.72      0.00000346             0</span></span>
+<span><span class="co">#&gt; 4 category 4        18      0.18             0.72      0.00000346             0</span></span>
+<span><span class="co">#&gt; 5 category 5        18      0.18             0.72      0.00000346             0</span></span>
+<span><span class="co">#&gt; 6 category 6        19      0.19             0.72      0.00000346             0</span></span></code></pre></div>
 </div>
 <p>Here, the <code>n_won</code> column counts the number of documents where each label had the highest probability, whereas the <code>share_won</code> column expresses it as a proportion of the documents scored.</p>
-<p>The console also outputs two diagnostics, <em>Leaked mass</em> and <em>Winning</em>. Leaked mass depicts the max and mean probability mass that landed on no category at all, while <em>Winning</em> depicts the lowest probability that any winning category received, conveying the floor of the local LLM’s confidence.</p>
+<p>The last three columns describe each question’s calls rather than any one category, so they repeat down its rows. The <code>pct_label_absent</code> column is the share of documents where at least one category fell outside the alternatives the local LLM returned, the <code>mean_prob_other</code> column is the average probability mass that landed on no category at all, and the <code>pct_off_label</code> column is the share of documents where the first token the local LLM generated was not a category.</p>
 </section><section class="level3"><h3 id="inspecting-question-document-pairs">Inspecting question-document pairs<a class="anchor" aria-label="anchor" href="#inspecting-question-document-pairs"></a>
 </h3>
 <p>The <code><a href="../reference/inspect_cases.html">inspect_cases()</a></code> function can be used to print a question alongside the corpus documents it was answered on, by the codebook instrument label of interest and by whether that label won or the local LLM’s answer was a close call between two labels.</p>
@@ -619,7 +579,7 @@
 </table>
 </div>
 </div>
-<p>Here, each row of the sample sheet pairs a corpus document with one of the codebook instrument’s questions, named in the <code>item</code> column and written out with its label definitions in the <code>question</code> column. Since this coding instrument asks a single question, every row carries the same question and each pair is simply a document. However, on a coding instrument of several questions, a document appears once per question and <code>n</code> counts pairs either way. The <code>human_label</code> column is left blank for human coders to fill in using the labels that the <code>allowed</code> column lists.</p>
+<p>Here, each row of the sample sheet pairs a corpus document with one of the codebook instrument’s questions, named in the <code>item</code> column and written out with its label definitions in the <code>question</code> column. Since this coding instrument asks a single question, every row carries the same question and each pair is simply a document. However, on a coding instrument of several questions, a document appears once per question it was drawn on and <code>n</code> counts pairs either way. The <code>human_label</code> column is left blank for human coders to fill in using the labels that the <code>allowed</code> column lists.</p>
 <section class="level3"><h3 id="validating-the-sample-using-two-coders">Validating the sample using two coders<a class="anchor" aria-label="anchor" href="#validating-the-sample-using-two-coders"></a>
 </h3>
 <p>Handing the <code><a href="../reference/validate_sample.html">validate_sample()</a></code> function a named list of <code><a href="../reference/coding_sample.html">coding_sample()</a></code> sheets will get it to score the local LLM against each of the human coders, calculate the ceiling the coders set between themselves, and return the distance between the two. Because the categories are ordinal, the call sets <code>level = "ordinal"</code>. Additionally, because the <code>parlasent</code> dataset already has two independent hand codings, this article uses those for validation.</p>
@@ -701,9 +661,75 @@
 </table>
 </div>
 </div>
-<p>The <code>v$gap</code> table compares the model with the ceiling the coders set, with one row per question. The <code>model_alpha</code> column is the model’s average alpha with each of the coders, while the <code>coder_alpha</code> column is the coders’ average alpha with each other, which with two coders is simply their one pairwise alpha. The <code>gap</code> column subtracts the second from the first, so it reads in the same units as alpha (see <code>v$discrimination</code> table for individual level comparisons between the model and each coder). A gap value below zero would indicate that the model on average disagrees with the coders more than they on average disagree with each other. Conversely, a gap value above zero would indicate that the model had a higher average agreement with the coders than the coders had with each other. The <code>gap_ci</code> column holds a percentile confidence interval around the gap (default of 95 percent), built from an empirical bootstrap. Here, the local LLM’s average alpha of 0.835 against the human coders’ average alpha of 0.79 has a gap of 0.045 with an interval of [-0.16, 0.25]. Both alpha values sitting at or near Krippendorff’s 0.80 threshold along with its gap interval crossing zero suggest that the local LLM’s judgment matched the annotators’ about as closely as their judgments match each other, further suggesting that the LLM’s coding can serve as a viable alternative to human coders for this corpus.</p>
-</section></section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<p>The <code>v$gap</code> table compares the model with the ceiling the coders set, with one row per question. The <code>model_alpha</code> column is the model’s average alpha with each of the coders, while the <code>coder_alpha</code> column is the coders’ average alpha with each other, which with two coders is simply their one pairwise alpha. The <code>gap</code> column subtracts the second from the first, so it reads in the same units as alpha (see the <code>v$discrimination</code> table for individual-level comparisons between the model and each coder). A gap value below zero would indicate that the model on average disagrees with the coders more than they on average disagree with each other. Conversely, a gap value above zero would indicate that the model had a higher average agreement with the coders than the coders had with each other. The <code>gap_ci</code> column holds a percentile confidence interval around the gap (default of 95 percent), built from a nonparametric bootstrap. Here, the local LLM’s average alpha of 0.835 against the human coders’ average alpha of 0.79 has a gap of 0.045 with an interval of [-0.16, 0.25]. Both alpha values sitting at or near Krippendorff’s 0.80 threshold along with its gap interval crossing zero suggest that the local LLM’s judgment matched the annotators’ about as closely as their judgments matched each other, further suggesting that the LLM’s coding can serve as a viable alternative to human coders for this corpus.</p>
+</section></section><section class="level2"><h2 id="step-6--test-the-measurement">Step 6. Test the measurement<a class="anchor" aria-label="anchor" href="#step-6--test-the-measurement"></a>
 </h2>
+<p>LLM classification responses have been shown to be sensitive to label ordering (e.g., Halterman and Keith 2026). To assess label order sensitivity, the <code><a href="../reference/order_sensitivity.html">order_sensitivity()</a></code> function runs <code><a href="../reference/measure.html">measure()</a></code> again (holding the original run’s parameters constant) on every document with the labels listed in reverse. When a codebook instrument uses three or more labels (such as this case), the function also runs <code><a href="../reference/measure.html">measure()</a></code> with the labels shuffled. These two runs are then compared with the original run.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/order_sensitivity.html">order_sensitivity</a></span><span class="op">(</span></span>
+<span>  <span class="va">res</span>,                         <span class="co"># model results</span></span>
+<span>  <span class="va">parlasent</span>,                   <span class="co"># data frame containing corpus</span></span>
+<span>  text   <span class="op">=</span> <span class="st">"sentence"</span>,         <span class="co"># corpus documents</span></span>
+<span>  id     <span class="op">=</span> <span class="st">"id"</span>,               <span class="co"># document ids</span></span>
+<span>  level  <span class="op">=</span> <span class="st">"ordinal"</span>,          <span class="co"># weight disagreements by distance</span></span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>,  <span class="co"># the scale, least to greatest</span></span>
+<span>  seed   <span class="op">=</span> <span class="fl">444</span>                 <span class="co"># fixed seed</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/pander/man/pander.html" class="external-link">pander</a></span><span class="op">(</span><span class="va">ord</span>, split.table <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top" style="width:68%;">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 16%">
+<col style="width: 12%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: center;">item</th>
+<th style="text-align: center;">order</th>
+<th style="text-align: center;">n</th>
+<th style="text-align: center;">agreement</th>
+<th style="text-align: center;">alpha</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">category</td>
+<td style="text-align: center;">reversed</td>
+<td style="text-align: center;">100</td>
+<td style="text-align: center;">0.75</td>
+<td style="text-align: center;">0.936</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">category</td>
+<td style="text-align: center;">shuffled</td>
+<td style="text-align: center;">100</td>
+<td style="text-align: center;">0.77</td>
+<td style="text-align: center;">0.9034</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ord</span>, <span class="st">"orders"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $declared</span></span>
+<span><span class="co">#&gt; [1] "1" "2" "3" "4" "5" "6"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $reversed</span></span>
+<span><span class="co">#&gt; [1] "6" "5" "4" "3" "2" "1"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $shuffled</span></span>
+<span><span class="co">#&gt; [1] "6" "3" "5" "1" "4" "2"</span></span></code></pre></div>
+</div>
+<p>Here, each row compares a reordering method model run with the original order model run on the same documents. Like with the <code>v$ceiling$pairs</code> table, the <code>agreement</code> column denotes the proportion of documents where both model runs wrote the same label, while the <code>alpha</code> column corresponds to the Krippendorff’s alpha between both model runs. Under both methods of reordering, the model’s share of agreement and high alpha scores suggest the model was still labeling documents similarly, suggesting that the main results are stable and consistent.</p>
+</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Halterman, A., &amp; Keith, K. A. (2026). Codebook LLMs: Evaluating LLMs as Measurement Tools for Political Science Concepts. <em>Political Analysis</em>, 34(2), 188–204. <a href="https://doi.org/10.1017/pan.2025.10017" class="external-link uri">https://doi.org/10.1017/pan.2025.10017</a></p>
 <p>Krippendorff, K. (2019). <em>Content Analysis: An Introduction to Its Methodology</em> (4th ed.). Sage. <a href="https://doi.org/10.4135/9781071878781" class="external-link uri">https://doi.org/10.4135/9781071878781</a></p>
 <p>Mochtak, M., Rupnik, P., Meden, K., &amp; Ljubešić, N. (2023). The multilingual sentiment dataset of parliamentary debates ParlaSent 1.0. <em>Slovenian language resource repository CLARIN.SI</em>. <a href="http://hdl.handle.net/11356/1868" class="external-link uri">http://hdl.handle.net/11356/1868</a></p>
 </section><script id="quarto-html-after-body" type="application/javascript">

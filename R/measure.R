@@ -60,7 +60,9 @@ fail_rows <- function(instrument, msg = NA_character_) {
 #' @param image A character vector of media paths sent with the prompt, or
 #'   `NULL`.
 #' @return A data frame of one row per label, scored at generated position 1,
-#'   with `call_ok` `FALSE` and the reason in `error` when the call failed.
+#'   with `call_ok` `FALSE` and the reason in `error` when the call failed. The
+#'   reason is never `NA`, since the results read a call as successful exactly
+#'   when `error` is.
 #' @keywords internal
 #' @noRd
 measure_one <- function(
@@ -71,7 +73,14 @@ measure_one <- function(
   num_ctx = NULL,
   image = NULL
 ) {
-  fail <- function(msg) fail_rows(instrument, msg)
+  # The results read success as `is.na(error)`, so a failure must never arrive
+  # without a reason, whatever a condition's message turns out to hold.
+  fail <- function(msg) {
+    if (length(msg) != 1L || is.na(msg) || !nzchar(trimws(msg))) {
+      msg <- "call failed without a reason"
+    }
+    fail_rows(instrument, msg)
+  }
 
   resp <- tryCatch(
     ollama_generate(
@@ -398,9 +407,29 @@ reserved_cols <- function(instrument) {
 #' Passing an integer once the corpus is known skips it.
 #'
 #' @section Retrying failures:
-#' A failed item is stored with `call_ok = FALSE` and is therefore stale on the
-#' next pass, so re-running retries exactly those. There is no separate retry
+#' A failed item is stored with its reason in `error` and is therefore stale on
+#' the next pass, so re-running retries exactly those. There is no separate retry
 #' sweep, which would run against a cold cache.
+#'
+#' @section When the check before the first document fails:
+#' Before any document, `measure()` sends one prompt built from your instrument
+#' and the corpus document nearest the median word count, or a built-in
+#' question when the corpus has no text. Among other checks, the run starts
+#' only if the first generated token is one of your labels. When it is not,
+#' nothing is measured and the message names the token the model opened with.
+#'
+#' Three causes are known. The cue may not name the labels clearly enough,
+#' which [preview()] shows. The chat template may open a reasoning block
+#' although reasoning is off on every call, which is a property of the model's
+#' template rather than of your instrument. Or the model may open with prose, a
+#' word such as `The` or `Okay` before its answer.
+#'
+#' Worked examples in the question, each a short document followed by its
+#' one-word answer, are the known fix for prose. Without them Qwen3.8-27B
+#' answered 941 of 945 tweets in full sentences in Denney and DiGiuseppe's
+#' (2026) replication of a tweet-sentiment study, and with them its answers
+#' could be scored. Examples become part of the instrument, so validate and
+#' audit the instrument that carries them.
 #'
 #' @param x A character vector of documents, or a data frame.
 #' @param backend An [ollama_backend()] object.
@@ -424,34 +453,26 @@ reserved_cols <- function(instrument) {
 #'
 #' - `label` is the label this row scores, in the order the instrument declares
 #'   them.
-#' - `prob_renorm` is `prob` rescaled so the labels sum to 1. The measure. `NA`
-#'   when no label appeared at all, since there is nothing to condition on.
-#' - `prob` is the raw probability, against every token the model could have
-#'   written. Does not sum to 1 down the labels.
-#' - `present` says whether any token counting as this label appeared in the
-#'   returned distribution. A `prob` of zero means the label was measured at
-#'   zero when this is `TRUE`, and fell below `top_logprobs` when it is `FALSE`.
-#' - `call_ok` is `FALSE` when the call failed. One fact per call, kept here
-#'   rather than only in `$calls` because it guards almost every filter over
-#'   these rows.
+#' - `prob_renorm` is the probability of this label rescaled so the labels sum
+#'   to 1. The measure. `NA` when no label appeared at all, since there is
+#'   nothing to condition on, and exactly 0 for a label that fell outside the
+#'   `top_logprobs` alternatives. The raw probability, against every token the
+#'   model could have written, is `prob_renorm * (1 - prob_other)`.
 #'
 #' ## `$calls`, one row per document and item
 #'
 #' Anything named in `keep` rides here too, since a carried column describes the
 #' document rather than any one label.
 #'
-#' - `error` is the message when the call failed, otherwise `NA`. Non-`NA`
-#'   exactly when `call_ok` is `FALSE`.
+#' - `error` is the message when the call failed, otherwise `NA`, so a call
+#'   succeeded exactly when `error` is `NA`.
 #' - `truncated` is `TRUE` when the prompt came within 64 tokens of `num_ctx`,
 #'   so the document may have lost its opening.
 #' - `top1_token` is the token the model actually generated, whether or not it
 #'   counts as a label.
-#' - `top1_prob` is the probability of that token. When it is not a label, this
-#'   is the only record of how much mass the winning non-label held.
 #' - `prob_other` is the mass on tokens counting as no label. The diagnostic
-#'   that says whether the question landed.
-#' - `all_absent` is `TRUE` when no label appeared anywhere in the returned
-#'   distribution.
+#'   that says whether the question landed. It is exactly 1 when no label
+#'   appeared anywhere in the returned distribution.
 #' - `margin` is the gap between the top two `prob_renorm` values. What
 #'   [inspect_cases()] sorts on to find the closest calls above two labels.
 #' - `expected_score` is `prob_renorm` weighted by the instrument's `scores`.
@@ -468,6 +489,9 @@ reserved_cols <- function(instrument) {
 #'   [preview()] for the prompt it sends, [read_checkpoints()] for a run cut
 #'   short, and [item_report()] and [inspect_cases()] for reading what comes
 #'   back.
+#' @references
+#'   Denney, S. and DiGiuseppe, M. (2026). JEV versus LLMs. Accuracy, cost and
+#'   calibration on seven political science replications. arXiv:2610.06625.
 #' @examples
 #' \dontrun{
 #' # Needs a running Ollama server, so it is not run here.
@@ -1083,22 +1107,23 @@ PROB_COLS <- c(
   "id",
   "item",
   "label",
-  "prob_renorm",
-  "prob",
-  "present",
-  "call_ok"
+  "prob_renorm"
 )
 
-# Computable from what is kept, or telemetry nothing reads. `winner` is
-# `slice_max(prob)` within a call, which is how every internal consumer already
-# derives it. `logprob` is `log(prob)`, and `present` carries the one thing it
-# said that `prob` cannot, which is whether a zero was measured or unseen.
+# Computable from what is kept, or telemetry nothing reads. `prob` is
+# `prob_renorm * (1 - prob_other)`, and `logprob` is its log. `present` is
+# whether `prob_renorm` is above 0, `all_absent` is `prob_other == 1`, and
+# `call_ok` is `is.na(error)`. `winner` is the label with the most
+# `prob_renorm` within a call, which is how every internal consumer derives it,
+# and `top1_prob` recorded the mass a winning non-label held, which
+# `prob_other` bounds.
 #
 # Every one is still computed and checkpointed. The split happens here and
 # nowhere earlier so that scoring, the loop and the checkpoint directories
-# already on disk stay as they were. `winner` and `wall_ms` feed the verbose
-# line before they go, and `model` cannot leave the flat frame at all, since
-# ckpt_stale() reads it there. On the results it is an attribute.
+# already on disk stay as they were. `winner`, `prob` and `wall_ms` feed the
+# verbose line before they go, and `call_ok` and `model` cannot leave the flat
+# frame at all, since ckpt_stale() reads both there. On the results `model` is
+# an attribute.
 DROP_COLS <- c(
   "entropy",
   "logprob",
@@ -1106,7 +1131,12 @@ DROP_COLS <- c(
   "prompt_tokens",
   "wall_ms",
   "winner",
-  "model"
+  "model",
+  "prob",
+  "present",
+  "call_ok",
+  "top1_prob",
+  "all_absent"
 )
 
 # Ordered rather than derived, so the frame reads the way the article walks it.
@@ -1117,9 +1147,7 @@ CALL_COLS <- c(
   "error",
   "truncated",
   "top1_token",
-  "top1_prob",
   "prob_other",
-  "all_absent",
   "margin",
   "expected_score",
   "prompt_hash"
@@ -1222,7 +1250,9 @@ print.fathom_results <- function(x, ...) {
   # the call failed. Counting `$probs` would count each failure once per label.
   nf <- sum(!is.na(x$calls$error))
   nt <- sum(x$calls$truncated, na.rm = TRUE)
-  na <- sum(x$calls$all_absent, na.rm = TRUE)
+  # No label anywhere in the returned distribution leaves all of the mass
+  # outside the labels.
+  na <- sum(x$calls$prob_other == 1, na.rm = TRUE)
   calls <- function(n) sprintf("%d call%s", n, if (n == 1L) "" else "s")
   if (nf) {
     cat_note("Warning", paste(calls(nf), "failed."))

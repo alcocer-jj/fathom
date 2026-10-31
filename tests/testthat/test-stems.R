@@ -428,10 +428,17 @@ test_that("preview shows the document before the question", {
 test_that("preview truncates long documents for display only", {
   b <- instrument(list(q = "Is it long?"), labels = c("YES", "NO"))
   long <- paste(rep("word", 500), collapse = " ")
-  p <- preview(b, text = long, truncate = 50L)
+  out <- paste(
+    capture.output(p <- preview(b, text = long, truncate = 50L)),
+    collapse = "\n"
+  )
 
-  expect_lt(nchar(p), nchar(long))
-  expect_match(p, "truncated for display")
+  # The screen is trimmed and says so.
+  expect_match(out, "truncated for display", fixed = TRUE)
+  expect_false(grepl(long, out, fixed = TRUE))
+  # The returned string is what measure() sends, whole and unmarked.
+  expect_false(grepl("truncated for display", p, fixed = TRUE))
+  expect_identical(p, fathom:::build_prompt(long, b$items$q, b))
 })
 
 test_that("preview rejects an unknown item", {

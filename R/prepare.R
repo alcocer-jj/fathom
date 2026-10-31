@@ -188,7 +188,7 @@ prepare_image <- function(paths, id = NULL) {
 #'   available.
 #' @param language A string giving the spoken language, detected per file when
 #'   `NULL` (the default).
-#' @param hf_token A string giving a HuggingFace read token, required when
+#' @param hf_token A string giving a Hugging Face read token, required when
 #'   `diarize_names` is on. Default is `NULL`.
 #' @param extra A character vector of further flags for the recognizer, passed
 #'   through verbatim and recorded on the result. Each element is its own
@@ -396,7 +396,7 @@ prepare_audio <- function(
           paste0(
             "`diarize_names = TRUE` needs `hf_token`. The diarization ",
             "model is ",
-            "gated on HuggingFace."
+            "gated on Hugging Face."
           ),
           paste0(
             "Accept the conditions at https://huggingface.co/pyannote/",

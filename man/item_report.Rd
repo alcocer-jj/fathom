@@ -35,65 +35,39 @@ Exactly two labels and no \code{scores}. One row per item.
 this can sit below the corpus size.
 \item \code{endorse_renorm} is the share of those documents where \code{target} reached 0.5
 on \code{prob_renorm}, the probability after the labels have been rescaled to
-sum to 1. Reaching it means the label beat the other one.
-\item \code{n_endorse_renorm} is the count behind \code{endorse_renorm}. Its denominator is
-\code{n} minus the documents where no label appeared, which have no renormalized
-probability. That count is \code{pct_both_absent} times \code{n}, and is 0 whenever
-\code{pct_both_absent} is.
-\item \code{endorse} is the same cut on \code{prob}, the probability against everything the
-model could have written. Reaching it means the model committed to the
-label.
-\item \code{n_endorse} is the count behind \code{endorse}. Its denominator is \code{n}.
-\item \code{mean_prob} is the mean \code{prob} on \code{target}, so it belongs to \code{endorse}
-rather than to \code{endorse_renorm}. It separates from \code{endorse} only when the
-probabilities cluster near the 0.5 cut. When they all sit near 0 or 1 the
-two agree almost exactly, so the gap between them says how far the
-endorsements were from being coin flips.
+sum to 1. Reaching it means the label beat the other one. Its denominator
+leaves out the documents where no label appeared, which have no
+renormalized probability, and \code{pct_both_absent} says how many those were.
 \item \code{pct_extreme_renorm} is the share of renormalized probabilities at or
 beyond 0.01 and 0.99, so it asks how the on-label mass was shaped rather
-than how much of it there was. This is the substantive one, for the same
-reason \code{endorse_renorm} is. It is not unconditionally the safer one. A
-document that answered almost entirely outside the label set can leave this
-denominator, read as graded, or read as certain, depending on how its
-residue fell.
-\item \code{pct_extreme} is the share of raw probabilities at or beyond 0.01 and 0.99.
-Reads \code{prob}, so it cannot separate a decisive answer from one that never
-entered the label set, since both put every label at the floor or the
-ceiling. Read it against \code{pct_extreme_renorm} and \code{max_prob_other} rather
-than alone. Near 1 means almost every answer came back at one end or the
-other, so these are labels in numeric clothing. Reporting them as degrees
-of confidence would claim more than they carry.
+than how much of it there was. Near 1 means almost every answer came back
+at one end or the other, so these are labels in numeric clothing, and
+reporting them as degrees of confidence would claim more than they carry.
 \item \code{pct_both_absent} is the share of documents where no label appeared at
 position 1. That is a template or prompt failure rather than a low score. A
-broken chat template registers in \code{n_off_label} rather than here, because
+broken chat template registers in \code{pct_off_label} rather than here, because
 the labels stay in the distribution at trace mass underneath whatever the
 template wrote first, which leaves \code{pct_both_absent} at 0 while every
 answer is unusable.
-\item \code{max_prob_other} is the most probability the model ever placed on tokens
-that were none of your labels, anywhere in the corpus. Leaked mass, in the
-term used elsewhere in these docs.
-\item \code{min_top1} is the least confident single answer in the corpus. For each
-document, take the probability of whichever token the model was most likely
-to write, label or not. This is the smallest of those. High values do not
-mean the item is correct.
-\item \code{n_off_label} counts the documents where the emitted token matched no
-label. It is judged by the same rule scoring uses, so a token that opens a
-label counts as that label and a split label is not reported as off-label.
-\item \code{n_failed} counts the documents whose call failed. Divided by the label
-count, so it counts documents rather than rows.
-\item \code{other_vs_median} is \code{max_prob_other} divided by the middle value of that
-column across the instrument, so 2 means this item placed twice as much
-probability outside the labels as the typical item did. Present only for an
-instrument of three or more items, since a middle value across one or two
-carries nothing. This is the one column the item count decides. Absolute
-leaked mass varies by model, by language, and by how close to 0 and 1 the
-instrument's probabilities sit, so values are not comparable across
-instruments.
+\item \code{pct_label_absent} is the share of documents where at least one label was
+missing from the \code{top_logprobs} alternatives the backend returned, so it
+includes \code{pct_both_absent}. A label missing beside one that appeared has a
+probability of exactly 0 and puts its partner at exactly 1, so on those
+documents \code{pct_extreme_renorm} records the cap on alternatives rather than
+the model.
+\item \code{mean_prob_other} is the average probability the model placed on tokens
+that were none of your labels. Leaked mass, in the term used elsewhere in
+these docs. It compares across the items of one instrument and not across
+instruments, since absolute leaked mass varies by model, by language, and
+by how close to 0 and 1 the instrument's probabilities sit.
+\item \code{pct_off_label} is the share of documents where the emitted token matched
+no label. It is judged by the same rule scoring uses, so a token that opens
+a label counts as that label and a split label is not reported as
+off-label.
+\item \code{n_failed} counts the documents whose call failed.
 \item \code{mean_expected} is the average expected score across documents, which on
 two labels is the mean of \code{prob_renorm} on \code{target} rescaled onto the
-scores. Present only when the instrument carries \code{scores}. Note that
-\code{mean_prob} is the raw probability, so the two differ by whatever mass fell
-outside the labels.
+scores. Present only when the instrument carries \code{scores}.
 }
 }
 
@@ -107,6 +81,9 @@ A document whose distribution held none of the labels wins nothing.
 \item \code{share_won} is \code{n_won} over the documents scored on that item, so the
 shares of an item fall short of 1 by the share that answered outside the
 labels.
+\item \code{pct_label_absent}, \code{mean_prob_other} and \code{pct_off_label} are as in the
+endorsement shape. They describe the item's calls rather than the label,
+so they repeat down its label rows.
 }
 }
 
@@ -125,6 +102,8 @@ been rescaled to sum to 1 across the labels. Because it uses every label
 rather than only the winner, a document the model split between two
 neighboring levels lands between them.
 \item \code{sd_expected} is the standard deviation of the same, across documents.
+\item \code{pct_label_absent}, \code{mean_prob_other} and \code{pct_off_label} are as in the
+choice shape.
 }
 }
 }
@@ -138,17 +117,14 @@ correct. A confident, low-leakage item can still be measuring something
 other than the construct. \code{\link[=inspect_cases]{inspect_cases()}} is what answers that, by showing
 the documents.
 }
-\section{Two endorsement rates}{
+\section{The endorsement cut}{
 
-\code{endorse} and \code{endorse_renorm} count the same documents at the same cut of
-0.5, and differ only in which probability they cut. Do not read the gap
-between them as measurement error or as disagreement between two estimates of
-one quantity. It is two quantities.
-
-Neither cut is configurable. 0.5 on \code{prob_renorm} is the argmax on a
-two-label instrument, and \code{\link[=threshold_sensitivity]{threshold_sensitivity()}} exists to show how little
-the cut point matters on \code{prob}. Both are reported so the choice does not
-have to be made in advance.
+\code{endorse_renorm} cuts \code{prob_renorm} at 0.5, which on a two-label instrument
+is the label the model ranked first. The cut is not configurable.
+\code{\link[=threshold_sensitivity]{threshold_sensitivity()}} reports the rate at other cut points, and
+\code{pct_extreme_renorm} says in one number how far it can move, since a
+probability at or beyond 0.01 and 0.99 sits on the same side of every cut
+between them.
 }
 
 \section{Output shapes}{
@@ -164,10 +140,11 @@ which columns. The test runs in this order.
 }
 
 The label count is tested first because on two labels the scored shape
-reports one number, the average expected score, and drops a dozen
-diagnostics to do it. There is no reason to choose between them. A scored
-instrument of two labels reports as endorsement and gains \code{mean_expected} as
-a column, so the number arrives without the diagnostics leaving.
+would report one number, the average expected score, and lose the
+endorsement diagnostics to do it. There is no reason to choose between them.
+A scored instrument of two labels reports as endorsement and gains
+\code{mean_expected} as a column, so the number arrives without the diagnostics
+leaving.
 
 \code{exclusive = TRUE} is not itself the test. An exclusive instrument lands in
 the choice or scored shape because it usually has more than two labels or a
@@ -183,8 +160,8 @@ the shape is named for the argument rather than for a measurement level.
 The shapes differ in row granularity as well as in columns. Endorsement gives
 one row per item. Choice and scored give one row per item \strong{and label},
 because a shared distribution has no single number per question to report.
-Choice and scored report a winner distribution, and leaked mass reaches them
-as a message rather than as a column.
+Choice and scored report a winner distribution, and the columns describing
+an item's calls rather than any one label repeat down its label rows.
 
 \code{target} applies to the endorsement shape only, and is ignored by the other
 two. There is no per-label endorsement rate for a forced choice, since the

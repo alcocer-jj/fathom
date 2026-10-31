@@ -2,7 +2,10 @@
 
 Computes the endorsement rate per item at each cut point, which shows
 how much of an item's rate is a property of the documents and how much
-is a property of where the cut falls.
+is a property of where the cut falls. `pct_extreme_renorm` in
+[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+gives the short answer in one number, since a probability at or beyond
+0.01 and 0.99 sits on the same side of every cut between them.
 
 ## Usage
 
@@ -10,8 +13,7 @@ is a property of where the cut falls.
 threshold_sensitivity(
   results,
   target = NULL,
-  thresholds = seq(0.1, 0.9, by = 0.1),
-  value = c("prob_renorm", "prob")
+  thresholds = seq(0.1, 0.9, by = 0.1)
 )
 ```
 
@@ -34,21 +36,6 @@ threshold_sensitivity(
   A numeric vector of cut points to evaluate. Default is
   `seq(0.1, 0.9, by = 0.1)`.
 
-- value:
-
-  A string naming the probability column to threshold. Defaults to
-  `"prob_renorm"`, the figure after the label probabilities have been
-  rescaled to sum to 1. That is the question a cut point is usually
-  being asked to answer, which is whether documents pile up near the
-  boundary between your labels, and it is the quantity everything
-  downstream compares against.
-
-  `"prob"` is the raw probability, so a sweep over it also moves with
-  mass the model spent outside your labels. That confounds two things,
-  and a rate that shifts under it may be reporting compliance rather
-  than the corpus. Use it when the claim is about whether the model
-  committed.
-
 ## Value
 
 A tibble with one row per item and threshold, items in instrument order
@@ -63,17 +50,17 @@ is a ranking rather than a table and stays widest swing first.
   an item, since the cut point changes which documents count as
   endorsing and not how many were asked.
 
-- `n_endorse` counts the documents whose `value` for `target` reached
-  the cut.
+- `n_endorse` counts the documents whose `prob_renorm` for `target`
+  reached the cut.
 
-- `endorse` is `n_endorse` over the documents with a `value` to cut. A
-  document where no label appeared has no `prob_renorm`, so under the
-  default it leaves this denominator, and `endorse` is `n_endorse` over
-  `n` only when no such document exists. That is the split
+- `endorse` is `n_endorse` over the documents with a `prob_renorm` to
+  cut. A document where no label appeared has none, so it leaves this
+  denominator, and `endorse` is `n_endorse` over `n` only when no such
+  document exists.
   [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
-  makes between `endorse_renorm` and `endorse`. This is the column to
-  read down, and the spread from its smallest to largest value within an
-  item is what the message ranks on.
+  treats `endorse_renorm` the same way. This is the column to read down,
+  and the spread from its smallest to largest value within an item is
+  what the message ranks on.
 
 ## More than two labels
 

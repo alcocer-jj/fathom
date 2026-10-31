@@ -169,6 +169,19 @@ test_that("DECISION. a first token that is not a label returns FALSE", {
   expect_match(paste(msgs, collapse = "\n"), "reasoning block")
 })
 
+test_that("the first-token message names a prose opening and where to read on", {
+  local_tags(gen = stub_tokens(fx_no_label()))
+
+  msgs <- paste(
+    testthat::capture_messages(v <- check_backend(stub_backend())),
+    collapse = "\n"
+  )
+  expect_false(v)
+  expect_match(msgs, "Three\\s+known\\s+causes")
+  expect_match(msgs, "opens\\s+with\\s+prose")
+  expect_match(msgs, "See\\s+\\?measure")
+})
+
 test_that("a label at position 1 returns TRUE and records what it read", {
   local_tags(gen = stub_generate())
 
@@ -518,7 +531,7 @@ test_that("measure sends the image to the backend, not into the prompt", {
     num_ctx = NULL
   )
 
-  expect_true(all(res$probs$call_ok))
+  expect_true(all(is.na(res$calls$error)))
   # Two items, so two calls, each carrying the path.
   expect_equal(seen$img, c(f, f))
   # And the picture is not in the prompt. It rides in its own field.
@@ -546,7 +559,7 @@ test_that("measure works from an image alone, with no text column", {
     id = "id",
     num_ctx = NULL
   )
-  expect_true(all(res$probs$call_ok))
+  expect_true(all(is.na(res$calls$error)))
   expect_equal(unique(seen$img), f)
 })
 
@@ -671,7 +684,7 @@ test_that("a list column sends every frame, a character column sends one", {
     id = "id",
     num_ctx = NULL
   )
-  expect_true(all(res$probs$call_ok))
+  expect_true(all(is.na(res$calls$error)))
   # Two items per document, so four calls, carrying 2, 2, 1, 1 frames.
   expect_equal(sort(seen$n), c(1L, 1L, 2L, 2L))
   expect_setequal(unique(seen$paths), f)

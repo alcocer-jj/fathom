@@ -41,9 +41,10 @@ The result is an ordinary list, so an item can be edited before it reaches
 \code{\link[=instrument]{instrument()}} when one category needs wording the stem cannot give it.
 }
 \description{
-Turns a list of categories into an instrument of independent
-binary items. The category goes into the question, not the answer, so
-categories may be any length and the tokenization constraint never applies.
+Turns a list of categories into the questions for an instrument
+of independent binary items. The category goes into the question, not the
+answer, so categories may be any length and the tokenization constraint
+never applies.
 }
 \section{The named stems}{
 

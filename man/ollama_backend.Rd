@@ -70,8 +70,9 @@ naming something absent here, before any call, because Ollama answers HTTP
 otherwise be discarded in silence.
 \item \code{top_logprobs} says how many alternatives are requested at the answer
 position. Ollama caps this at 20. A label whose token falls outside the
-returned set is scored as absent, so \code{prob} is a lower bound and
-\code{prob_other} absorbs the difference.
+returned set is scored as absent, with a \code{prob_renorm} of exactly 0, so
+\code{prob_other} absorbs its mass, and \code{\link[=item_report]{item_report()}} reports how often that
+happened as \code{pct_label_absent}.
 \item \code{think} is always \code{FALSE}, and not an argument. Reasoning is disabled on
 every call, because scoring reads generated position 1 and a model that
 reasons first puts something else there.

@@ -171,7 +171,8 @@ instrument(
 An object of class `fathom_instrument`, a list. Its print method shows
 the parts usually wanted, and
 [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
-shows what the model will actually receive.
+shows what the model will receive, before Ollama applies the model's
+chat template.
 
 ### The instrument
 
@@ -264,6 +265,35 @@ is what lets a category be a long phrase while the answer stays one
 word. Other instruments store them without putting them in the prompt,
 since their question is yours to write.
 
+## Items or one exclusive question
+
+An instrument of items asks about each category on its own, so a
+document can carry several categories or none, and each question is
+answered without the others in view. `exclusive = TRUE` asks one
+question that lists every category, so the categories share one
+distribution and each document takes one of them.
+
+The exclusive form is the one to use when a document should take exactly
+one category, such as a level on a scale, and whenever the categories
+are defined against each other. Halterman and Keith (2026) found no
+accuracy gain in preliminary experiments from asking about one category
+at a time, and argue that their codebooks need every category in view to
+separate them. A drone strike can meet a codebook's definition of an
+assassination for a model that never sees the drone assassination
+category beside it.
+
+## Twenty alternatives
+
+Ollama returns at most the 20 most likely first tokens. A label the
+model does not rank among those 20 on a document scores exactly 0 there,
+and on two labels its partner then scores exactly 1. Every label
+therefore has to be a word the model would plausibly open its answer
+with, likely enough to rank among the 20. An instrument of many labels
+risks some of them falling outside on every document. `pct_label_absent`
+in
+[`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+reports the share of calls where any label did.
+
 ## Ordinal labels
 
 `scores` attaches a numeric value to each label. The values are
@@ -328,6 +358,13 @@ The first-character rule is therefore about characters and not bytes.
 Two labels differing only in an accent still collide once folded, and
 this function refuses them. Where a coding scheme forces that collision,
 `exact = TRUE` is the escape.
+
+## References
+
+Halterman, A. and Keith, K. A. (2026). Codebook LLMs. Evaluating LLMs as
+measurement tools for political science concepts. *Political Analysis*
+34, 188–204.
+[doi:10.1017/pan.2025.10017](https://doi.org/10.1017/pan.2025.10017)
 
 ## See also
 

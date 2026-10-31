@@ -52,11 +52,14 @@ with the columns measure() and the audit functions expect.
 
 A probability is more than a label, and these are what that buys. How
 much of an item’s endorsement rate is the threshold rather than the
-corpus, whether the model agreed with a human, how far two humans agreed
+corpus, whether its answers move with the order the labels are listed
+in, whether the model agreed with a human, how far two humans agreed
 with each other, and whether its probabilities were honest.
 
 - [`threshold_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/threshold_sensitivity.md)
   : Compute endorsement rates across a range of thresholds
+- [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+  : Ask again with the labels in another order
 - [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
   : Draw a blinded sample for human coding
 - [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)

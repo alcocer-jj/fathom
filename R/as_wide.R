@@ -29,7 +29,8 @@
 #'   matched by position.
 #' @param target A string naming the label whose probability fills each cell.
 #'   Defaults to the first label for a multi-item instrument, and to `NULL` for
-#'   an exclusive instrument, where every category gets its own column.
+#'   an exclusive instrument or a single question, where every label gets its
+#'   own column.
 #' @param value A string naming the column that supplies the value. Defaults to
 #'   `"prob_renorm"`, the probability conditioned on the model having answered
 #'   with one of your labels at all. That is the quantity a human coder given
@@ -37,13 +38,11 @@
 #'   and the expected score read, so a matrix built here can be compared against
 #'   either without changing quantity partway through.
 #'
-#'   `"prob"` is the raw probability, measured against every token the model
-#'   could have written. Use it when the claim is about whether the model
-#'   committed rather than about which label it preferred.
-#'
 #'   `"expected_score"` requires an instrument built with `scores`, and returns
 #'   one column per item rather than one per label, since an expected score is
-#'   one number per document and item.
+#'   one number per document and item. On an item whose `pct_extreme_renorm` in
+#'   [item_report()] sits near 1 it bunches at the scores themselves, so it
+#'   ranks documents more reliably than it measures the distances between them.
 #' @param prefix A string prepended to column names. Default is `""`.
 #' @param dichotomize A logical value indicating whether to threshold at 0.5 and
 #'   return integers. Default is `FALSE`.
@@ -90,7 +89,7 @@ as_wide <- function(
   results,
   ...,
   target = NULL,
-  value = c("prob_renorm", "prob", "expected_score"),
+  value = c("prob_renorm", "expected_score"),
   prefix = "",
   dichotomize = FALSE,
   keep = character(0),
@@ -101,7 +100,7 @@ as_wide <- function(
   # document and therefore in $calls, so the join has to be told about them.
   results <- flat_results(
     results,
-    c("all_absent", "expected_score", "truncated", keep)
+    c("error", "expected_score", "prob_other", "truncated", keep)
   )
   value <- match.arg(value)
   labs <- unique(results$label)
@@ -150,9 +149,11 @@ as_wide <- function(
     )
   }
 
-  nf <- sum(!results$call_ok, na.rm = TRUE)
+  nf <- sum(!is.na(results$error))
   nt <- sum(results$truncated, na.rm = TRUE)
-  na <- sum(results$all_absent, na.rm = TRUE)
+  # No label anywhere in the returned distribution leaves all of the mass
+  # outside the labels.
+  na <- sum(results$prob_other == 1, na.rm = TRUE)
   if (nf) {
     warning(
       fmt_warn(paste0(nf, " failed record(s) become NA. Re-run measure().")),

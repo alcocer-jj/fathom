@@ -17,11 +17,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-The `fathom` package allows R users to qualitatively code and measure a corpus of text, images, audio, or video with local large language models (LLMs), where every answer comes back as a probability rather than a word. This page helps you install the package, confirm that your Ollama server is up and running, and configure the additional software tools required to evaluate an audio or video corpus.
+The `fathom` package allows R users to qualitatively code and measure a corpus of text, images, audio, or video with local large language models (LLMs), where every answer comes back as a probability rather than a word. This page helps you install the package as well as confirm that your Ollama server is up and running and configure the additional software tools required to evaluate an audio or video corpus.
 
 ## Installation
 
-`fathom` is distributed through R-Universe.
+`fathom` is distributed through R-universe.
 
 ```{r install, eval=FALSE}
 install.packages(
@@ -71,22 +71,23 @@ If called without a model name, the function lists the models you have installed
 
 ```{r backend-list, eval=FALSE}
 ollama_backend()
+#>
 #> Models on http://localhost:11434
 #>
-#>   deepseek-llm:7b           4.0 GB   7B Q4_0        text
-#>   deepseek-r1:32b          19.9 GB   32.8B Q4_K_M   text
-#>   deepseek-v2:16b           8.9 GB   15.7B Q4_0     text
-#>   gemma3:27b               17.4 GB   27.4B Q4_K_M   text, image
-#>   gemma4:31b               19.9 GB   31.3B Q4_K_M   text, image
-#>   granite4.1:30b           17.5 GB   28.9B Q4_K_M   text
-#>   ministral-3:14b           9.1 GB   13.9B Q4_K_M   text, image
-#>   mistral-small:24b        14.3 GB   23.6B Q4_K_M   text
-#>   mistral-small3.2:24b     15.2 GB   24.0B Q4_K_M   text, image
-#>   nemotron3:33b            27.6 GB   33.0B Q4_K_M   text, image
-#>   olmo-3:32b               19.5 GB   32.2B Q4_K_M   text
-#>   olmo-3.1:32b-instruct    19.5 GB   32.2B Q4_K_M   text
-#>   qwen3.5:27b              17.4 GB   27.8B Q4_K_M   text, image
-#>   qwen3.6:35b              23.9 GB   36.0B Q4_K_M   text, image
+#>   deepseek-llm:7b          4.0 GB   7B Q4_0        text
+#>   deepseek-r1:32b         19.9 GB   32.8B Q4_K_M   text
+#>   deepseek-v2:16b          8.9 GB   15.7B Q4_0     text
+#>   gemma3:27b              17.4 GB   27.4B Q4_K_M   text, image
+#>   gemma4:31b              19.9 GB   31.3B Q4_K_M   text, image
+#>   granite4.1:30b          17.5 GB   28.9B Q4_K_M   text
+#>   ministral-3:14b          9.1 GB   13.9B Q4_K_M   text, image
+#>   mistral-small:24b       14.3 GB   23.6B Q4_K_M   text
+#>   mistral-small3.2:24b    15.2 GB   24.0B Q4_K_M   text, image
+#>   nemotron3:33b           27.6 GB   33.0B Q4_K_M   text, image
+#>   olmo-3:32b              19.5 GB   32.2B Q4_K_M   text
+#>   olmo-3.1:32b-instruct   19.5 GB   32.2B Q4_K_M   text
+#>   qwen3.5:27b             17.4 GB   27.8B Q4_K_M   text, image
+#>   qwen3.6:35b             23.9 GB   36.0B Q4_K_M   text, image
 #>
 #> Error: `model` is required. Paste one of the tags above, e.g.
 #>         ollama_backend("deepseek-llm:7b")
@@ -135,7 +136,7 @@ ffmpeg -version
 
 #### Linux
 
-`ffmpeg` can be installed via [APT](https://wiki.debian.org/Apt), the command-line package manager that Debian and Ubuntu ship with.^[Other distributions use their own package manager; see this [guide to the other distributions](https://itsfoss.com/ffmpeg/) for more information.]
+`ffmpeg` can be installed via [APT](https://wiki.debian.org/Apt), the command-line package manager that Debian and Ubuntu ship with.^[Other distributions use their own package manager. See this [guide to the other distributions](https://itsfoss.com/ffmpeg/) for more information.]
 
 Run this in a terminal window.
 
@@ -169,7 +170,7 @@ Then confirm the installation worked.
 whisperx --version # or swap with whispermlx
 ```
 
-Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. `uv tool dir --bin` in a terminal window prints where `uv` put the command; paste that path to `~/.Renviron`, which R reads at startup, as `PATH=${PATH}:/the/directory`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
+Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. Running `uv tool dir --bin` in a terminal window prints the path where `uv` put the command. Add the path to `~/.Renviron` as `PATH=${PATH}:/the/directory`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
 
 ```{r macos-check, eval=FALSE}
 Sys.which("whisperx") # or swap with whispermlx
@@ -178,7 +179,7 @@ Sys.which("ffmpeg")
 
 #### Windows
 
-`whisperx` can be installed via [uv](https://docs.astral.sh/uv/), a package manager that installs Python command-line tools into isolated environments.^[To set up `uv`, see their [installation guide](https://docs.astral.sh/uv/getting-started/installation/), or run `winget install --id=astral-sh.uv -e` and restart the command-line window if you already have WinGet from the section above. For GPU acceleration, install the [CUDA toolkit 12.8](https://developer.nvidia.com/cuda-12-8-1-download-archive) before `whisperx`; CPU-only installs skip it.]
+`whisperx` can be installed via [uv](https://docs.astral.sh/uv/), a package manager that installs Python command-line tools into isolated environments.^[To set up `uv`, see their [installation guide](https://docs.astral.sh/uv/getting-started/installation/), or run `winget install --id=astral-sh.uv -e` and restart the command-line window if you already have WinGet from the section above. For GPU acceleration, install the [CUDA toolkit 12.8](https://developer.nvidia.com/cuda-12-8-1-download-archive) before `whisperx`. CPU-only installs skip it.]
 
 Run this in a PowerShell window.
 
@@ -192,7 +193,8 @@ Then confirm the installation worked.
 whisperx --version
 ```
 
-Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. `uv tool dir --bin` in a PowerShell window prints where `uv` put the command; paste that path to `~/.Renviron`, which R reads at startup, as `PATH=${PATH};"C:\the\directory"`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
+Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. Running `uv tool dir --bin` in a PowerShell window prints the path where `uv` put the command. Add the path to `~/.Renviron` as `PATH="${PATH};C:\the\directory"`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
+
 
 ```{r windows-check, eval=FALSE}
 Sys.which("whisperx")
@@ -201,7 +203,7 @@ Sys.which("ffmpeg")
 
 #### Linux
 
-`whisperx` can be installed via [uv](https://docs.astral.sh/uv/), a package manager that installs Python command-line tools into isolated environments.^[`uv` is not in the Debian or Ubuntu repositories, so the standalone installer is the usual route; see their [installation guide](https://docs.astral.sh/uv/getting-started/installation/). For GPU acceleration, install the [CUDA toolkit 12.8](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/) before `whisperx`; CPU-only installs skip it.]
+`whisperx` can be installed via [uv](https://docs.astral.sh/uv/), a package manager that installs Python command-line tools into isolated environments.^[`uv` is not in the Debian or Ubuntu repositories, so the standalone installer is the usual route. See their [installation guide](https://docs.astral.sh/uv/getting-started/installation/). For GPU acceleration, install the [CUDA toolkit 12.8](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/) before `whisperx`. CPU-only installs skip it.]
 
 Run this in a terminal window.
 
@@ -215,16 +217,16 @@ Then confirm the installation worked.
 whisperx --version
 ```
 
-Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. `uv tool dir --bin` in a terminal window prints where uv put the command; add it to `~/.Renviron`, which R reads at startup, as `PATH=${PATH}:/the/directory`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
+Then, in R, confirm your environment can see it, along with `ffmpeg`.^[An empty string in your console means R was started without that directory on its `PATH`. Running `uv tool dir --bin` in a terminal window prints the path where uv put the command. Add the path to `~/.Renviron` as `PATH=${PATH}:/the/directory`. `usethis::edit_r_environ()` in an R session opens the file wherever it lives. Restart R afterwards.]
 
 ```{r linux-check, eval=FALSE}
 Sys.which("whisperx")
 Sys.which("ffmpeg")
 ```
 
-### HuggingFace read token
+### Hugging Face read token
 
-Both the `prepare_audio()` and `prepare_video()` functions require a HuggingFace (HF) API token when setting `diarize_names = TRUE`, as the diarization model the package uses is gated. However, transcription, alignment, and voice activity detection all run from ungated weights, so only the labeling of speakers requires that extra step. To get access to the gated model, sign in to your HF account and accept the conditions on the [model webpage](https://huggingface.co/pyannote/speaker-diarization-community-1). Then, create a read token at [hf.co/settings/tokens](https://hf.co/settings/tokens) and add it to your `~/.Renviron` as a line like this one.
+Both the `prepare_audio()` and `prepare_video()` functions require a Hugging Face (HF) API token when setting `diarize_names = TRUE`, as the diarization model the package uses is gated. However, transcription, alignment, and voice activity detection all run from ungated weights, so only the labeling of speakers requires that extra step. To get access to the gated model, sign in to your HF account and accept the conditions on the [model webpage](https://huggingface.co/pyannote/speaker-diarization-community-1). Then, create a read token at [hf.co/settings/tokens](https://hf.co/settings/tokens) and add it to your `~/.Renviron` as a line like this one.
 
 ```ini
 HF_TOKEN=hf_yourtokenhere
@@ -242,12 +244,12 @@ hf_token <- Sys.getenv("HF_TOKEN")
 
 A full run can consist of five to seven steps depending on whether your corpus of interest is not text and if you want an additional diagnostic check.
 
-0. **Prepare a corpus** with `prepare_image()`, `prepare_audio()` or `prepare_video()`.
+0. **Prepare a corpus** with `prepare_image()`, `prepare_audio()`, or `prepare_video()`.
 1. **Select a model** with `ollama_backend()`.
 2. **Code the qualitative instrument** with `instrument()`, and use `preview()` to see what the local LLM will read.
 3. **Extract response probabilities** with `measure()`.
 4. **Read the results** with `item_report()` for descriptive summaries, use `inspect_cases()` to manually review some entries, and apply `as_wide()` to hand off for downstream analyses.
 5. **Validate the LLM results** with `coding_sample()` and `validate_sample()`.
-6. **Test the measurement** with `threshold_sensitivity()` to assess if endorsement rates are sensitive to cut-point thresholds.
+6. **Test the measurement** with `threshold_sensitivity()` to assess if endorsement rates are sensitive to cut-point thresholds, and with `order_sensitivity()` to assess if the answers move with the order the labels are listed in.
 
 For an applied example, see [A complete run](complete_run.html).

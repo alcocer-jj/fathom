@@ -231,6 +231,37 @@ LANG_PRESETS <- list(
   )
 )
 
+#' The cue an instrument gets when none is supplied
+#'
+#' Held in one place because `reorder_labels()` rebuilds it for a new label
+#' order. A second copy of the format could drift from this one, and an audit
+#' would then compare against a prompt the package never sends.
+#'
+#' @param labels A character vector of label names, in the order the cue lists
+#'   them.
+#' @param lang A string naming a preset in `LANG_PRESETS`.
+#' @return A string.
+#' @keywords internal
+#' @noRd
+default_cue <- function(labels, lang) {
+  preset <- LANG_PRESETS[[lang]]
+  sprintf(preset$cue_fmt, paste_or(labels, preset$or_word))
+}
+
+#' The listing an exclusive question carries under it
+#'
+#' One `name = definition` line per label, in the order given. Shared with
+#' `reorder_labels()` for the reason `default_cue()` is.
+#'
+#' @param labels A character vector of label names, in listing order.
+#' @param desc A character vector of the same length giving each label's text.
+#' @return A string.
+#' @keywords internal
+#' @noRd
+choice_listing <- function(labels, desc) {
+  paste(sprintf("%s = %s", labels, desc), collapse = "\n")
+}
+
 #' Construct a validated instrument of items
 #'
 #' @description
@@ -274,6 +305,30 @@ LANG_PRESETS <- list(
 #' what lets a category be a long phrase while the answer stays one word. Other
 #' instruments store them without putting them in the prompt, since their
 #' question is yours to write.
+#'
+#' @section Items or one exclusive question:
+#' An instrument of items asks about each category on its own, so a document
+#' can carry several categories or none, and each question is answered without
+#' the others in view. `exclusive = TRUE` asks one question that lists every
+#' category, so the categories share one distribution and each document takes
+#' one of them.
+#'
+#' The exclusive form is the one to use when a document should take exactly
+#' one category, such as a level on a scale, and whenever the categories are
+#' defined against each other. Halterman and Keith (2026) found no accuracy
+#' gain in preliminary experiments from asking about one category at a time,
+#' and argue that their codebooks need every category in view to separate
+#' them. A drone strike can meet a codebook's definition of an assassination
+#' for a model that never sees the drone assassination category beside it.
+#'
+#' @section Twenty alternatives:
+#' Ollama returns at most the 20 most likely first tokens. A label the model
+#' does not rank among those 20 on a document scores exactly 0 there, and on
+#' two labels its partner then scores exactly 1. Every label therefore has to
+#' be a word the model would plausibly open its answer with, likely enough to
+#' rank among the 20. An instrument of many labels risks some of them falling
+#' outside on every document. `pct_label_absent` in [item_report()] reports the
+#' share of calls where any label did.
 #'
 #' @section Ordinal labels:
 #' `scores` attaches a numeric value to each label. The values are metadata.
@@ -424,7 +479,7 @@ LANG_PRESETS <- list(
 #'   its own label and so is matched by prefix regardless.
 #' @return An object of class `fathom_instrument`, a list. Its print method
 #' shows the parts usually wanted, and [preview()] shows what the model will
-#' actually receive.
+#' receive, before Ollama applies the model's chat template.
 #'
 #' ## The instrument
 #'
@@ -465,6 +520,10 @@ LANG_PRESETS <- list(
 #' interface.
 #' @seealso [template_items()] for items built from one stem, [preview()] for
 #'   the prompt it assembles, and [measure()] for running it.
+#' @references
+#'   Halterman, A. and Keith, K. A. (2026). Codebook LLMs. Evaluating LLMs as
+#'   measurement tools for political science concepts. \emph{Political
+#'   Analysis} 34, 188--204. \doi{10.1017/pan.2025.10017}
 #' @examples
 #' b <- instrument(
 #'   items = list(
@@ -604,11 +663,11 @@ instrument <- function(
       ))
     }
 
-    listing <- paste(sprintf("%s = %s", cat_names, cat_desc), collapse = "\n")
+    listing <- choice_listing(cat_names, cat_desc)
     items[[1]] <- paste0(items[[1]], "\n\n", listing)
 
     if (is.null(cue)) {
-      cue <- sprintf(preset$cue_fmt, paste_or(cat_names, preset$or_word))
+      cue <- default_cue(cat_names, lang)
     }
 
     labels <- cat_names
@@ -883,7 +942,7 @@ instrument <- function(
     # Through paste_or() rather than a plain collapse, so a three-label
     # non-exclusive instrument reads "a, b, or c" like the exclusive branch does
     # instead of "a or b or c".
-    cue <- sprintf(preset$cue_fmt, paste_or(lnm, preset$or_word))
+    cue <- default_cue(lnm, lang)
   }
   if (!is.character(cue) || length(cue) != 1L || !nzchar(trimws(cue))) {
     stop("`cue` must be a single non-empty string", call. = FALSE)
@@ -994,6 +1053,80 @@ paste_or <- function(x, or_word = "or") {
     " ",
     utils::tail(x, 1)
   )
+}
+
+#' The same instrument with its labels shown in another order
+#'
+#' What `order_sensitivity()` sends in place of the declared instrument. A
+#' prompt shows the labels in order in two places, the cue and, on an exclusive
+#' instrument, the listing under the question, and both are rebuilt here. A cue
+#' written by hand is left as written, since its wording is not the package's to
+#' change.
+#'
+#' Every field keyed by label is reordered by name, so matching, `scores` and
+#' any probed tokens carry over unchanged and nothing is sent to the model. Only
+#' the presentation moves. `name` is kept, so a reordered instrument still names
+#' the one it came from.
+#'
+#' @param instrument A `fathom_instrument`.
+#' @param ord A character vector holding every label name once, in the new
+#'   order.
+#' @return A `fathom_instrument`.
+#' @keywords internal
+#' @noRd
+reorder_labels <- function(instrument, ord) {
+  old <- names(instrument$labels)
+  stopifnot(length(ord) == length(old), setequal(ord, old))
+  b <- instrument
+
+  if (isTRUE(b$exclusive)) {
+    desc <- if (is.null(b$definitions)) {
+      stats::setNames(old, old)
+    } else {
+      b$definitions
+    }
+    # instrument() wrote the question as its stem, a blank line and the
+    # listing, so the stem is what remains once that listing is taken off the
+    # end. A question edited after construction no longer ends in it, and
+    # reordering would then append a second listing to the first.
+    tail_old <- paste0("\n\n", choice_listing(old, unname(desc[old])))
+    q <- b$items[[1]]
+    if (!endsWith(q, tail_old)) {
+      stop(
+        fmt_err(paste0(
+          "the question does not end in the listing `instrument()` writes, so ",
+          "its labels cannot be shown in another order. Build the instrument ",
+          "with `instrument()` rather than editing its fields."
+        )),
+        call. = FALSE
+      )
+    }
+    stem <- substr(q, 1L, nchar(q) - nchar(tail_old))
+    b$items[[1]] <- paste0(
+      stem,
+      "\n\n",
+      choice_listing(ord, unname(desc[ord]))
+    )
+  }
+
+  if (identical(b$cue, default_cue(old, b$lang))) {
+    b$cue <- default_cue(ord, b$lang)
+  }
+
+  keyed <- c(
+    "labels",
+    "normalized",
+    "definitions",
+    "scores",
+    "probe_texts",
+    "firsts"
+  )
+  for (f in keyed) {
+    if (!is.null(b[[f]])) {
+      b[[f]] <- b[[f]][ord]
+    }
+  }
+  b
 }
 
 #' Discover each label's first token against a live model
@@ -1233,9 +1366,10 @@ probe_labels <- function(instrument, backend) {
 
 #' Build items by substituting categories into one question stem
 #'
-#' @description Turns a list of categories into an instrument of independent
-#'   binary items. The category goes into the question, not the answer, so
-#'   categories may be any length and the tokenization constraint never applies.
+#' @description Turns a list of categories into the questions for an instrument
+#'   of independent binary items. The category goes into the question, not the
+#'   answer, so categories may be any length and the tokenization constraint
+#'   never applies.
 #'
 #' @section The named stems:
 #' Four sets, one per medium, each in English and in Spanish. `medium` picks

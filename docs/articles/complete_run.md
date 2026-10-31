@@ -32,14 +32,17 @@ English portion of ParlaSent 1.0 by Mochtak, Rupnik, Meden, and Ljubešić
     [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
     and
     [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
+6.  **Test the measurement** with
+    [`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+    to check whether the order of the labels drove the answers.
 
 ## The corpus
 
 `parlasent` contains data on two annotators who coded every
 parliamentary sentence independently based on a six-level ordered scale.
 In addition, it contains a reconciliation column resulting from those
-two. `annotator1` and `annotator2` are the two codings, `reconciliation`
-is what they settled on.
+two. `annotator1` and `annotator2` are the two codings, and
+`reconciliation` is what they settled on.
 
 \
 [`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
@@ -69,10 +72,10 @@ is what they settled on.
 
 The `Positive` and `Negative` labels are used for sentences that emit
 these emotions entirely or predominantly. The `M_Positive` and
-`M_Negative` labels are used for sentences that emit these emotions in a
-mixed or leaning manner. The `P_Neutral` and `N_Neutral` labels carry no
-sentiment and differ only in which way they tilt. Overall, the sample of
-100 documents holds around sixteen or seventeen of each.
+`M_Negative` labels are used for sentences that emit these emotions in
+an ambiguous or mixed manner. The `P_Neutral` and `N_Neutral` labels
+carry no sentiment and differ only in which way they tilt. Overall, the
+sample of 100 documents holds around sixteen or seventeen of each.
 
 ## Step 1. Select a model
 
@@ -155,7 +158,7 @@ that kind of example.
 The
 [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
 function prints what the local LLM would receive without executing the
-call.[^2]
+call, which is everything in between the dashed lines.[^2]
 
 \
 [`preview`](https://alcocer-jj.github.io/fathom/reference/preview.md)`(``b``, text ``=`` ``parlasent``$``sentence``[``1``]``)`\
@@ -191,7 +194,7 @@ call.[^2]
 
 ## Step 3. Extract response probabilities
 
-As in the
+Using the same prompt as the
 [`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
 function, the
 [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
@@ -240,7 +243,7 @@ covers setting the window by hand with `num_ctx`.
 
 The results object holds two data frames.
 
-- `$probs` is one row per document, item and label, and contains the
+- `$probs` is one row per document, item, and label, and contains the
   results themselves, the probability that the local LLM assigned to
   each label of each document-question pair.
 
@@ -253,33 +256,32 @@ The results object holds two data frames.
 \
 [`pander`](https://rdrr.io/pkg/pander/man/pander.html)`(`[`head`](https://rdrr.io/r/utils/head.html)`(``res``$``probs``)``, n ``=`` ``6``)`
 
-|   id   |   item   | label | prob_renorm |   prob    | present | call_ok |
-|:------:|:--------:|:-----:|:-----------:|:---------:|:-------:|:-------:|
-| uk_001 | category |   1   |      0      |     0     |  FALSE  |  TRUE   |
-| uk_001 | category |   2   |      0      |     0     |  FALSE  |  TRUE   |
-| uk_001 | category |   3   |  6.648e-06  | 6.648e-06 |  TRUE   |  TRUE   |
-| uk_001 | category |   4   |      1      |     1     |  TRUE   |  TRUE   |
-| uk_001 | category |   5   |  1.473e-08  | 1.473e-08 |  TRUE   |  TRUE   |
-| uk_001 | category |   6   |  3.169e-07  | 3.169e-07 |  TRUE   |  TRUE   |
+|   id   |   item   | label | prob_renorm |
+|:------:|:--------:|:-----:|:-----------:|
+| uk_001 | category |   1   |      0      |
+| uk_001 | category |   2   |      0      |
+| uk_001 | category |   3   |  6.648e-06  |
+| uk_001 | category |   4   |      1      |
+| uk_001 | category |   5   |  1.473e-08  |
+| uk_001 | category |   6   |  3.169e-07  |
 
-Here, the `prob_renorm` and `prob` columns convey the probabilities that
-the local LLM assigned to a label. However, `prob_renorm` is
-renormalized to the codebook instrument’s label set, making it the main
-measure of interest.
+Here, the `prob_renorm` column conveys the probability that the local
+LLM assigned to a label, renormalized to the codebook instrument’s label
+set, making it the main measure of interest.
 
 ### Calls (`$calls`)
 
 \
 [`pander`](https://rdrr.io/pkg/pander/man/pander.html)`(`[`head`](https://rdrr.io/r/utils/head.html)`(``res``$``calls``)``, split.table ``=`` ``Inf``)`
 
-| id | item | error | truncated | top1_token | top1_prob | prob_other | all_absent | margin | expected_score | prompt_hash | reconciliation |
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| uk_001 | category | NA | FALSE | 4 | 1 | 2.924e-07 | FALSE | 1 | NA | e80af6d394fe | N_Neutral |
-| uk_002 | category | NA | FALSE | 1 | 1 | 0 | FALSE | 1 | NA | e80af6d394fe | Negative |
-| uk_003 | category | NA | FALSE | 6 | 1 | 0 | FALSE | 1 | NA | e80af6d394fe | P_Neutral |
-| uk_004 | category | NA | FALSE | 5 | 1 | 0 | FALSE | 1 | NA | e80af6d394fe | M_Positive |
-| uk_005 | category | NA | FALSE | 4 | 0.8997 | 5.1e-05 | FALSE | 0.7994 | NA | e80af6d394fe | N_Neutral |
-| uk_006 | category | NA | FALSE | 1 | 1 | 0 | FALSE | 1 | NA | e80af6d394fe | Negative |
+| id | item | error | truncated | top1_token | prob_other | margin | expected_score | prompt_hash | reconciliation |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| uk_001 | category | NA | FALSE | 4 | 2.924e-07 | 1 | NA | e80af6d394fe | N_Neutral |
+| uk_002 | category | NA | FALSE | 1 | 0 | 1 | NA | e80af6d394fe | Negative |
+| uk_003 | category | NA | FALSE | 6 | 0 | 1 | NA | e80af6d394fe | P_Neutral |
+| uk_004 | category | NA | FALSE | 5 | 0 | 1 | NA | e80af6d394fe | M_Positive |
+| uk_005 | category | NA | FALSE | 4 | 5.1e-05 | 0.7994 | NA | e80af6d394fe | N_Neutral |
+| uk_006 | category | NA | FALSE | 1 | 0 | 1 | NA | e80af6d394fe | Negative |
 
 Given that this data frame is at the call level, the `prob_other` column
 conveys the raw probability mass that the local LLM gave to all other
@@ -297,7 +299,7 @@ The
 [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
 function summarizes the run
 [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
-produced. On a forced choice codebook instrument it returns one row per
+produced. On a forced-choice codebook instrument it returns one row per
 category and prints a header above the table.
 
 \
@@ -307,27 +309,27 @@ category and prints a header above the table.
 `#> Documents     100`\
 `#> Items         1`\
 `#> Labels        6`\
-`#> Leaked mass   max 0.0001, mean 0.0000`\
-`#> Winning       probability min 0.686`\
-`#> # A tibble: 6 × 4`\
-`#>   item     label n_won share_won`\
-`#>   <chr>    <chr> <int>     <dbl>`\
-`#> 1 category 1        17      0.17`\
-`#> 2 category 2        15      0.15`\
-`#> 3 category 3        13      0.13`\
-`#> 4 category 4        18      0.18`\
-`#> 5 category 5        18      0.18`\
-`#> 6 category 6        19      0.19`
+`#> # A tibble: 6 × 7`\
+`#>   item     label n_won share_won pct_label_absent mean_prob_other pct_off_label`\
+`#>   <chr>    <chr> <int>     <dbl>            <dbl>           <dbl>         <dbl>`\
+`#> 1 category 1        17      0.17             0.72      0.00000346             0`\
+`#> 2 category 2        15      0.15             0.72      0.00000346             0`\
+`#> 3 category 3        13      0.13             0.72      0.00000346             0`\
+`#> 4 category 4        18      0.18             0.72      0.00000346             0`\
+`#> 5 category 5        18      0.18             0.72      0.00000346             0`\
+`#> 6 category 6        19      0.19             0.72      0.00000346             0`
 
 Here, the `n_won` column counts the number of documents where each label
 had the highest probability, whereas the `share_won` column expresses it
 as a proportion of the documents scored.
 
-The console also outputs two diagnostics, *Leaked mass* and *Winning*.
-Leaked mass depicts the max and mean probability mass that landed on no
-category at all, while *Winning* depicts the lowest probability that any
-winning category received, conveying the floor of the local LLM’s
-confidence.
+The last three columns describe each question’s calls rather than any
+one category, so they repeat down its rows. The `pct_label_absent`
+column is the share of documents where at least one category fell
+outside the alternatives the local LLM returned, the `mean_prob_other`
+column is the average probability mass that landed on no category at
+all, and the `pct_off_label` column is the share of documents where the
+first token the local LLM generated was not a category.
 
 ### Inspecting question-document pairs
 
@@ -439,10 +441,10 @@ the codebook instrument’s questions, named in the `item` column and
 written out with its label definitions in the `question` column. Since
 this coding instrument asks a single question, every row carries the
 same question and each pair is simply a document. However, on a coding
-instrument of several questions, a document appears once per question
-and `n` counts pairs either way. The `human_label` column is left blank
-for human coders to fill in using the labels that the `allowed` column
-lists.
+instrument of several questions, a document appears once per question it
+was drawn on and `n` counts pairs either way. The `human_label` column
+is left blank for human coders to fill in using the labels that the
+`allowed` column lists.
 
 ### Validating the sample using two coders
 
@@ -508,24 +510,83 @@ with one row per question. The `model_alpha` column is the model’s
 average alpha with each of the coders, while the `coder_alpha` column is
 the coders’ average alpha with each other, which with two coders is
 simply their one pairwise alpha. The `gap` column subtracts the second
-from the first, so it reads in the same units as alpha (see
-`v$discrimination` table for individual level comparisons between the
+from the first, so it reads in the same units as alpha (see the
+`v$discrimination` table for individual-level comparisons between the
 model and each coder). A gap value below zero would indicate that the
 model on average disagrees with the coders more than they on average
 disagree with each other. Conversely, a gap value above zero would
 indicate that the model had a higher average agreement with the coders
 than the coders had with each other. The `gap_ci` column holds a
 percentile confidence interval around the gap (default of 95 percent),
-built from an empirical bootstrap. Here, the local LLM’s average alpha
-of 0.835 against the human coders’ average alpha of 0.79 has a gap of
-0.045 with an interval of \[-0.16, 0.25\]. Both alpha values sitting at
-or near Krippendorff’s 0.80 threshold along with its gap interval
+built from a nonparametric bootstrap. Here, the local LLM’s average
+alpha of 0.835 against the human coders’ average alpha of 0.79 has a gap
+of 0.045 with an interval of \[-0.16, 0.25\]. Both alpha values sitting
+at or near Krippendorff’s 0.80 threshold along with its gap interval
 crossing zero suggest that the local LLM’s judgment matched the
-annotators’ about as closely as their judgments match each other,
+annotators’ about as closely as their judgments matched each other,
 further suggesting that the LLM’s coding can serve as a viable
 alternative to human coders for this corpus.
 
+## Step 6. Test the measurement
+
+LLM classification responses have been shown to be sensitive to label
+ordering (e.g., Halterman and Keith 2026). To assess label order
+sensitivity, the
+[`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)
+function runs
+[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+again (holding the original run’s parameters constant) on every document
+with the labels listed in reverse. When a codebook instrument uses three
+or more labels (such as this case), the function also runs
+[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+with the labels shuffled. These two runs are then compared with the
+original run.
+
+\
+`ord`` ``<-`` `[`order_sensitivity`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)`(`\
+`  ``res``,                         ``# model results`\
+`  ``parlasent``,                   ``# data frame containing corpus`\
+`  text   ``=`` ``"sentence"``,         ``# corpus documents`\
+`  id     ``=`` ``"id"``,               ``# document ids`\
+`  level  ``=`` ``"ordinal"``,          ``# weight disagreements by distance`\
+`  labels ``=`` `[`as.character`](https://rdrr.io/r/base/character.html)`(``1``:``6``)``,  ``# the scale, least to greatest`\
+`  seed   ``=`` ``444``                 ``# fixed seed`\
+`)`
+
+\
+[`pander`](https://rdrr.io/pkg/pander/man/pander.html)`(``ord``, split.table ``=`` ``Inf``)`
+
+|   item   |  order   |  n  | agreement | alpha  |
+|:--------:|:--------:|:---:|:---------:|:------:|
+| category | reversed | 100 |   0.75    | 0.936  |
+| category | shuffled | 100 |   0.77    | 0.9034 |
+
+\
+\
+[`attr`](https://rdrr.io/r/base/attr.html)`(``ord``, ``"orders"``)`\
+`#> $declared`\
+`#> [1] "1" "2" "3" "4" "5" "6"`\
+`#> `\
+`#> $reversed`\
+`#> [1] "6" "5" "4" "3" "2" "1"`\
+`#> `\
+`#> $shuffled`\
+`#> [1] "6" "3" "5" "1" "4" "2"`
+
+Here, each row compares a reordering method model run with the original
+order model run on the same documents. Like with the `v$ceiling$pairs`
+table, the `agreement` column denotes the proportion of documents where
+both model runs wrote the same label, while the `alpha` column
+corresponds to the Krippendorff’s alpha between both model runs. Under
+both methods of reordering, the model’s share of agreement and high
+alpha scores suggest the model was still labeling documents similarly,
+suggesting that the main results are stable and consistent.
+
 ## References
+
+Halterman, A., & Keith, K. A. (2026). Codebook LLMs: Evaluating LLMs as
+Measurement Tools for Political Science Concepts. *Political Analysis*,
+34(2), 188–204. <https://doi.org/10.1017/pan.2025.10017>
 
 Krippendorff, K. (2019). *Content Analysis: An Introduction to Its
 Methodology* (4th ed.). Sage. <https://doi.org/10.4135/9781071878781>

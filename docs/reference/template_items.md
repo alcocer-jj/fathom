@@ -1,9 +1,9 @@
 # Build items by substituting categories into one question stem
 
-Turns a list of categories into an instrument of independent binary
-items. The category goes into the question, not the answer, so
-categories may be any length and the tokenization constraint never
-applies.
+Turns a list of categories into the questions for an instrument of
+independent binary items. The category goes into the question, not the
+answer, so categories may be any length and the tokenization constraint
+never applies.
 
 ## Usage
 

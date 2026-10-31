@@ -1,7 +1,8 @@
 # Print the assembled prompt
 
-Prints the exact string the model will receive. Makes no model calls.
-Prompt failures do not appear in the output of
+Prints the exact string the model will receive, before Ollama applies
+the model's chat template. Makes no model calls. Prompt failures do not
+appear in the output of
 [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md).
 
 ## Usage
@@ -44,17 +45,22 @@ preview(
 - truncate:
 
   An integer giving the number of characters of document text to show.
-  `NULL` shows all. Default is 300.
+  `NULL` shows all. The returned string always carries the whole
+  document. Default is 300.
 
 ## Value
 
 Invisibly, the assembled prompt string for the item shown, exactly as
-the model would receive it. A single character scalar.
+[`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
+sends it, before Ollama applies the model's chat template. It carries
+the whole document and leaves out the bracketed media line. A single
+character scalar.
 
-The printed output is larger than the return value and the difference
-matters. Printing shows the prompt and, beneath it, the table of what
-each label will be matched against. That table is where most extraction
-failures are visible, and it is not in the returned string.
+The printed output and the return value differ, and the difference
+matters. Printing trims a long document at `truncate` and shows, beneath
+the prompt, the table of what each label will be matched against. That
+table is where most extraction failures are visible, and it is not in
+the returned string.
 
 So capture the value to diff two prompts or to paste one into a paper,
 and read the printed output to check the instrument. No call is made

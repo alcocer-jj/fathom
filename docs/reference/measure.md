@@ -152,29 +152,20 @@ stored once instead of repeating down the label rows.
 - `label` is the label this row scores, in the order the instrument
   declares them.
 
-- `prob_renorm` is `prob` rescaled so the labels sum to 1. The measure.
-  `NA` when no label appeared at all, since there is nothing to
-  condition on.
-
-- `prob` is the raw probability, against every token the model could
-  have written. Does not sum to 1 down the labels.
-
-- `present` says whether any token counting as this label appeared in
-  the returned distribution. A `prob` of zero means the label was
-  measured at zero when this is `TRUE`, and fell below `top_logprobs`
-  when it is `FALSE`.
-
-- `call_ok` is `FALSE` when the call failed. One fact per call, kept
-  here rather than only in `$calls` because it guards almost every
-  filter over these rows.
+- `prob_renorm` is the probability of this label rescaled so the labels
+  sum to 1. The measure. `NA` when no label appeared at all, since there
+  is nothing to condition on, and exactly 0 for a label that fell
+  outside the `top_logprobs` alternatives. The raw probability, against
+  every token the model could have written, is
+  `prob_renorm * (1 - prob_other)`.
 
 ### `$calls`, one row per document and item
 
 Anything named in `keep` rides here too, since a carried column
 describes the document rather than any one label.
 
-- `error` is the message when the call failed, otherwise `NA`. Non-`NA`
-  exactly when `call_ok` is `FALSE`.
+- `error` is the message when the call failed, otherwise `NA`, so a call
+  succeeded exactly when `error` is `NA`.
 
 - `truncated` is `TRUE` when the prompt came within 64 tokens of
   `num_ctx`, so the document may have lost its opening.
@@ -182,14 +173,9 @@ describes the document rather than any one label.
 - `top1_token` is the token the model actually generated, whether or not
   it counts as a label.
 
-- `top1_prob` is the probability of that token. When it is not a label,
-  this is the only record of how much mass the winning non-label held.
-
 - `prob_other` is the mass on tokens counting as no label. The
-  diagnostic that says whether the question landed.
-
-- `all_absent` is `TRUE` when no label appeared anywhere in the returned
-  distribution.
+  diagnostic that says whether the question landed. It is exactly 1 when
+  no label appeared anywhere in the returned distribution.
 
 - `margin` is the gap between the top two `prob_renorm` values. What
   [`inspect_cases()`](https://alcocer-jj.github.io/fathom/reference/inspect_cases.md)
@@ -246,9 +232,33 @@ token count. Passing an integer once the corpus is known skips it.
 
 ## Retrying failures
 
-A failed item is stored with `call_ok = FALSE` and is therefore stale on
-the next pass, so re-running retries exactly those. There is no separate
-retry sweep, which would run against a cold cache.
+A failed item is stored with its reason in `error` and is therefore
+stale on the next pass, so re-running retries exactly those. There is no
+separate retry sweep, which would run against a cold cache.
+
+## When the check before the first document fails
+
+Before any document, `measure()` sends one prompt built from your
+instrument and the corpus document nearest the median word count, or a
+built-in question when the corpus has no text. Among other checks, the
+run starts only if the first generated token is one of your labels. When
+it is not, nothing is measured and the message names the token the model
+opened with.
+
+Three causes are known. The cue may not name the labels clearly enough,
+which
+[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
+shows. The chat template may open a reasoning block although reasoning
+is off on every call, which is a property of the model's template rather
+than of your instrument. Or the model may open with prose, a word such
+as `The` or `Okay` before its answer.
+
+Worked examples in the question, each a short document followed by its
+one-word answer, are the known fix for prose. Without them Qwen3.8-27B
+answered 941 of 945 tweets in full sentences in Denney and DiGiuseppe's
+(2026) replication of a tweet-sentiment study, and with them its answers
+could be scored. Examples become part of the instrument, so validate and
+audit the instrument that carries them.
 
 ## Character input
 
@@ -264,6 +274,12 @@ prompt. Carrying the text instead would put a copy of the corpus in
 
 Naming that column in `keep` carries it deliberately, and then it is a
 kept column like any other rather than something the schema promises.
+
+## References
+
+Denney, S. and DiGiuseppe, M. (2026). JEV versus LLMs. Accuracy, cost
+and calibration on seven political science replications.
+arXiv:2610.06625.
 
 ## See also
 

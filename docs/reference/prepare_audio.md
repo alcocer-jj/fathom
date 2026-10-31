@@ -85,7 +85,7 @@ prepare_audio(
 
 - hf_token:
 
-  A string giving a HuggingFace read token, required when
+  A string giving a Hugging Face read token, required when
   `diarize_names` is on. Default is `NULL`.
 
 - extra:

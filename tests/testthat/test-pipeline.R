@@ -187,9 +187,9 @@ test_that("a dead server marks rows for retry instead of ending the run", {
   )
 
   expect_equal(nrow(res$probs), 8L)
-  expect_true(all(!res$probs$call_ok))
+  expect_true(all(!is.na(res$calls$error)))
   expect_match(res$calls$error[1], "connection refused")
-  expect_true(all(is.na(res$probs$prob)))
+  expect_true(all(is.na(res$probs$prob_renorm)))
 
   # The failure frame carries the same columns a scored one does. If it did not,
   # a corpus mixing a failure with a success would bind into a ragged frame
@@ -213,7 +213,7 @@ test_that("a reply with nothing to score fails the same way", {
     num_ctx = NULL
   )
 
-  expect_true(all(!res$probs$call_ok))
+  expect_true(all(!is.na(res$calls$error)))
   expect_match(res$calls$error[1], "0.12.11")
 })
 
@@ -232,7 +232,7 @@ test_that("re-running retries the failures and nothing else", {
     num_ctx = NULL,
     checkpoint = ck
   )
-  expect_true(all(!first$probs$call_ok))
+  expect_true(all(!is.na(first$calls$error)))
 
   local_offline()
   second <- quiet_measure(
@@ -244,7 +244,7 @@ test_that("re-running retries the failures and nothing else", {
     num_ctx = NULL,
     checkpoint = ck
   )
-  expect_true(all(second$probs$call_ok))
+  expect_true(all(is.na(second$calls$error)))
 })
 
 test_that("the truncation flag is set only when there is a ceiling to hit", {
@@ -578,7 +578,7 @@ test_that("preview brackets what travels beside the prompt, never sending it", {
   f <- tempfile(fileext = ".png")
   writeBin(as.raw(rep(1, 2796)), f)
 
-  out <- capture.output(preview(b, image = f))
+  out <- capture.output(p <- preview(b, image = f))
   txt <- paste(out, collapse = "\n")
 
   expect_true(grepl("[image: 2,796 bytes", txt, fixed = TRUE))
@@ -590,6 +590,10 @@ test_that("preview brackets what travels beside the prompt, never sending it", {
   # The path itself never appears. A file name in the prompt would be the name
   # answering the question instead of the picture.
   expect_false(grepl(basename(f), txt, fixed = TRUE))
+  # The returned string is what measure() sends, so the bracketed line, which
+  # describes the picture rather than quoting the prompt, stays on the screen.
+  expect_false(grepl("[image:", p, fixed = TRUE))
+  expect_identical(p, fathom:::build_prompt("", b$items[[1]], b))
 
   # A caption plus a picture shows both, because both are sent.
   both <- paste(
@@ -793,4 +797,52 @@ test_that("a failed call at verbose prints its line without a warning", {
     num_ctx = NULL,
     verbosity = "verbose"
   )))
+})
+
+test_that("a failed call always carries a reason", {
+  # The results read a call as successful exactly when `error` is NA, so a
+  # failure has to arrive with a reason even when its condition carries none.
+  local_offline(
+    gen = function(prompt, backend, num_ctx = NULL, image = NULL) stop("")
+  )
+  res <- quiet_measure(
+    tibble::tibble(id = c("a", "b"), body = c("one", "two")),
+    stub_backend(),
+    ab_instrument(),
+    text = "body",
+    id = "id",
+    num_ctx = NULL
+  )
+  expect_true(all(!is.na(res$calls$error)))
+  expect_true(all(nzchar(trimws(res$calls$error))))
+})
+
+test_that("the results carry nothing derivable from what they keep", {
+  # prob is prob_renorm * (1 - prob_other), present is prob_renorm above 0,
+  # all_absent is prob_other == 1, call_ok is is.na(error), and top1_prob is
+  # bounded by prob_other. All five stay in the checkpoints and leave here.
+  local_offline()
+  res <- quiet_measure(
+    tibble::tibble(id = c("a", "b"), body = c("one", "two")),
+    stub_backend(),
+    ab_instrument(),
+    text = "body",
+    id = "id",
+    num_ctx = NULL
+  )
+  expect_named(res$probs, c("id", "item", "label", "prob_renorm"))
+  expect_named(
+    res$calls,
+    c(
+      "id",
+      "item",
+      "error",
+      "truncated",
+      "top1_token",
+      "prob_other",
+      "margin",
+      "expected_score",
+      "prompt_hash"
+    )
+  )
 })

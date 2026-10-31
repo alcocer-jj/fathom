@@ -85,16 +85,20 @@ category, or a bad prompt.
   user wants the model to read alongside the corpus.
 - Questions can be structured as (1) independent items or (2) exclusive
   items.
-- 1.  Independent items ask a separate binary question for each
-      category, meaning that a document can match several at once. (2)
-      Exclusive items make the categories the labels of a single
-      question, meaning that they share a single distribution.
+  - Independent items ask a separate binary question for each category,
+    meaning that a document can match several at once.
+  - Exclusive items make the categories the labels of a single question,
+    meaning that they share a single distribution.
+- Exclusive items are the right choice when a document takes exactly one
+  category, such as a level on a scale, or when the categories are
+  defined against each other, since the model then needs to see all of
+  them to tell them apart.
 
 **[`template_items()`](https://alcocer-jj.github.io/fathom/reference/template_items.md)
 (optional)**
 
-- Builds an instrument of independent items by inserting each category
-  from a list into one question template.
+- Builds the questions for an instrument of independent items by
+  inserting each category from a list into one question template.
 - Templates can be written by the user or chosen from a provided set
   that comes in English and Spanish for each type of corpus (text,
   image, audio, and video).
@@ -102,7 +106,8 @@ category, or a bad prompt.
 **[`preview()`](https://alcocer-jj.github.io/fathom/reference/preview.md)
 (optional)**
 
-- Prints a preview of the exact string that the model will receive.
+- Prints a preview of the exact string that the model will receive,
+  before Ollama applies the model’s chat template.
 
 **3. Extract response probabilities**
 
@@ -127,11 +132,12 @@ category, or a bad prompt.
 
 - Summarizes how each question was answered by the model across the
   corpus.
-- For two-label questions, such as independent items, it reports how
+- For questions with only two labels (e.g., “yes”/“no”), it reports how
   often the model chose the label of interest (e.g., how often it
-  answered “yes” over “no”), how often it was close to certain with
-  probabilities near 0 or 1, and the most probability it ever placed on
-  words outside the specified labels.
+  answered “yes” over “no” or vice versa), how often it was close to
+  certain with probabilities near 0 or 1, the average probability it
+  placed on words outside the specified labels, and how often its first
+  word was either of the two.
 - For questions with more than two labels, such as most exclusive items,
   it reports how often each label won.
 
@@ -141,9 +147,9 @@ category, or a bad prompt.
 - Prints the full text of a sample of documents where a question’s
   target label won (e.g., text where the model answered “yes”), allowing
   a user to gut-check the model’s answers.
-- It can also print the closest calls, meaning the documents where the
-  gap between the two most likely labels was smallest (e.g., text where
-  the model put nearly equal probability on “yes” and “no”).
+- It can also print the model’s most uncertain calls, where the gap
+  between the top and runner-up labels was the smallest (e.g., text
+  where the model put nearly equal probability on “yes” and “no”).
 
 **[`as_wide()`](https://alcocer-jj.github.io/fathom/reference/as_wide.md)**
 
@@ -151,7 +157,8 @@ category, or a bad prompt.
   [`measure()`](https://alcocer-jj.github.io/fathom/reference/measure.md)
   into one row per document and one column per question, each holding
   the probability of the target label (e.g., the probability of “yes”).
-  For exclusive items, each category gets its own column instead.
+  For exclusive items or a single question, each label gets its own
+  column instead.
 - With `dichotomize = TRUE`, returns 0 or 1 instead of probabilities,
   cut at 0.5.
 - With `value = "expected_score"`, returns each document’s expected
@@ -174,10 +181,11 @@ category, or a bad prompt.
   sheets into one, allowing a group of coders to serve as the single
   reference for
   [`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md).
-- Its default is majority rule, but can also be switched to unanimous
-  agreement (`method = "unanimous"`) or to report the share of coders
-  who chose the target label (`method = "soft"`).
-- Leaves a tie blank rather than breaking it.
+- Its default method of consolidation is majority rule, but it can also
+  consolidate based on unanimous agreement (`method = "unanimous"`) or
+  instead report the smoothed share of coders who chose the target label
+  (`method = "soft"`).
+- Ties are left blank.
 
 **[`validate_sample()`](https://alcocer-jj.github.io/fathom/reference/validate_sample.md)**
 
@@ -190,7 +198,8 @@ category, or a bad prompt.
 - If given a named list of
   [`coding_sample()`](https://alcocer-jj.github.io/fathom/reference/coding_sample.md)
   sheets, it also reports intercoder reliability and how far the model’s
-  responses are from the coders, with a bootstrap confidence interval.
+  responses are from the coders, the latter with a bootstrap confidence
+  interval.
 
 **6. Get measurement diagnostics (optional)**
 
@@ -198,30 +207,37 @@ category, or a bad prompt.
 
 - Reports endorsement rates at a range of cut points.
 
+**[`order_sensitivity()`](https://alcocer-jj.github.io/fathom/reference/order_sensitivity.md)**
+
+- Measures every document (or a seeded sample of them) again with the
+  labels reversed, and reports how often the responses changed.
+- Questions with three or more labels also do a second run with shuffled
+  labels.
+
 ## Requirements
 
 A running [Ollama](https://ollama.com) server at version 0.12.11 or
 later, and a
-[compatible](https://alcocer-jj.github.io/fathom/quick_start.md) Ollama
-instruction-following model.
+[compatible](https://alcocer-jj.github.io/fathom/articles/quick_start.md)
+Ollama instruction-following model.
 
 [`ffmpeg`](https://www.ffmpeg.org/) for measuring audio and video.
 
 [`whisperx`](https://github.com/m-bain/whisperx) or
 [`whispermlx`](https://github.com/KalebJS/whispermlx) (Apple Silicon
-optimized) for measuring audio, with a HuggingFace [User Access
-Token](https://huggingface.co/docs/hub/en/security-tokens) and access to
-the
+optimized) for measuring audio and video, with a Hugging Face [User
+Access Token](https://huggingface.co/docs/hub/en/security-tokens) and
+access to the
 [Community-1](https://huggingface.co/pyannote/speaker-diarization-community-1)
 model to use speaker diarization.
 
 See the [Quick
-start](https://alcocer-jj.github.io/fathom/quick_start.md) page for
-information on how to set each of these up.
+start](https://alcocer-jj.github.io/fathom/articles/quick_start.md) page
+for information on how to set each of these up.
 
 ## Installation
 
-`fathom` is distributed through R-Universe.
+`fathom` is distributed through R-universe.
 
 \
 [`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(`\

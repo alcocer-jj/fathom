@@ -19,7 +19,7 @@ none come back."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -156,8 +156,9 @@ naming something absent here, before any call, because Ollama answers HTTP
 otherwise be discarded in silence.</p></li>
 <li><p><code>top_logprobs</code> says how many alternatives are requested at the answer
 position. Ollama caps this at 20. A label whose token falls outside the
-returned set is scored as absent, so <code>prob</code> is a lower bound and
-<code>prob_other</code> absorbs the difference.</p></li>
+returned set is scored as absent, with a <code>prob_renorm</code> of exactly 0, so
+<code>prob_other</code> absorbs its mass, and <code><a href="item_report.html">item_report()</a></code> reports how often that
+happened as <code>pct_label_absent</code>.</p></li>
 <li><p><code>think</code> is always <code>FALSE</code>, and not an argument. Reasoning is disabled on
 every call, because scoring reads generated position 1 and a model that
 reasons first puts something else there.</p></li>

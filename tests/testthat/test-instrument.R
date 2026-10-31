@@ -352,3 +352,67 @@ test_that("checkpoint staleness is per item", {
   prev$results$prompt_hash[2] <- "stale00000000"
   expect_equal(fathom:::ckpt_stale(prev, h, "m"), "z")
 })
+
+test_that("default_cue writes the cue instrument() has always written", {
+  expect_identical(
+    fathom:::default_cue(c("YES", "NO"), "en"),
+    "\n\nAnswer with exactly one word: YES or NO."
+  )
+  expect_identical(
+    fathom:::default_cue(c("SI", "NO", "TAL"), "es"),
+    "\n\nResponde con exactamente una palabra: SI, NO, o TAL."
+  )
+  expect_identical(
+    instrument(list(q = "Q?"), labels = c("SI", "NO"), lang = "es")$cue,
+    fathom:::default_cue(c("SI", "NO"), "es")
+  )
+})
+
+test_that("reorder_labels moves the cue and the listing and nothing else", {
+  b <- instrument(
+    "Which category?",
+    labels = c("ECON", "HEALTH", "OTHER"),
+    definitions = c(
+      ECON = "the economy",
+      HEALTH = "health care",
+      OTHER = "anything else"
+    ),
+    scores = c(ECON = 1, HEALTH = 2, OTHER = 3),
+    exclusive = TRUE
+  )
+  r <- fathom:::reorder_labels(b, c("OTHER", "HEALTH", "ECON"))
+  expect_identical(
+    r$items$category,
+    paste0(
+      "Which category?\n\n",
+      "OTHER = anything else\nHEALTH = health care\nECON = the economy"
+    )
+  )
+  expect_identical(
+    r$cue,
+    "\n\nAnswer with exactly one word: OTHER, HEALTH, or ECON."
+  )
+  expect_identical(names(r$labels), c("OTHER", "HEALTH", "ECON"))
+  expect_identical(r$scores, c(OTHER = 3, HEALTH = 2, ECON = 1))
+  expect_identical(r$name, b$name)
+  # Put back in the declared order, it is the instrument instrument() built.
+  expect_identical(fathom:::reorder_labels(r, names(b$labels)), b)
+})
+
+test_that("reorder_labels keeps a cue written by hand and refuses an edited question", {
+  b <- instrument(
+    "Which category?",
+    labels = c("ECON", "HEALTH"),
+    exclusive = TRUE,
+    cue = "\n\nOne word, please."
+  )
+  r <- fathom:::reorder_labels(b, c("HEALTH", "ECON"))
+  expect_identical(r$cue, b$cue)
+  expect_true(endsWith(r$items$category, "HEALTH = HEALTH\nECON = ECON"))
+
+  b$items$category <- "Which category?"
+  expect_error(
+    fathom:::reorder_labels(b, c("HEALTH", "ECON")),
+    "does\\s+not\\s+end\\s+in\\s+the\\s+listing"
+  )
+})

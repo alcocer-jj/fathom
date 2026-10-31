@@ -13,22 +13,10 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-```
 
-```{r baked, include=FALSE}
 p <- system.file("extdata", "vignette_results.rds", package = "fathom")
-if (!nzchar(p)) {
-  stop("baked results not found. Run bake_results.R, then devtools::install().")
-}
+
 baked <- readRDS(p)
-need <- c("res_topics")
-missing <- setdiff(need, names(baked))
-if (length(missing)) {
-  stop(
-    "vignette_results.rds is missing ", paste(missing, collapse = ", "),
-    ". Re-run data-raw/bake_results.R and reinstall."
-  )
-}
 ```
 
 [A complete run](complete_run.html) uses `fathom` to build an exclusive coding instrument, where every label category is placed in the question itself and their probabilities share a single distribution. This article provides an example of how to build an independent binary qualitative instrument, where each label category is asked as its own yes-or-no question, so that a document can fall into multiple categories. The pipeline uses a dataset available in the package (`ati`) of three hundred Spanish-language access-to-information requests that Mexicans filed with their federal government through INFOMEX, sampled from a corpus hand-coded by Erlich et al. (2022).
@@ -39,7 +27,7 @@ if (length(missing)) {
 2. **Code the qualitative instrument** with `template_items()` and `instrument()`, and use `preview()` to see what the local large language model (LLM) will read.
 3. **Extract response probabilities** with `measure()`.
 4. **Read the results** with `item_report()` and `as_wide()`.
-5. **Check sensitivity to the cut point** with `threshold_sensitivity()`.
+5. **Check cut point sensitivity** with `threshold_sensitivity()`.
 
 ## The corpus
 
@@ -58,8 +46,8 @@ ati %>%
 
 ## Step 1. Preprocess the corpus
 
-As described by Erlich et al. (2022), about one in eight document requests arrived with an attachment, and for many of those the text field contains only pointer language, which makes it noise for this analysis.
-Given this, the pipeline drops those documents, along with any request shorter than six words.
+Around 13% of the corpus documents consisted of requests with an attachment. As a result, the text found in these requests contained only pointer language.
+Given that this is just noise, the first step consists of dropping those documents along with requests shorter than six words.^[Six is a mere arbitrary heuristic.]
 
 ```{r pointer}
 vocab <- paste0(
@@ -219,7 +207,7 @@ wide <- as_wide(
 head(wide, 6)
 ```
 
-## Step 5. Check sensitivity to the cut point
+## Step 5. Check cut point sensitivity
 
 By default, `fathom` sets the endorsement cut point at 0.5. The `threshold_sensitivity()` function conducts a grid search testing each cut point across the 0.1 to 0.9 range and reports the endorsement rates at each.
 

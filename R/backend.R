@@ -75,8 +75,9 @@ TAGS_TIMEOUT <- 15L
 #'   otherwise be discarded in silence.
 #' - `top_logprobs` says how many alternatives are requested at the answer
 #'   position. Ollama caps this at 20. A label whose token falls outside the
-#'   returned set is scored as absent, so `prob` is a lower bound and
-#'   `prob_other` absorbs the difference.
+#'   returned set is scored as absent, with a `prob_renorm` of exactly 0, so
+#'   `prob_other` absorbs its mass, and [item_report()] reports how often that
+#'   happened as `pct_label_absent`.
 #' - `think` is always `FALSE`, and not an argument. Reasoning is disabled on
 #'   every call, because scoring reads generated position 1 and a model that
 #'   reasons first puts something else there.
@@ -520,7 +521,7 @@ fmt_size <- function(bytes) {
 #' One line per installed model
 #'
 #' The name column is sized by the longest name that fits under a cap, not by
-#' the longest name outright. A single HuggingFace path can run past forty
+#' the longest name outright. A single Hugging Face path can run past forty
 #' characters, which would pad every other row out to match it. A name over the
 #' cap overflows its own row and leaves the rest aligned.
 #'
@@ -712,8 +713,9 @@ ollama_generate <- function(prompt, backend, num_ctx = NULL, image = NULL) {
 #'     \item{No log probabilities}{Ollama returned text but no distribution,
 #'     which means a version below 0.12.11.}
 #'     \item{First token is not a label}{The answer is not at position 1, which
-#'     is what a chat template opening a reasoning block does. Left unchecked
-#'     this returns zeros for an entire corpus with no error anywhere.}
+#'     is what a chat template opening a reasoning block does, and what a model
+#'     opening with prose does. Left unchecked this returns zeros for an entire
+#'     corpus with no error anywhere.}
 #'     \item{Image probe call failed}{One of the two image calls did not come
 #'     back, so whether pictures reach the model is unknown rather than known
 #'     to be broken. Distinguished from the text probe failing because the
@@ -734,7 +736,7 @@ ollama_generate <- function(prompt, backend, num_ctx = NULL, image = NULL) {
 #'   and `prob_renorm` divides that remainder by itself into something that
 #'   reads as an answer. Matching is therefore on the token at position 1
 #'   rather than on whether a label appeared anywhere in the distribution,
-#'   which is what `all_absent` reports and which is true of a broken template
+#'   which a `prob_other` below 1 reports and which is true of a broken template
 #'   too.
 #'
 #'   Exclusive instruments are checked like any other. They were skipped while
@@ -883,9 +885,10 @@ check_backend <- function(
         paste(names(b$labels), collapse = "/"),
         "."
       ),
-      "Two known causes.",
+      "Three known causes.",
       "1. The cue does not name the labels clearly enough. Run preview() and read the assembled prompt.",
-      "2. The chat template opened a reasoning block despite think = FALSE. The run would return a full results frame built from trace mass, with no error."
+      "2. The chat template opened a reasoning block despite think = FALSE. The run would return a full results frame built from trace mass, with no error.",
+      "3. The model opens with prose, a word such as The or Okay before its answer. Worked examples in the question, each a short document and its one-word answer, have fixed this for at least one model. See ?measure."
     ))
     return(FALSE)
   }

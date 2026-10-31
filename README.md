@@ -47,15 +47,17 @@ Getting an LLM's response about a question provides no insight as to how confide
 
 - Bundles the questions with the single-word labels the model may answer with.
 - Questions can be structured as (1) independent items or (2) exclusive items.
-- (1) Independent items ask a separate binary question for each category, meaning that a document can match several at once. (2) Exclusive items make the categories the labels of a single question, meaning that they share a single distribution.
+  - Independent items ask a separate binary question for each category, meaning that a document can match several at once.
+  - Exclusive items make the categories the labels of a single question, meaning that they share a single distribution.
+- Exclusive items are the right choice when a document takes exactly one category, such as a level on a scale, or when the categories are defined against each other, since the model then needs to see all of them to tell them apart.
 
 **`template_items()` (optional)**
 
-- Builds an instrument of independent items by inserting each category from a list into one question template.
+- Builds the questions for an instrument of independent items by inserting each category from a list into one question template.
 
 **`preview()` (optional)**
 
-- Prints a preview of the exact string that the model will receive.
+- Prints a preview of the exact string that the model will receive, before Ollama applies the model's chat template.
 
 </details>
 
@@ -82,7 +84,7 @@ Getting an LLM's response about a question provides no insight as to how confide
 
 **`as_wide()`**
 
-- Pivots the first table from `measure()` into one row per document and one column per question, each holding the probability of the target label (e.g., the probability of "yes"). For exclusive items, each category gets its own column instead.
+- Pivots the first table from `measure()` into one row per document and one column per question, each holding the probability of the target label (e.g., the probability of "yes"). For exclusive items or a single question, each label gets its own column instead.
 
 </details>
 
@@ -110,6 +112,10 @@ Getting an LLM's response about a question provides no insight as to how confide
 
 - Reports endorsement rates at a range of cut points.
 
+**`order_sensitivity()`**
+
+- Asks every document (or a seeded sample of them) again with the labels listed in reverse and, with three or more labels, in one shuffled order, and reports how often the answers changed.
+
 </details>
 
 The [package website](https://alcocer-jj.github.io/fathom/) carries the reference index and several articles.
@@ -120,13 +126,13 @@ A running [Ollama](https://ollama.com) server at version 0.12.11 or later, and a
 
 [`ffmpeg`](https://www.ffmpeg.org/) for measuring audio and video.
 
-[`whisperx`](https://github.com/m-bain/whisperx) or [`whispermlx`](https://github.com/KalebJS/whispermlx) (Apple Silicon optimized) for measuring audio, with a HuggingFace [User Access Token](https://huggingface.co/docs/hub/en/security-tokens) and access to the [Community-1](https://huggingface.co/pyannote/speaker-diarization-community-1) model to use speaker diarization.
+[`whisperx`](https://github.com/m-bain/whisperx) or [`whispermlx`](https://github.com/KalebJS/whispermlx) (Apple Silicon optimized) for measuring audio and video, with a Hugging Face [User Access Token](https://huggingface.co/docs/hub/en/security-tokens) and access to the [Community-1](https://huggingface.co/pyannote/speaker-diarization-community-1) model to use speaker diarization.
 
 See the [Quick start](https://alcocer-jj.github.io/fathom/articles/quick_start.html) page for information on how to set each of these up.
 
 ## Installation
 
-`fathom` is distributed through R-Universe.
+`fathom` is distributed through R-universe.
 
 ```r
 install.packages(

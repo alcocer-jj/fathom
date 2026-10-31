@@ -360,26 +360,23 @@ as_media <- function(x) {
 
 #' The winning label of each call, or none
 #'
-#' The row holding the most `prob` within each document and item. A call whose
-#' distribution held none of the labels has every `prob` at zero, and
-#' slice_max() would hand the win to whichever label it met first, so such a
-#' call keeps no row here. score_labels() writes `NA` for the same case, for
-#' the same reason.
-#'
-#' The test is on `prob` rather than `present`, since a label is present
-#' exactly when its `prob` is above zero, and a frame built by hand may carry
-#' `prob` alone.
+#' The row holding the most `prob_renorm` within each document and item, which
+#' is the label with the most raw probability too, since every label in a call
+#' is divided by the same total. A call whose distribution held none of the
+#' labels has no `prob_renorm` at all, and slice_max() would hand the win to
+#' whichever label it met first, so such a call keeps no row here.
+#' score_labels() writes `NA` for the same case, for the same reason.
 #'
 #' @param x A data frame of label rows carrying `id`, `item`, `label` and
-#'   `prob`.
+#'   `prob_renorm`.
 #' @return The winning row of each call that had one.
 #' @keywords internal
 #' @noRd
 winning_rows <- function(x) {
   x %>%
     dplyr::group_by(.data$id, .data$item) %>%
-    dplyr::filter(any(.data$prob > 0)) %>%
-    dplyr::slice_max(.data$prob, n = 1L, with_ties = FALSE) %>%
+    dplyr::filter(any(.data$prob_renorm > 0, na.rm = TRUE)) %>%
+    dplyr::slice_max(.data$prob_renorm, n = 1L, with_ties = FALSE) %>%
     dplyr::ungroup()
 }
 
@@ -405,6 +402,62 @@ check_conf_level <- function(conf_level) {
     )
   }
   invisible(conf_level)
+}
+
+#' Refuse a replicate count too small to read a tail from
+#'
+#' Shared by `validate_sample()` and `order_sensitivity()`, so the two refuse
+#' the same values with the same reason.
+#'
+#' @param bootstrap_n A number giving the replicates for each interval.
+#' @return `bootstrap_n` as an integer.
+#' @keywords internal
+#' @noRd
+check_bootstrap_n <- function(bootstrap_n) {
+  if (
+    !is.numeric(bootstrap_n) ||
+      length(bootstrap_n) != 1L ||
+      is.na(bootstrap_n) ||
+      bootstrap_n < 100
+  ) {
+    stop(
+      fmt_err(paste0(
+        "`bootstrap_n` must be a single number of at least 100. A percentile ",
+        "interval reads the tails of the resampled distribution, and below a ",
+        "hundred replicates the tail is a handful of draws."
+      )),
+      call. = FALSE
+    )
+  }
+  as.integer(bootstrap_n)
+}
+
+#' Refuse an `image` that names no column of `docs`
+#'
+#' Shared by `coding_sample()` and `order_sensitivity()`, which both read media
+#' straight off the documents, since nothing in a results row holds a path.
+#'
+#' @param docs The documents as passed.
+#' @param image A string naming the media column.
+#' @return `image`, invisibly.
+#' @keywords internal
+#' @noRd
+check_image_col <- function(docs, image) {
+  if (!is.data.frame(docs) || !image %in% names(docs)) {
+    stop(
+      fmt_err(paste0(
+        "`image` must name a column in `docs`. Columns are ",
+        if (is.data.frame(docs)) {
+          paste(names(docs), collapse = ", ")
+        } else {
+          "none, since `docs` is not a data frame"
+        },
+        "."
+      )),
+      call. = FALSE
+    )
+  }
+  invisible(image)
 }
 
 #' Refuse a target that names no label

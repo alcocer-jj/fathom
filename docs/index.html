@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,19 +105,22 @@
 <ul>
 <li>Bundles the questions with the single-word labels the model may answer with.</li>
 <li>Questions themselves can be of any length and consist of anything a user wants the model to read alongside the corpus.</li>
-<li>Questions can be structured as (1) independent items or (2) exclusive items.</li>
-<li><ol style="list-style-type: decimal">
-<li>Independent items ask a separate binary question for each category, meaning that a document can match several at once. (2) Exclusive items make the categories the labels of a single question, meaning that they share a single distribution.</li>
-</ol></li>
+<li>Questions can be structured as (1) independent items or (2) exclusive items.
+<ul>
+<li>Independent items ask a separate binary question for each category, meaning that a document can match several at once.</li>
+<li>Exclusive items make the categories the labels of a single question, meaning that they share a single distribution.</li>
+</ul>
+</li>
+<li>Exclusive items are the right choice when a document takes exactly one category, such as a level on a scale, or when the categories are defined against each other, since the model then needs to see all of them to tell them apart.</li>
 </ul>
 <p><strong><code><a href="reference/template_items.html">template_items()</a></code> (optional)</strong></p>
 <ul>
-<li>Builds an instrument of independent items by inserting each category from a list into one question template.</li>
+<li>Builds the questions for an instrument of independent items by inserting each category from a list into one question template.</li>
 <li>Templates can be written by the user or chosen from a provided set that comes in English and Spanish for each type of corpus (text, image, audio, and video).</li>
 </ul>
 <p><strong><code><a href="reference/preview.html">preview()</a></code> (optional)</strong></p>
 <ul>
-<li>Prints a preview of the exact string that the model will receive.</li>
+<li>Prints a preview of the exact string that the model will receive, before Ollama applies the model’s chat template.</li>
 </ul></details><details><summary><strong>3. Extract response probabilities</strong>
 </summary><p><strong><code><a href="reference/measure.html">measure()</a></code></strong></p>
 <ul>
@@ -128,17 +131,17 @@
 </summary><p><strong><code><a href="reference/item_report.html">item_report()</a></code></strong></p>
 <ul>
 <li>Summarizes how each question was answered by the model across the corpus.</li>
-<li>For two-label questions, such as independent items, it reports how often the model chose the label of interest (e.g., how often it answered “yes” over “no”), how often it was close to certain with probabilities near 0 or 1, and the most probability it ever placed on words outside the specified labels.</li>
+<li>For questions with only two labels (e.g., “yes”/“no”), it reports how often the model chose the label of interest (e.g., how often it answered “yes” over “no” or vice versa), how often it was close to certain with probabilities near 0 or 1, the average probability it placed on words outside the specified labels, and how often its first word was either of the two.</li>
 <li>For questions with more than two labels, such as most exclusive items, it reports how often each label won.</li>
 </ul>
 <p><strong><code><a href="reference/inspect_cases.html">inspect_cases()</a></code> (optional)</strong></p>
 <ul>
 <li>Prints the full text of a sample of documents where a question’s target label won (e.g., text where the model answered “yes”), allowing a user to gut-check the model’s answers.</li>
-<li>It can also print the closest calls, meaning the documents where the gap between the two most likely labels was smallest (e.g., text where the model put nearly equal probability on “yes” and “no”).</li>
+<li>It can also print the model’s most uncertain calls, where the gap between the top and runner-up labels was the smallest (e.g., text where the model put nearly equal probability on “yes” and “no”).</li>
 </ul>
 <p><strong><code><a href="reference/as_wide.html">as_wide()</a></code></strong></p>
 <ul>
-<li>Pivots the first table from <code><a href="reference/measure.html">measure()</a></code> into one row per document and one column per question, each holding the probability of the target label (e.g., the probability of “yes”). For exclusive items, each category gets its own column instead.</li>
+<li>Pivots the first table from <code><a href="reference/measure.html">measure()</a></code> into one row per document and one column per question, each holding the probability of the target label (e.g., the probability of “yes”). For exclusive items or a single question, each label gets its own column instead.</li>
 <li>With <code>dichotomize = TRUE</code>, returns 0 or 1 instead of probabilities, cut at 0.5.</li>
 <li>With <code>value = "expected_score"</code>, returns each document’s expected score on each question, the average of the label scores weighted by their probabilities, which requires an instrument built with <code>scores</code>.</li>
 </ul></details><details><summary><strong>5. Validate response probabilities</strong>
@@ -150,31 +153,36 @@
 <p><strong><code><a href="reference/coder_reference.html">coder_reference()</a></code> (optional)</strong></p>
 <ul>
 <li>Consolidates two or more completed <code><a href="reference/coding_sample.html">coding_sample()</a></code> sheets into one, allowing a group of coders to serve as the single reference for <code><a href="reference/validate_sample.html">validate_sample()</a></code>.</li>
-<li>Its default is majority rule, but can also be switched to unanimous agreement (<code>method = "unanimous"</code>) or to report the share of coders who chose the target label (<code>method = "soft"</code>).</li>
-<li>Leaves a tie blank rather than breaking it.</li>
+<li>Its default method of consolidation is majority rule, but it can also consolidate based on unanimous agreement (<code>method = "unanimous"</code>) or instead report the smoothed share of coders who chose the target label (<code>method = "soft"</code>).</li>
+<li>Ties are left blank.</li>
 </ul>
 <p><strong><code><a href="reference/validate_sample.html">validate_sample()</a></code></strong></p>
 <ul>
 <li>Validates the model’s answers from <code><a href="reference/measure.html">measure()</a></code> against a completed <code><a href="reference/coding_sample.html">coding_sample()</a></code> sheet in terms of discrimination and ranking, with calibration on request.</li>
-<li>If given a named list of <code><a href="reference/coding_sample.html">coding_sample()</a></code> sheets, it also reports intercoder reliability and how far the model’s responses are from the coders, with a bootstrap confidence interval.</li>
+<li>If given a named list of <code><a href="reference/coding_sample.html">coding_sample()</a></code> sheets, it also reports intercoder reliability and how far the model’s responses are from the coders, the latter with a bootstrap confidence interval.</li>
 </ul></details><details><summary><strong>6. Get measurement diagnostics (optional)</strong>
 </summary><p><strong><code><a href="reference/threshold_sensitivity.html">threshold_sensitivity()</a></code></strong></p>
 <ul>
 <li>Reports endorsement rates at a range of cut points.</li>
+</ul>
+<p><strong><code><a href="reference/order_sensitivity.html">order_sensitivity()</a></code></strong></p>
+<ul>
+<li>Measures every document (or a seeded sample of them) again with the labels reversed, and reports how often the responses changed.</li>
+<li>Questions with three or more labels also do a second run with shuffled labels.</li>
 </ul></details>
 </div>
 <div class="section level2">
 <h2 id="requirements">Requirements<a class="anchor" aria-label="anchor" href="#requirements"></a>
 </h2>
-<p>A running <a href="https://ollama.com" class="external-link">Ollama</a> server at version 0.12.11 or later, and a <a href="quick_start.html">compatible</a> Ollama instruction-following model.</p>
+<p>A running <a href="https://ollama.com" class="external-link">Ollama</a> server at version 0.12.11 or later, and a <a href="articles/quick_start.html">compatible</a> Ollama instruction-following model.</p>
 <p><a href="https://www.ffmpeg.org/" class="external-link"><code>ffmpeg</code></a> for measuring audio and video.</p>
-<p><a href="https://github.com/m-bain/whisperx" class="external-link"><code>whisperx</code></a> or <a href="https://github.com/KalebJS/whispermlx" class="external-link"><code>whispermlx</code></a> (Apple Silicon optimized) for measuring audio, with a HuggingFace <a href="https://huggingface.co/docs/hub/en/security-tokens" class="external-link">User Access Token</a> and access to the <a href="https://huggingface.co/pyannote/speaker-diarization-community-1" class="external-link">Community-1</a> model to use speaker diarization.</p>
-<p>See the <a href="quick_start.html">Quick start</a> page for information on how to set each of these up.</p>
+<p><a href="https://github.com/m-bain/whisperx" class="external-link"><code>whisperx</code></a> or <a href="https://github.com/KalebJS/whispermlx" class="external-link"><code>whispermlx</code></a> (Apple Silicon optimized) for measuring audio and video, with a Hugging Face <a href="https://huggingface.co/docs/hub/en/security-tokens" class="external-link">User Access Token</a> and access to the <a href="https://huggingface.co/pyannote/speaker-diarization-community-1" class="external-link">Community-1</a> model to use speaker diarization.</p>
+<p>See the <a href="articles/quick_start.html">Quick start</a> page for information on how to set each of these up.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p><code>fathom</code> is distributed through R-Universe.</p>
+<p><code>fathom</code> is distributed through R-universe.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
 <span>  <span class="st">"fathom"</span>,</span>

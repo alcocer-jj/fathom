@@ -71,7 +71,6 @@ labels are dropped before selection.
 \item \code{prob_renorm} is the probability on \code{target} for that document, rescaled
 over the labels. This is what \code{which} filtered on and what the printout
 shows.
-\item \code{prob} is the raw probability on \code{target}, before rescaling.
 \item \code{prob_other} is the probability the model placed on tokens that were none
 of the labels, for that document.
 \item \code{text} is the document, joined from \code{docs}. Truncated if \code{chars} was set.

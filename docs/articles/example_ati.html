@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fathom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@
 <li>
 <strong>Read the results</strong> with <code><a href="../reference/item_report.html">item_report()</a></code> and <code><a href="../reference/as_wide.html">as_wide()</a></code>.</li>
 <li>
-<strong>Check sensitivity to the cut point</strong> with <code><a href="../reference/threshold_sensitivity.html">threshold_sensitivity()</a></code>.</li>
+<strong>Check cut point sensitivity</strong> with <code><a href="../reference/threshold_sensitivity.html">threshold_sensitivity()</a></code>.</li>
 </ol></section><section class="level2"><h2 id="the-corpus">The corpus<a class="anchor" aria-label="anchor" href="#the-corpus"></a>
 </h2>
 <p><code>ati</code> contains the text of Spanish-language requests that were filed by Mexicans between 2003 and 2015, along with the fields that trace them back to their source. <code>folio</code> is the request number from INFOMEX, the portal created by Mexico’s 2002 transparency law, <em>la Ley Federal de Transparencia y Acceso a la Información Pública</em>, and <code>dependency</code> is the federal agency that received the request. Unlike <code>parlasent</code>, this dataset carries no human codings, so the article does not validate the results against coders.</p>
@@ -128,7 +128,7 @@
 </div>
 </section><section class="level2"><h2 id="step-1--preprocess-the-corpus">Step 1. Preprocess the corpus<a class="anchor" aria-label="anchor" href="#step-1--preprocess-the-corpus"></a>
 </h2>
-<p>As described by Erlich et al. (2022), about one in eight document requests arrived with an attachment, and for many of those the text field contains only pointer language, which makes it noise for this analysis. Given this, the pipeline drops those documents, along with any request shorter than six words.</p>
+<p>Around 13% of the corpus documents consisted of requests with an attachment. As a result, the text found in these requests contained only pointer language. Given that this is just noise, the first step consists of dropping those documents along with requests shorter than six words.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Six is a mere arbitrary heuristic.&lt;/p&gt;"><sup>1</sup></a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vocab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
@@ -204,7 +204,7 @@
 </div>
 <section class="level3"><h3 id="previewing-the-model-call">Previewing the model call<a class="anchor" aria-label="anchor" href="#previewing-the-model-call"></a>
 </h3>
-<p>The <code><a href="../reference/preview.html">preview()</a></code> function prints what the local LLM would receive without executing the call.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;&lt;code&gt;&lt;a href="../reference/preview.html"&gt;preview()&lt;/a&gt;&lt;/code&gt; cosmetically trims the document at &lt;code&gt;truncate&lt;/code&gt;, 300 characters by default, and marks where it cut. The actual run does not truncate the text.&lt;/p&gt;'><sup>1</sup></a></p>
+<p>The <code><a href="../reference/preview.html">preview()</a></code> function prints what the local LLM would receive without executing the call.<a class="footnote-ref" role="doc-noteref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;&lt;code&gt;&lt;a href="../reference/preview.html"&gt;preview()&lt;/a&gt;&lt;/code&gt; cosmetically trims the document at &lt;code&gt;truncate&lt;/code&gt;, 300 characters by default, and marks where it cut. The actual run does not truncate the text.&lt;/p&gt;'><sup>2</sup></a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/preview.html">preview</a></span><span class="op">(</span><span class="va">b_topics</span>, text <span class="op">=</span> <span class="va">ati</span><span class="op">$</span><span class="va">text</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
@@ -282,126 +282,84 @@
 <code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/item_report.html">item_report</a></span><span class="op">(</span><span class="va">res_topics</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/pander/man/pander.html" class="external-link">pander</a></span><span class="op">(</span><span class="va">report</span>, split.table <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<table class="table caption-top" style="width:100%;">
+<table class="table caption-top">
 <colgroup>
-<col style="width: 6%">
-<col style="width: 2%">
-<col style="width: 7%">
-<col style="width: 8%">
+<col style="width: 10%">
 <col style="width: 4%">
-<col style="width: 5%">
-<col style="width: 5%">
-<col style="width: 9%">
-<col style="width: 6%">
-<col style="width: 8%">
+<col style="width: 12%">
+<col style="width: 14%">
+<col style="width: 12%">
+<col style="width: 13%">
+<col style="width: 12%">
+<col style="width: 11%">
 <col style="width: 7%">
-<col style="width: 5%">
-<col style="width: 6%">
-<col style="width: 5%">
-<col style="width: 8%">
 </colgroup>
 <thead><tr class="header">
 <th style="text-align: center;">item</th>
 <th style="text-align: center;">n</th>
 <th style="text-align: center;">endorse_renorm</th>
-<th style="text-align: center;">n_endorse_renorm</th>
-<th style="text-align: center;">endorse</th>
-<th style="text-align: center;">n_endorse</th>
-<th style="text-align: center;">mean_prob</th>
 <th style="text-align: center;">pct_extreme_renorm</th>
-<th style="text-align: center;">pct_extreme</th>
 <th style="text-align: center;">pct_both_absent</th>
-<th style="text-align: center;">max_prob_other</th>
-<th style="text-align: center;">min_top1</th>
-<th style="text-align: center;">n_off_label</th>
+<th style="text-align: center;">pct_label_absent</th>
+<th style="text-align: center;">mean_prob_other</th>
+<th style="text-align: center;">pct_off_label</th>
 <th style="text-align: center;">n_failed</th>
-<th style="text-align: center;">other_vs_median</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">actividades</td>
 <td style="text-align: center;">286</td>
 <td style="text-align: center;">0.2413</td>
-<td style="text-align: center;">69</td>
-<td style="text-align: center;">0.2413</td>
-<td style="text-align: center;">69</td>
-<td style="text-align: center;">0.2441</td>
-<td style="text-align: center;">0.9266</td>
 <td style="text-align: center;">0.9266</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">8.224e-06</td>
-<td style="text-align: center;">0.4853</td>
+<td style="text-align: center;">0.06993</td>
+<td style="text-align: center;">1.377e-06</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">1.065</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">presupuesto</td>
 <td style="text-align: center;">286</td>
 <td style="text-align: center;">0.2937</td>
-<td style="text-align: center;">84</td>
-<td style="text-align: center;">0.2937</td>
-<td style="text-align: center;">84</td>
-<td style="text-align: center;">0.2954</td>
-<td style="text-align: center;">0.979</td>
 <td style="text-align: center;">0.979</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">6.586e-06</td>
-<td style="text-align: center;">0.5141</td>
+<td style="text-align: center;">0.1993</td>
+<td style="text-align: center;">1.035e-06</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">0.8525</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">contratos</td>
 <td style="text-align: center;">286</td>
 <td style="text-align: center;">0.2378</td>
-<td style="text-align: center;">68</td>
-<td style="text-align: center;">0.2378</td>
-<td style="text-align: center;">68</td>
-<td style="text-align: center;">0.2376</td>
-<td style="text-align: center;">0.965</td>
 <td style="text-align: center;">0.965</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">7.525e-06</td>
-<td style="text-align: center;">0.4494</td>
+<td style="text-align: center;">0.1503</td>
+<td style="text-align: center;">8.275e-07</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">0.9741</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">estructura</td>
 <td style="text-align: center;">286</td>
 <td style="text-align: center;">0.2168</td>
-<td style="text-align: center;">62</td>
-<td style="text-align: center;">0.2168</td>
-<td style="text-align: center;">62</td>
-<td style="text-align: center;">0.2153</td>
-<td style="text-align: center;">0.986</td>
 <td style="text-align: center;">0.986</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">1.228e-05</td>
-<td style="text-align: center;">0.5094</td>
+<td style="text-align: center;">0.07343</td>
+<td style="text-align: center;">9.752e-07</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">1.589</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">normatividad</td>
 <td style="text-align: center;">286</td>
 <td style="text-align: center;">0.09091</td>
-<td style="text-align: center;">26</td>
-<td style="text-align: center;">0.09091</td>
-<td style="text-align: center;">26</td>
-<td style="text-align: center;">0.09283</td>
-<td style="text-align: center;">0.9895</td>
 <td style="text-align: center;">0.9895</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">7.725e-06</td>
-<td style="text-align: center;">0.5254</td>
+<td style="text-align: center;">0.03846</td>
+<td style="text-align: center;">1.202e-06</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">0</td>
-<td style="text-align: center;">1</td>
 </tr>
 </tbody>
 </table>
@@ -431,7 +389,7 @@
 <span><span class="co">#&gt; 5 1093              0             0           0            0              1</span></span>
 <span><span class="co">#&gt; 6 11                1             0           0            0              0</span></span></code></pre></div>
 </div>
-</section></section><section class="level2"><h2 id="step-5--check-sensitivity-to-the-cut-point">Step 5. Check sensitivity to the cut point<a class="anchor" aria-label="anchor" href="#step-5--check-sensitivity-to-the-cut-point"></a>
+</section></section><section class="level2"><h2 id="step-5--check-cut-point-sensitivity">Step 5. Check cut point sensitivity<a class="anchor" aria-label="anchor" href="#step-5--check-cut-point-sensitivity"></a>
 </h2>
 <p>By default, <code>fathom</code> sets the endorsement cut point at 0.5. The <code><a href="../reference/threshold_sensitivity.html">threshold_sensitivity()</a></code> function conducts a grid search testing each cut point across the 0.1 to 0.9 range and reports the endorsement rates at each.</p>
 <div class="cell">

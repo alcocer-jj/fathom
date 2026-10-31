@@ -303,16 +303,11 @@ test_that("the documented schema matches the one measure() returns", {
     # $probs, per label
     "label",
     "prob_renorm",
-    "prob",
-    "present",
-    "call_ok",
     # $calls, per document and item
     "error",
     "truncated",
     "top1_token",
-    "top1_prob",
     "prob_other",
-    "all_absent",
     "margin",
     "expected_score",
     "prompt_hash"
@@ -836,7 +831,8 @@ test_that("DECISION. preview() has a title, and rules around the prompt only", {
   expect_true("Scoring       generated position 1" %in% out)
   rules <- which(out == strrep("-", 70))
   expect_length(rules, 2L)
-  # Between the rules is exactly the string preview() returns.
+  # Between the rules is exactly the string preview() returns, on a document
+  # short enough to show whole and with no media beside it.
   expect_identical(
     paste(out[(rules[1] + 1):(rules[2] - 1)], collapse = "\n"),
     p

@@ -10,7 +10,7 @@ as_wide(
   results,
   ...,
   target = NULL,
-  value = c("prob_renorm", "prob", "expected_score"),
+  value = c("prob_renorm", "expected_score"),
   prefix = "",
   dichotomize = FALSE,
   keep = character(0),
@@ -37,7 +37,8 @@ as_wide(
 
   A string naming the label whose probability fills each cell. Defaults
   to the first label for a multi-item instrument, and to `NULL` for an
-  exclusive instrument, where every category gets its own column.
+  exclusive instrument or a single question, where every label gets its
+  own column.
 
 - value:
 
@@ -49,13 +50,13 @@ as_wide(
   and the expected score read, so a matrix built here can be compared
   against either without changing quantity partway through.
 
-  `"prob"` is the raw probability, measured against every token the
-  model could have written. Use it when the claim is about whether the
-  model committed rather than about which label it preferred.
-
   `"expected_score"` requires an instrument built with `scores`, and
   returns one column per item rather than one per label, since an
-  expected score is one number per document and item.
+  expected score is one number per document and item. On an item whose
+  `pct_extreme_renorm` in
+  [`item_report()`](https://alcocer-jj.github.io/fathom/reference/item_report.md)
+  sits near 1 it bunches at the scores themselves, so it ranks documents
+  more reliably than it measures the distances between them.
 
 - prefix:
 

@@ -1,7 +1,7 @@
 Package: fathom
 Type: Package
 Title: Qualitative Coding and Measurement with Local Language Models
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
 	person(
 	  "Jose J.", "Alcocer",
@@ -11,6 +11,8 @@ Authors@R: c(
         person("Ewon", "Baik", email = "ebaik@usc.edu", role = "ctb",
 	       comment = c(ORCID = "0000-0002-4811-9401")),
         person("Karen", "Borglund", email = "borglund@usc.edu", role = "ctb"),
+	person("Rachel", "Chavez", email = "rachel.chavez@austin.utexas.edu", role = "ctb"),
+	person("Bailey", "Inglish", email = "bei246@my.utexas.edu", role = "ctb"),
 	person("Alain S.", "Muñoz", email = "santiago.mc1106@gmail.com", role = "ctb"),
         person("Sandra S.", "Muñoz", email = "saandramc2@gmail.com", role = "ctb")
 	)

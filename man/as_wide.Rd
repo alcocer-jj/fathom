@@ -8,7 +8,7 @@ as_wide(
   results,
   ...,
   target = NULL,
-  value = c("prob_renorm", "prob", "expected_score"),
+  value = c("prob_renorm", "expected_score"),
   prefix = "",
   dichotomize = FALSE,
   keep = character(0),
@@ -25,7 +25,8 @@ matched by position.}
 
 \item{target}{A string naming the label whose probability fills each cell.
 Defaults to the first label for a multi-item instrument, and to \code{NULL} for
-an exclusive instrument, where every category gets its own column.}
+an exclusive instrument or a single question, where every label gets its
+own column.}
 
 \item{value}{A string naming the column that supplies the value. Defaults to
 \code{"prob_renorm"}, the probability conditioned on the model having answered
@@ -34,13 +35,11 @@ the same categories would have produced, and it is what \code{\link[=validate_sa
 and the expected score read, so a matrix built here can be compared against
 either without changing quantity partway through.
 
-\code{"prob"} is the raw probability, measured against every token the model
-could have written. Use it when the claim is about whether the model
-committed rather than about which label it preferred.
-
 \code{"expected_score"} requires an instrument built with \code{scores}, and returns
 one column per item rather than one per label, since an expected score is
-one number per document and item.}
+one number per document and item. On an item whose \code{pct_extreme_renorm} in
+\code{\link[=item_report]{item_report()}} sits near 1 it bunches at the scores themselves, so it
+ranks documents more reliably than it measures the distances between them.}
 
 \item{prefix}{A string prepended to column names. Default is \code{""}.}
 

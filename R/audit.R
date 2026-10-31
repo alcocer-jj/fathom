@@ -66,7 +66,6 @@
 #' - `prob_renorm` is the probability on `target` for that document, rescaled
 #'   over the labels. This is what `which` filtered on and what the printout
 #'   shows.
-#' - `prob` is the raw probability on `target`, before rescaling.
 #' - `prob_other` is the probability the model placed on tokens that were none
 #'   of the labels, for that document.
 #' - `text` is the document, joined from `docs`. Truncated if `chars` was set.
@@ -105,7 +104,7 @@ inspect_cases <- function(
   no_dots(..., .fn = "inspect_cases")
   results <- flat_results(
     results,
-    c("expected_score", "margin", "prob_other")
+    c("error", "expected_score", "margin", "prob_other")
   )
   which <- match.arg(which)
   target <- target %||% results$label[1]
@@ -145,7 +144,7 @@ inspect_cases <- function(
 
   tx <- as_docs(docs, text, id, results)
   d <- results[
-    results$item == item & results$label == target & results$call_ok,
+    results$item == item & results$label == target & is.na(results$error),
     ,
     drop = FALSE
   ]
@@ -163,10 +162,9 @@ inspect_cases <- function(
   # filter, which is the opposite of what it means.
   n_pool <- NULL
 
-  # Both branches read prob_renorm rather than prob. That is the probability
-  # conditioned on the model having answered with a label at all, which is the
-  # measure item_report() reports and threshold_sensitivity() cuts on. Reading
-  # the raw one here would disagree with both on any run that leaked.
+  # Both branches read prob_renorm, the probability conditioned on the model
+  # having answered with a label at all, which is the measure item_report()
+  # reports and threshold_sensitivity() cuts on.
   sel <- switch(
     which,
     endorsed = if (n_lab > 2L) {
@@ -175,7 +173,7 @@ inspect_cases <- function(
       # coding_sample() and validate_sample() use to name a winner.
       # A document whose distribution held none of the labels has no winner.
       won <- winning_rows(
-        results[results$item == item & results$call_ok, , drop = FALSE]
+        results[results$item == item & is.na(results$error), , drop = FALSE]
       )
       d[d$id %in% won$id[won$label == target], , drop = FALSE]
     } else {
@@ -350,16 +348,13 @@ label_levels <- function(results) {
 #' other than the construct. [inspect_cases()] is what answers that, by showing
 #' the documents.
 #'
-#' @section Two endorsement rates:
-#' `endorse` and `endorse_renorm` count the same documents at the same cut of
-#' 0.5, and differ only in which probability they cut. Do not read the gap
-#' between them as measurement error or as disagreement between two estimates of
-#' one quantity. It is two quantities.
-#'
-#' Neither cut is configurable. 0.5 on `prob_renorm` is the argmax on a
-#' two-label instrument, and [threshold_sensitivity()] exists to show how little
-#' the cut point matters on `prob`. Both are reported so the choice does not
-#' have to be made in advance.
+#' @section The endorsement cut:
+#' `endorse_renorm` cuts `prob_renorm` at 0.5, which on a two-label instrument
+#' is the label the model ranked first. The cut is not configurable.
+#' [threshold_sensitivity()] reports the rate at other cut points, and
+#' `pct_extreme_renorm` says in one number how far it can move, since a
+#' probability at or beyond 0.01 and 0.99 sits on the same side of every cut
+#' between them.
 #'
 #' @section Output shapes:
 #' Three shapes come back, and which one is decided by the **labels** rather
@@ -373,10 +368,11 @@ label_levels <- function(results) {
 #' }
 #'
 #' The label count is tested first because on two labels the scored shape
-#' reports one number, the average expected score, and drops a dozen
-#' diagnostics to do it. There is no reason to choose between them. A scored
-#' instrument of two labels reports as endorsement and gains `mean_expected` as
-#' a column, so the number arrives without the diagnostics leaving.
+#' would report one number, the average expected score, and lose the
+#' endorsement diagnostics to do it. There is no reason to choose between them.
+#' A scored instrument of two labels reports as endorsement and gains
+#' `mean_expected` as a column, so the number arrives without the diagnostics
+#' leaving.
 #'
 #' `exclusive = TRUE` is not itself the test. An exclusive instrument lands in
 #' the choice or scored shape because it usually has more than two labels or a
@@ -392,8 +388,8 @@ label_levels <- function(results) {
 #' The shapes differ in row granularity as well as in columns. Endorsement gives
 #' one row per item. Choice and scored give one row per item **and label**,
 #' because a shared distribution has no single number per question to report.
-#' Choice and scored report a winner distribution, and leaked mass reaches them
-#' as a message rather than as a column.
+#' Choice and scored report a winner distribution, and the columns describing
+#' an item's calls rather than any one label repeat down its label rows.
 #'
 #' `target` applies to the endorsement shape only, and is ignored by the other
 #' two. There is no per-label endorsement rate for a forced choice, since the
@@ -425,65 +421,39 @@ label_levels <- function(results) {
 #'   this can sit below the corpus size.
 #' - `endorse_renorm` is the share of those documents where `target` reached 0.5
 #'   on `prob_renorm`, the probability after the labels have been rescaled to
-#'   sum to 1. Reaching it means the label beat the other one.
-#' - `n_endorse_renorm` is the count behind `endorse_renorm`. Its denominator is
-#'   `n` minus the documents where no label appeared, which have no renormalized
-#'   probability. That count is `pct_both_absent` times `n`, and is 0 whenever
-#'   `pct_both_absent` is.
-#' - `endorse` is the same cut on `prob`, the probability against everything the
-#'   model could have written. Reaching it means the model committed to the
-#'   label.
-#' - `n_endorse` is the count behind `endorse`. Its denominator is `n`.
-#' - `mean_prob` is the mean `prob` on `target`, so it belongs to `endorse`
-#'   rather than to `endorse_renorm`. It separates from `endorse` only when the
-#'   probabilities cluster near the 0.5 cut. When they all sit near 0 or 1 the
-#'   two agree almost exactly, so the gap between them says how far the
-#'   endorsements were from being coin flips.
+#'   sum to 1. Reaching it means the label beat the other one. Its denominator
+#'   leaves out the documents where no label appeared, which have no
+#'   renormalized probability, and `pct_both_absent` says how many those were.
 #' - `pct_extreme_renorm` is the share of renormalized probabilities at or
 #'   beyond 0.01 and 0.99, so it asks how the on-label mass was shaped rather
-#'   than how much of it there was. This is the substantive one, for the same
-#'   reason `endorse_renorm` is. It is not unconditionally the safer one. A
-#'   document that answered almost entirely outside the label set can leave this
-#'   denominator, read as graded, or read as certain, depending on how its
-#'   residue fell.
-#' - `pct_extreme` is the share of raw probabilities at or beyond 0.01 and 0.99.
-#'   Reads `prob`, so it cannot separate a decisive answer from one that never
-#'   entered the label set, since both put every label at the floor or the
-#'   ceiling. Read it against `pct_extreme_renorm` and `max_prob_other` rather
-#'   than alone. Near 1 means almost every answer came back at one end or the
-#'   other, so these are labels in numeric clothing. Reporting them as degrees
-#'   of confidence would claim more than they carry.
+#'   than how much of it there was. Near 1 means almost every answer came back
+#'   at one end or the other, so these are labels in numeric clothing, and
+#'   reporting them as degrees of confidence would claim more than they carry.
 #' - `pct_both_absent` is the share of documents where no label appeared at
 #'   position 1. That is a template or prompt failure rather than a low score. A
-#'   broken chat template registers in `n_off_label` rather than here, because
+#'   broken chat template registers in `pct_off_label` rather than here, because
 #'   the labels stay in the distribution at trace mass underneath whatever the
 #'   template wrote first, which leaves `pct_both_absent` at 0 while every
 #'   answer is unusable.
-#' - `max_prob_other` is the most probability the model ever placed on tokens
-#'   that were none of your labels, anywhere in the corpus. Leaked mass, in the
-#'   term used elsewhere in these docs.
-#' - `min_top1` is the least confident single answer in the corpus. For each
-#'   document, take the probability of whichever token the model was most likely
-#'   to write, label or not. This is the smallest of those. High values do not
-#'   mean the item is correct.
-#' - `n_off_label` counts the documents where the emitted token matched no
-#'   label. It is judged by the same rule scoring uses, so a token that opens a
-#'   label counts as that label and a split label is not reported as off-label.
-#' - `n_failed` counts the documents whose call failed. Divided by the label
-#'   count, so it counts documents rather than rows.
-#' - `other_vs_median` is `max_prob_other` divided by the middle value of that
-#'   column across the instrument, so 2 means this item placed twice as much
-#'   probability outside the labels as the typical item did. Present only for an
-#'   instrument of three or more items, since a middle value across one or two
-#'   carries nothing. This is the one column the item count decides. Absolute
-#'   leaked mass varies by model, by language, and by how close to 0 and 1 the
-#'   instrument's probabilities sit, so values are not comparable across
-#'   instruments.
+#' - `pct_label_absent` is the share of documents where at least one label was
+#'   missing from the `top_logprobs` alternatives the backend returned, so it
+#'   includes `pct_both_absent`. A label missing beside one that appeared has a
+#'   probability of exactly 0 and puts its partner at exactly 1, so on those
+#'   documents `pct_extreme_renorm` records the cap on alternatives rather than
+#'   the model.
+#' - `mean_prob_other` is the average probability the model placed on tokens
+#'   that were none of your labels. Leaked mass, in the term used elsewhere in
+#'   these docs. It compares across the items of one instrument and not across
+#'   instruments, since absolute leaked mass varies by model, by language, and
+#'   by how close to 0 and 1 the instrument's probabilities sit.
+#' - `pct_off_label` is the share of documents where the emitted token matched
+#'   no label. It is judged by the same rule scoring uses, so a token that opens
+#'   a label counts as that label and a split label is not reported as
+#'   off-label.
+#' - `n_failed` counts the documents whose call failed.
 #' - `mean_expected` is the average expected score across documents, which on
 #'   two labels is the mean of `prob_renorm` on `target` rescaled onto the
-#'   scores. Present only when the instrument carries `scores`. Note that
-#'   `mean_prob` is the raw probability, so the two differ by whatever mass fell
-#'   outside the labels.
+#'   scores. Present only when the instrument carries `scores`.
 #'
 #' ## Choice shape
 #'
@@ -495,6 +465,9 @@ label_levels <- function(results) {
 #' - `share_won` is `n_won` over the documents scored on that item, so the
 #'   shares of an item fall short of 1 by the share that answered outside the
 #'   labels.
+#' - `pct_label_absent`, `mean_prob_other` and `pct_off_label` are as in the
+#'   endorsement shape. They describe the item's calls rather than the label,
+#'   so they repeat down its label rows.
 #'
 #' ## Scored shape
 #'
@@ -511,6 +484,8 @@ label_levels <- function(results) {
 #'   rather than only the winner, a document the model split between two
 #'   neighboring levels lands between them.
 #' - `sd_expected` is the standard deviation of the same, across documents.
+#' - `pct_label_absent`, `mean_prob_other` and `pct_off_label` are as in the
+#'   choice shape.
 #' @seealso [inspect_cases()] for the documents behind an item, and
 #'   [threshold_sensitivity()] for how the rates move with the cut point.
 #' @examples
@@ -523,9 +498,9 @@ item_report <- function(results, target = NULL, order = c("declared", "size")) {
   order <- match.arg(order)
   results <- flat_results(
     results,
-    c("expected_score", "prob_other", "top1_token", "top1_prob")
+    c("error", "expected_score", "prob_other", "top1_token")
   )
-  ok <- results[results$call_ok, , drop = FALSE]
+  ok <- results[is.na(results$error), , drop = FALSE]
   # The report shape follows the results rather than the instrument's exclusive
   # flag. What decides it is how many labels there are and whether they carry
   # values. An exclusive instrument is one way to reach more than two labels,
@@ -538,11 +513,9 @@ item_report <- function(results, target = NULL, order = c("declared", "size")) {
     !all(is.na(ok$expected_score)) &&
     !is.null(attr(results, "instrument")$scores)
 
-  # Label count first. On two labels the scored shape reports one number and
-  # drops a dozen diagnostics to do it, and the two are not alternatives. The
-  # endorsement shape carries the number as a column instead. It is not a
-  # duplicate of anything already there, since mean_prob is the raw probability
-  # and the expected score is built on the renormalized one.
+  # Label count first. On two labels the scored shape would report one number
+  # and lose the endorsement diagnostics to do it, and the two are not
+  # alternatives. The endorsement shape carries the number as a column instead.
   if (dplyr::n_distinct(results$label) > 2L) {
     if (scored) {
       return(scored_report(results, ok, order))
@@ -551,107 +524,37 @@ item_report <- function(results, target = NULL, order = c("declared", "size")) {
   }
   target <- target %||% results$label[1]
   check_target(target, unique(results$label))
-  per_doc <- ok %>%
-    dplyr::group_by(.data$item, .data$id) %>%
-    dplyr::summarise(
-      both_absent = all(!.data$present),
-      prob_other = .data$prob_other[1],
-      top1_prob = .data$top1_prob[1],
-      top1_token = .data$top1_token[1],
-      .groups = "drop"
-    )
   tgt <- ok[ok$label == target, , drop = FALSE]
-
-  # Judged by the rule scoring uses rather than by membership in the declared
-  # variants. Under prefix matching those are different questions. BU is not in
-  # the variant list and is scored as BUDGET, so a membership test would report
-  # every correct answer on a split label as off-label.
-  b <- attr(results, "instrument")
-  off_label <- function(resp) {
-    if (is.null(b)) {
-      return(rep(FALSE, length(resp)))
-    }
-    tok <- stringi::stri_trans_toupper(trimws(resp))
-    !vapply(
-      tok,
-      function(t) {
-        any(vapply(
-          seq_along(b$normalized),
-          function(i) any(match_token(t, b, i)),
-          logical(1)
-        ))
-      },
-      logical(1)
-    )
-  }
 
   lv <- item_levels(results)
   out <- tgt %>%
     dplyr::group_by(.data$item) %>%
     dplyr::summarise(
       n = dplyr::n(),
-      # Renormalized first, because it is the reported measure. `prob` is the
-      # record every other column is derived from, and it earns its place here
-      # as the thing `endorse_renorm` is read against rather than as the
-      # headline rate.
+      # na.rm because prob_renorm is NA for a document where no label appeared
+      # at all. There is nothing to condition on there, so it leaves the
+      # denominator rather than counting as a non-endorsement, and
+      # pct_both_absent sizes how many those were.
       endorse_renorm = mean(.data$prob_renorm >= 0.5, na.rm = TRUE),
-      n_endorse_renorm = sum(.data$prob_renorm >= 0.5, na.rm = TRUE),
-      endorse = mean(.data$prob >= 0.5),
-      n_endorse = sum(.data$prob >= 0.5),
-      # The raw cut, reported beside the renormalized one rather than instead
-      # of it. Both are 0.5, so neither is a tuning knob. What carries the
-      # information is the gap between them, which is the probability the model
-      # spent outside the label set.
-      #
-      # na.rm on the renormalized pair above, because prob_renorm is NA for a
-      # document where no label appeared at all. There is nothing to condition
-      # on there, so it leaves that denominator rather than counting as a
-      # non-endorsement. pct_both_absent sizes how many those were.
-      mean_prob = mean(.data$prob),
-      # Saturation, asked twice, renormalized first for the same reason the
-      # endorsement pair is. The measure leads and the diagnostic follows, so a
-      # reader taking the first column of each pair takes the right one.
-      #
-      # `pct_extreme_renorm` conditions on the model having answered in the
-      # label set at all, so it asks only whether the labels were graded
-      # against each other. On a two-label instrument it is symmetric by
-      # construction, since the pair sums to 1 and one crossing 0.99 puts the
-      # other under 0.01.
-      #
-      # `pct_extreme` reads the raw probability, so a document the model
-      # answered outside the label set entirely lands at the floor on every
-      # label and reads as maximally decisive. That is the same place a
-      # genuinely decisive answer's losing label sits, and the raw column
-      # cannot separate the two.
-      #
-      # The gap needs the residual on-label mass split across labels, not
-      # merely a large leak. A document leaking 0.9995 with one label surviving
-      # renormalizes to exactly 0 and 1, which is extreme in both columns and
-      # opens nothing. Leak size is not the condition. Degeneracy is.
+      # Conditions on the model having answered in the label set at all, so it
+      # asks only whether the labels were graded against each other. On a
+      # two-label instrument it is symmetric by construction, since the pair
+      # sums to 1 and one crossing 0.99 puts the other under 0.01.
       pct_extreme_renorm = mean(
         .data$prob_renorm <= 0.01 | .data$prob_renorm >= 0.99,
         na.rm = TRUE
       ),
-      pct_extreme = mean(.data$prob <= 0.01 | .data$prob >= 0.99),
       .groups = "drop"
     ) %>%
     dplyr::left_join(
-      per_doc %>%
-        dplyr::group_by(.data$item) %>%
-        dplyr::summarise(
-          pct_both_absent = mean(.data$both_absent),
-          max_prob_other = max(.data$prob_other, na.rm = TRUE),
-          min_top1 = min(.data$top1_prob, na.rm = TRUE),
-          n_off_label = sum(off_label(.data$top1_token)),
-          .groups = "drop"
-        ),
+      call_diagnostics(ok, attr(results, "instrument")),
       by = "item"
     ) %>%
     dplyr::left_join(
       results %>%
         dplyr::group_by(.data$item) %>%
         dplyr::summarise(
-          n_failed = sum(!.data$call_ok) / dplyr::n_distinct(.data$label),
+          n_failed = dplyr::n_distinct(.data$id[!is.na(.data$error)]),
           .groups = "drop"
         ),
       by = "item"
@@ -681,25 +584,78 @@ item_report <- function(results, target = NULL, order = c("declared", "size")) {
         by = "item"
       )
   }
-  # `n_endorse` used to raise a message below thirty on a corpus of a hundred or
-  # more. It is gone. This function describes rather than screens, and the same
-  # paragraph two lines down declines to threshold leaked mass for exactly that
-  # reason, so thresholding endorsement was the one place the contract broke.
-  #
-  # Sufficient n also depends on what happens next, which the function cannot
-  # know. Thirty endorsements is thin for a two-parameter model and ample for a
-  # prevalence estimate, and the message fired on rare categories that were
-  # measured correctly. `n_endorse` is a column. A reader who needs the count
-  # can read it.
-  #
-  # Leaked mass is comparable within an instrument and not across instruments,
-  # so it is reported as a ratio to the instrument median. No threshold and no
-  # message.
-  if (nrow(out) >= 3L) {
-    med <- stats::median(out$max_prob_other, na.rm = TRUE)
-    out$other_vs_median <- if (med > 0) out$max_prob_other / med else NA_real_
-  }
+  # No column carries a threshold and nothing raises a message. The function
+  # describes rather than screens, since how much of anything is enough depends
+  # on what happens next, which the function cannot know.
   out
+}
+
+#' Whether each emitted token answered outside the labels
+#'
+#' @description Judged by the rule scoring uses rather than by membership in
+#'   the declared variants. Under prefix matching those are different
+#'   questions. BU is not in the variant list and is scored as BUDGET, so a
+#'   membership test would report every correct answer on a split label as
+#'   off-label.
+#'
+#' @param tokens A character vector of `top1_token` values.
+#' @param instrument The `fathom_instrument` the run was scored under, or `NULL`
+#'   for a results object that lost the attribute, which reports nothing as
+#'   off-label.
+#' @return A logical vector the length of `tokens`.
+#' @keywords internal
+#' @noRd
+off_label <- function(tokens, instrument) {
+  if (is.null(instrument)) {
+    return(rep(FALSE, length(tokens)))
+  }
+  tok <- stringi::stri_trans_toupper(trimws(tokens))
+  !vapply(
+    tok,
+    function(t) {
+      any(vapply(
+        seq_along(instrument$normalized),
+        function(i) any(match_token(t, instrument, i)),
+        logical(1)
+      ))
+    },
+    logical(1),
+    USE.NAMES = FALSE
+  )
+}
+
+#' The columns describing an item's calls rather than any one label
+#'
+#' @description Shared by the three shapes of [item_report()], so a column
+#'   means the same thing whichever shape carries it. A label missing from the
+#'   returned alternatives scores exactly 0 on `prob_renorm`, and a call where
+#'   every label is missing has no renormalized probability at all.
+#'
+#' @param ok A data frame of the successful rows, as [item_report()] builds it.
+#' @param instrument As in `off_label()`.
+#' @return A tibble, one row per item, with `pct_both_absent`,
+#'   `pct_label_absent`, `mean_prob_other` and `pct_off_label`.
+#' @keywords internal
+#' @noRd
+call_diagnostics <- function(ok, instrument) {
+  ok %>%
+    dplyr::group_by(.data$item, .data$id) %>%
+    dplyr::summarise(
+      both_absent = all(is.na(.data$prob_renorm)),
+      label_absent = all(is.na(.data$prob_renorm)) ||
+        any(.data$prob_renorm == 0, na.rm = TRUE),
+      prob_other = .data$prob_other[1],
+      top1_token = .data$top1_token[1],
+      .groups = "drop"
+    ) %>%
+    dplyr::group_by(.data$item) %>%
+    dplyr::summarise(
+      pct_both_absent = mean(.data$both_absent),
+      pct_label_absent = mean(.data$label_absent),
+      mean_prob_other = mean(.data$prob_other, na.rm = TRUE),
+      pct_off_label = mean(off_label(.data$top1_token, instrument)),
+      .groups = "drop"
+    )
 }
 
 #' Report for an instrument with more than two labels
@@ -764,7 +720,19 @@ choice_report <- function(results, ok, order = "declared") {
       n_won = dplyr::coalesce(.data$n_won, 0L),
       share_won = .data$n_won / .data$n_scored
     ) %>%
-    dplyr::select("item", "label", "n_won", "share_won") %>%
+    dplyr::left_join(
+      call_diagnostics(ok, attr(results, "instrument")),
+      by = "item"
+    ) %>%
+    dplyr::select(
+      "item",
+      "label",
+      "n_won",
+      "share_won",
+      "pct_label_absent",
+      "mean_prob_other",
+      "pct_off_label"
+    ) %>%
     # Questions always in instrument order. Labels follow `order`, and the
     # default is declared because frequency is one arrange() away while
     # declaration order needs the instrument attribute to recover. The `if`
@@ -779,26 +747,12 @@ choice_report <- function(results, ok, order = "declared") {
       }
     )
 
-  per_doc <- ok %>%
-    dplyr::group_by(.data$id, .data$item) %>%
-    dplyr::summarise(
-      prob_other = .data$prob_other[1],
-      won_prob = max(.data$prob),
-      .groups = "drop"
-    )
-
   message(paste0(
     "Choice instrument\n\n",
     fmt_fields(list(
       Documents = format(n_docs, big.mark = ","),
       Items = as.character(dplyr::n_distinct(ok$item)),
-      Labels = as.character(dplyr::n_distinct(ok$label)),
-      `Leaked mass` = sprintf(
-        "max %.4f, mean %.4f",
-        max(per_doc$prob_other),
-        mean(per_doc$prob_other)
-      ),
-      Winning = sprintf("probability min %.3f", min(per_doc$won_prob))
+      Labels = as.character(dplyr::n_distinct(ok$label))
     )),
     "\n"
   ))
@@ -858,7 +812,6 @@ scored_report <- function(results, ok, order = "declared") {
     dplyr::group_by(.data$id, .data$item) %>%
     dplyr::summarise(
       expected = .data$expected_score[1],
-      prob_other = .data$prob_other[1],
       # Recomputed rather than carried. The same formula score.R used,
       # over the renormalized probabilities of this call, which the
       # group holds.
@@ -887,6 +840,10 @@ scored_report <- function(results, ok, order = "declared") {
       share_won = .data$n_won / .data$n_scored
     ) %>%
     dplyr::left_join(per_item, by = "item") %>%
+    dplyr::left_join(
+      call_diagnostics(ok, attr(results, "instrument")),
+      by = "item"
+    ) %>%
     dplyr::select(
       "item",
       "label",
@@ -894,7 +851,10 @@ scored_report <- function(results, ok, order = "declared") {
       "n_won",
       "share_won",
       "mean_expected",
-      "sd_expected"
+      "sd_expected",
+      "pct_label_absent",
+      "mean_prob_other",
+      "pct_off_label"
     ) %>%
     # Questions always in instrument order. Labels follow `order`, and on a
     # scored instrument declared is also score order, since a scale is declared
@@ -937,11 +897,6 @@ scored_report <- function(results, ok, order = "declared") {
         "mean %.3f, max possible %.3f",
         mean(per_doc$entropy),
         log(n_lab)
-      ),
-      `Leaked mass` = sprintf(
-        "max %.4f, mean %.4f",
-        max(per_doc$prob_other),
-        mean(per_doc$prob_other)
       )
     )),
     "\n"
@@ -955,7 +910,9 @@ scored_report <- function(results, ok, order = "declared") {
 #' @description
 #' Computes the endorsement rate per item at each cut point, which shows how
 #' much of an item's rate is a property of the documents and how much is a
-#' property of where the cut falls.
+#' property of where the cut falls. `pct_extreme_renorm` in [item_report()]
+#' gives the short answer in one number, since a probability at or beyond 0.01
+#' and 0.99 sits on the same side of every cut between them.
 #'
 #' @section More than two labels:
 #' This assumes a two-label instrument. Thresholding one label's probability
@@ -976,17 +933,6 @@ scored_report <- function(results, ok, order = "declared") {
 #'   the first.
 #' @param thresholds A numeric vector of cut points to evaluate. Default is
 #'   `seq(0.1, 0.9, by = 0.1)`.
-#' @param value A string naming the probability column to threshold. Defaults to
-#'   `"prob_renorm"`, the figure after the label probabilities have been
-#'   rescaled to sum to 1. That is the question a cut point is usually being
-#'   asked to answer, which is whether documents pile up near the boundary
-#'   between your labels, and it is the quantity everything downstream compares
-#'   against.
-#'
-#'   `"prob"` is the raw probability, so a sweep over it also moves with mass
-#'   the model spent outside your labels. That confounds two things, and a rate
-#'   that shifts under it may be reporting compliance rather than the corpus.
-#'   Use it when the claim is about whether the model committed.
 #' @return A tibble with one row per item and threshold, items in instrument
 #' order and thresholds ascending within an item. The message printed alongside
 #' is a ranking rather than a table and stays widest swing first.
@@ -996,15 +942,14 @@ scored_report <- function(results, ok, order = "declared") {
 #' - `n` counts the documents scored on this item. The same on every row of an
 #'   item, since the cut point changes which documents count as endorsing and
 #'   not how many were asked.
-#' - `n_endorse` counts the documents whose `value` for `target` reached the
-#'   cut.
-#' - `endorse` is `n_endorse` over the documents with a `value` to cut. A
-#'   document where no label appeared has no `prob_renorm`, so under the default
-#'   it leaves this denominator, and `endorse` is `n_endorse` over `n` only when
-#'   no such document exists. That is the split [item_report()] makes between
-#'   `endorse_renorm` and `endorse`. This is the column to read down, and the
-#'   spread from its smallest to largest value within an item is what the
-#'   message ranks on.
+#' - `n_endorse` counts the documents whose `prob_renorm` for `target` reached
+#'   the cut.
+#' - `endorse` is `n_endorse` over the documents with a `prob_renorm` to cut. A
+#'   document where no label appeared has none, so it leaves this denominator,
+#'   and `endorse` is `n_endorse` over `n` only when no such document exists.
+#'   [item_report()] treats `endorse_renorm` the same way. This is the column to
+#'   read down, and the spread from its smallest to largest value within an item
+#'   is what the message ranks on.
 #' @seealso [item_report()] for the winner distribution, and for `mean_expected`
 #'   on a scored instrument, which needs no cut.
 #' @examples
@@ -1016,17 +961,13 @@ scored_report <- function(results, ok, order = "declared") {
 threshold_sensitivity <- function(
   results,
   target = NULL,
-  thresholds = seq(0.1, 0.9, by = 0.1),
-  value = c("prob_renorm", "prob")
+  thresholds = seq(0.1, 0.9, by = 0.1)
 ) {
-  # No columns are wanted from $calls, but the body indexes results in two
-  # dimensions, which a list refuses. The keys alone flatten it.
-  results <- flat_results(results, character(0))
-  value <- match.arg(value)
+  results <- flat_results(results, "error")
   target <- target %||% results$label[1]
   check_target(target, unique(results$label))
 
-  d <- results[results$call_ok & results$label == target, , drop = FALSE]
+  d <- results[is.na(results$error) & results$label == target, , drop = FALSE]
   if (nrow(d) == 0L) {
     stop(fmt_err("no successful records to threshold"), call. = FALSE)
   }
@@ -1038,8 +979,8 @@ threshold_sensitivity <- function(
       dplyr::summarise(
         threshold = th,
         n = dplyr::n(),
-        n_endorse = sum(.data[[value]] >= th, na.rm = TRUE),
-        endorse = mean(.data[[value]] >= th, na.rm = TRUE),
+        n_endorse = sum(.data$prob_renorm >= th, na.rm = TRUE),
+        endorse = mean(.data$prob_renorm >= th, na.rm = TRUE),
         .groups = "drop"
       )
   }))
@@ -1070,6 +1011,475 @@ threshold_sensitivity <- function(
   # Instrument order, then up the range within an item, so each item's rows read
   # as one curve.
   out %>% dplyr::arrange(match(.data$item, lv), .data$threshold)
+}
+
+#' Ask again with the labels in another order
+#'
+#' @description
+#' Measures every document again, or a seeded sample of them, with the labels
+#' shown in reverse and, on three or more labels, in one shuffled order, and
+#' compares the answers with the ones the run already holds. Every call in a
+#' run sees the labels in the order the instrument declared, so nothing in the
+#' run can show whether that order moved its answers.
+#'
+#' A prompt shows the labels in order in two places, the cue and, on an
+#' exclusive instrument, the listing of definitions under the question. Both
+#' are rebuilt for each order. Matching and any probed tokens carry over by
+#' label name rather than being probed again, so only the presentation moves.
+#'
+#' @section What it costs:
+#' The declared order is read off `results`, so it costs no calls. Each other
+#' order costs one call per document asked about. The default asks about every
+#' document with a label, so the cost grows with the corpus. A number for `n`
+#' caps it, and `n = 50` makes it 50 calls an item on two labels and 100 on
+#' three or more.
+#'
+#' The instrument, the backend and the context ceiling all come off `results`,
+#' so the calls run under the model and settings of the run being audited.
+#' Nothing is checkpointed, and the run's checkpoint directory is never
+#' touched. A reordered prompt hashes differently, so a call stored there would
+#' mark the item stale and replace the run's rows with the audit's.
+#'
+#' @section A cue written by hand:
+#' The package does not rewrite wording it did not write. An exclusive
+#' instrument with its own `cue` keeps it, and only its listing is reordered.
+#' An instrument of items lists its labels nowhere but the cue, so with its own
+#' `cue` there is nothing to reorder and the call is refused.
+#'
+#' @param results A `fathom_results` object from [measure()] or
+#'   [read_checkpoints()]. It supplies the instrument, the backend and the
+#'   context ceiling the calls are made with.
+#' @param docs A character vector, or the data frame passed to [measure()].
+#'   Default is `NULL`, which uses the documents a character-vector run stored
+#'   on the results.
+#' @param ... Not used, and refused if anything reaches it. Every argument
+#'   after it is name-only, so a misspelling lands here rather than being
+#'   matched by position.
+#' @param text,id Strings naming the text and identifier columns, if `docs` is
+#'   a data frame. `id` defaults to the row position, as in [measure()]. `text`
+#'   may be left out when `image` is given and the run sent no text.
+#' @param image A string naming the column in `docs` that holds each
+#'   document's media, as passed to [measure()]. A run that sent media needs it
+#'   here too, or every call asks about a prompt the run never sent. Default is
+#'   `NULL`.
+#' @param items A character vector restricting the audit to specific items, or
+#'   `NULL` (the default) for all of them.
+#' @param n An integer giving the documents drawn per item, from those with a
+#'   label in the run, or `NULL` to ask about all of them. An item with fewer
+#'   than `n` uses all it has. Default is `NULL`. Drawing 50 puts the standard
+#'   error of an agreement near 0.9 at about 0.04.
+#' @param level A string, `"nominal"` (the default) or `"ordinal"`, deciding
+#'   how `alpha` charges a disagreement, as in [validate_sample()].
+#' @param labels A character vector giving, under `"ordinal"`, every label in
+#'   scale order. Ignored under `"nominal"`. Default is `NULL`, which takes the
+#'   order from the instrument's `scores`.
+#' @param ci A string choosing whether to report intervals. `"none"`, the
+#'   default, returns none and the interval columns are absent. `"bootstrap"`
+#'   adds one bracketed column beside `agreement` and `alpha`.
+#' @param conf_level A number giving the coverage of every interval, 0.95 by
+#'   default. It is stamped on the result as the `conf_level` attribute.
+#' @param bootstrap_n An integer giving the replicates for each interval. The
+#'   default is a round two thousand, and below a hundred is refused.
+#' @param seed An integer giving the seed for the shuffled order, the draw and
+#'   the intervals, so the same call asks about the same documents. The
+#'   session's random stream is put back on exit. `NULL` draws from the
+#'   session's stream instead. Default is 1234.
+#' @return A tibble with one row per item and order, items in instrument order
+#' and `"reversed"` before `"shuffled"`. The label sequences are on the
+#' `orders` attribute, the declared one first, and in the printed header.
+#'
+#' - `item` is the question name.
+#' - `order` is `"reversed"`, or `"shuffled"` on three or more labels.
+#' - `n` counts the documents compared, those where the reordered call returned
+#'   a label. A call that failed or returned none is left out and warned about,
+#'   since an order that pushes the answer off the labels is itself an effect
+#'   of the order.
+#' - `agreement` is the share of those documents whose winning label is the
+#'   same under both orders.
+#' - `alpha` is Krippendorff's alpha with the two orders as two coders of the
+#'   same documents. On two labels the nominal and ordinal metrics coincide.
+#'
+#' `level` and `conf_level` are stamped as attributes, and `run_at` and `call`
+#' as on the other objects here.
+#' @seealso [threshold_sensitivity()] for the other choice a measurement should
+#'   not depend on, where the cut falls, and [validate_sample()] for agreement
+#'   with a human rather than with the model itself.
+#' @examples
+#' \dontrun{
+#' # Needs a running Ollama server, so it is not run here.
+#' p <- system.file("extdata", "vignette_results.rds", package = "fathom")
+#' baked <- readRDS(p)
+#' order_sensitivity(baked$res_indep, parlasent, text = "sentence", id = "id")
+#' }
+#' @export
+order_sensitivity <- function(
+  results,
+  docs = NULL,
+  ...,
+  text = NULL,
+  id = NULL,
+  image = NULL,
+  items = NULL,
+  n = NULL,
+  level = c("nominal", "ordinal"),
+  labels = NULL,
+  ci = c("none", "bootstrap"),
+  conf_level = 0.95,
+  bootstrap_n = 2000L,
+  seed = 1234L
+) {
+  no_dots(..., .fn = "order_sensitivity")
+  metric <- match.arg(level)
+  ci <- match.arg(ci)
+  check_conf_level(conf_level)
+  bootstrap_n <- check_bootstrap_n(bootstrap_n)
+  # NULL asks about every document with a label, so only a number is checked.
+  if (!is.null(n)) {
+    if (
+      !is.numeric(n) ||
+        length(n) != 1L ||
+        !is.finite(n) ||
+        n < 2 ||
+        n != round(n)
+    ) {
+      stop(
+        fmt_err(paste0(
+          "`n` must be a single whole number of at least 2, or `NULL` for ",
+          "every document. Agreement and alpha compare documents, and one ",
+          "leaves nothing to compare."
+        )),
+        call. = FALSE
+      )
+    }
+    n <- as.integer(n)
+  }
+
+  # Read off the results rather than passed again, so an audit under another
+  # model or ceiling than its run cannot be asked for.
+  b <- attr(results, "instrument")
+  backend <- attr(results, "backend")
+  if (
+    !inherits(b, "fathom_instrument") || !inherits(backend, "fathom_backend")
+  ) {
+    stop(
+      fmt_err(paste0(
+        "the results carry no instrument or no backend, and the audit asks ",
+        "again with both. Pass the results as `measure()` or ",
+        "`read_checkpoints()` returned them."
+      )),
+      call. = FALSE
+    )
+  }
+  num_ctx <- attr(results, "num_ctx")
+  if (length(num_ctx) != 1L || is.na(num_ctx)) {
+    num_ctx <- NULL
+  }
+  results <- flat_results(results, "error")
+  declared <- names(b$labels)
+
+  if (
+    !isTRUE(b$exclusive) && !identical(b$cue, default_cue(declared, b$lang))
+  ) {
+    stop(
+      fmt_err(
+        paste0(
+          "the cue was written by hand, and an instrument of items lists its ",
+          "labels nowhere else. The package does not rewrite wording it did ",
+          "not write, so every reordered call would send the run's own prompt."
+        ),
+        paste0(
+          "Write the cue again with the labels in another order, and measure ",
+          "the same documents with that instrument."
+        )
+      ),
+      call. = FALSE
+    )
+  }
+
+  all_items <- names(b$items)
+  unknown <- setdiff(items, all_items)
+  if (length(unknown)) {
+    stop(
+      fmt_err(paste0(
+        "`items` names questions the instrument does not have, ",
+        paste(unknown, collapse = ", "),
+        ". Its questions are ",
+        paste(all_items, collapse = ", "),
+        "."
+      )),
+      call. = FALSE
+    )
+  }
+  items <- if (is.null(items)) all_items else all_items[all_items %in% items]
+
+  scale <- NULL
+  if (metric == "ordinal") {
+    scale <- as.character(labels %||% labels_from_instrument(b))
+    short <- setdiff(declared, scale)
+    if (length(short)) {
+      stop(
+        fmt_err(
+          paste0(
+            "the ordinal metric charges a disagreement by its distance along ",
+            "the scale, so every label needs a position on it. `labels` has ",
+            "no place for ",
+            paste(sprintf("`%s`", short), collapse = ", "),
+            "."
+          ),
+          paste0(
+            "Pass `labels` in scale order, least to greatest. An instrument ",
+            "carrying `scores` supplies it without that."
+          )
+        ),
+        call. = FALSE
+      )
+    }
+    scale <- scale[scale %in% declared]
+  }
+
+  # A run that sent media and no text measured an empty string beside each
+  # file, and the audit has to send the same.
+  if (is.data.frame(docs) && is.null(text) && !is.null(image)) {
+    tx <- tibble::tibble(
+      id = if (is.null(id)) {
+        as.character(seq_len(nrow(docs)))
+      } else {
+        as.character(docs[[id]])
+      },
+      .fathom_text = ""
+    )
+  } else {
+    tx <- as_docs(docs, text, id, results)
+  }
+  media <- NULL
+  if (!is.null(image)) {
+    check_image_col(docs, image)
+    media <- as_media(docs[[image]])
+  }
+
+  local_seed(seed)
+  orders <- list(reversed = rev(declared))
+  if (length(declared) >= 3L) {
+    # Neither the declared order nor its reverse, so the third order asks
+    # something the other two did not.
+    repeat {
+      shuffled <- sample(declared)
+      if (
+        !identical(shuffled, declared) && !identical(shuffled, rev(declared))
+      ) {
+        break
+      }
+    }
+    orders$shuffled <- shuffled
+  }
+  reordered <- lapply(orders, function(o) reorder_labels(b, o))
+
+  # Only calls with a label in the run, since a document with no answer under
+  # the declared order has nothing to compare. The pool is sorted, by radix so
+  # the locale cannot reorder it, which draws the same documents whether the
+  # results came from the run or from its checkpoints.
+  won <- winning_rows(
+    results[is.na(results$error) & results$item %in% items, , drop = FALSE]
+  )
+  won <- won[won$id %in% tx$id, , drop = FALSE]
+  drawn <- lapply(stats::setNames(items, items), function(it) {
+    pool <- sort(unique(as.character(won$id[won$item == it])), method = "radix")
+    if (is.null(n) || length(pool) <= n) pool else sample(pool, n)
+  })
+  none <- items[lengths(drawn) == 0L]
+  if (length(none)) {
+    stop(
+      fmt_err(paste0(
+        "no document on ",
+        paste(none, collapse = ", "),
+        " has both a label in the run and an entry in `docs`. If `docs` is ",
+        "the data frame the run measured, check that `id` names the column it ",
+        "named there."
+      )),
+      call. = FALSE
+    )
+  }
+
+  base <- results[
+    is.na(results$error) & results$item %in% items,
+    c("id", "item", "label", "prob_renorm"),
+    drop = FALSE
+  ]
+  declared_dist <- function(i, it) {
+    rows <- base[base$id == i & base$item == it, , drop = FALSE]
+    rows$prob_renorm[match(declared, rows$label)]
+  }
+
+  n_orders <- length(orders)
+  n_calls <- sum(lengths(drawn)) * n_orders
+  per <- range(lengths(drawn))
+  message(paste0(
+    "Order sensitivity\n\n",
+    fmt_fields(list(
+      Model = backend$model,
+      Items = as.character(length(items)),
+      Documents = if (per[1] == per[2]) {
+        sprintf("%d per item", per[1])
+      } else {
+        sprintf("%d to %d per item", per[1], per[2])
+      },
+      Declared = paste(declared, collapse = ", "),
+      Reversed = paste(orders$reversed, collapse = ", "),
+      Shuffled = if (!is.null(orders$shuffled)) {
+        paste(orders$shuffled, collapse = ", ")
+      },
+      Calls = format(n_calls, big.mark = ","),
+      Intervals = if (ci == "bootstrap") {
+        sprintf(
+          "%s percent, %s replicates",
+          format(100 * conf_level),
+          format(bootstrap_n, big.mark = ",")
+        )
+      }
+    )),
+    "\n"
+  ))
+
+  env <- environment()
+  bar <- use_bar(FALSE)
+  if (bar) {
+    pb <- cli::cli_progress_bar(total = n_calls, clear = TRUE, .envir = env)
+  }
+  first <- TRUE
+  # One call, as the label distribution in declared order, or NULL when the
+  # call failed or returned no label.
+  ask <- function(txt, inst, it, img) {
+    r <- measure_one(txt, inst$items[[it]], inst, backend, num_ctx, image = img)
+    if (bar) {
+      cli::cli_progress_update(id = pb, .envir = env)
+    }
+    err <- r$error[1]
+    # Every call goes to the same server and model, and a call fails only on
+    # the request or the payload, never on what the model answered. A first
+    # call that fails says the rest would too.
+    if (first && !is.na(err)) {
+      stop(
+        fmt_err(paste0(
+          "the first call failed, so the audit stopped before the rest. ",
+          err
+        )),
+        call. = FALSE
+      )
+    }
+    first <<- FALSE
+    p <- r$prob_renorm[match(declared, r$label)]
+    if (is.na(err) && any(p > 0, na.rm = TRUE)) p else NULL
+  }
+
+  rows <- list()
+  lost <- list()
+  for (it in items) {
+    ids <- drawn[[it]]
+    at <- match(ids, tx$id)
+    P <- do.call(rbind, lapply(ids, declared_dist, it = it))
+    for (o in names(orders)) {
+      got <- lapply(at, function(k) {
+        ask(
+          tx$.fathom_text[k],
+          reordered[[o]],
+          it,
+          if (is.null(media)) NULL else media[[k]]
+        )
+      })
+      ok <- !vapply(got, is.null, logical(1))
+      lost[[length(lost) + 1L]] <- tibble::tibble(
+        item = it,
+        order = o,
+        lost = sum(!ok),
+        drawn = length(ok)
+      )
+
+      row <- tibble::tibble(
+        item = it,
+        order = o,
+        n = sum(ok),
+        agreement = NA_real_,
+        alpha = NA_real_
+      )
+      q <- NULL
+      if (any(ok)) {
+        Pk <- P[ok, , drop = FALSE]
+        Qk <- do.call(rbind, got[ok])
+        # The first maximum in declared order on both sides, so a tie breaks
+        # the same way whichever order the call was asked in.
+        lab_p <- declared[max.col(Pk, ties.method = "first")]
+        lab_q <- declared[max.col(Qk, ties.method = "first")]
+        stat <- function(ix) {
+          c(
+            agreement = mean(lab_p[ix] == lab_q[ix]),
+            alpha = kripp_parts(
+              cbind(lab_p[ix], lab_q[ix]),
+              metric = metric,
+              labels = scale
+            )$alpha
+          )
+        }
+        point <- stat(seq_along(lab_p))
+        row$agreement <- point[["agreement"]]
+        row$alpha <- point[["alpha"]]
+        if (ci == "bootstrap" && length(lab_p) >= 2L) {
+          q <- ci_percentile(
+            resample_units(length(lab_p), stat, b = bootstrap_n),
+            conf_level
+          )
+        }
+      }
+      if (ci == "bootstrap") {
+        bounds <- function(m) if (is.null(q)) c(NA_real_, NA_real_) else q[m, ]
+        row <- add_ci(
+          row,
+          list(
+            agreement = bounds("agreement"),
+            alpha = bounds("alpha")
+          )
+        )
+      }
+      rows[[length(rows) + 1L]] <- row
+    }
+  }
+  if (bar) {
+    cli::cli_progress_done(id = pb, .envir = env)
+  }
+
+  lost <- dplyr::bind_rows(lost)
+  hit <- lost[lost$lost > 0L, , drop = FALSE]
+  if (nrow(hit)) {
+    warning(
+      fmt_warn(
+        paste0(
+          "reordered calls that failed or returned no label are left out of ",
+          "`n`. ",
+          paste(
+            sprintf(
+              "%s %s, %d of %d",
+              hit$item,
+              hit$order,
+              hit$lost,
+              hit$drawn
+            ),
+            collapse = "; "
+          ),
+          "."
+        ),
+        paste0(
+          "An order that pushes the answer off the labels is itself an effect ",
+          "of the order, and `agreement` and `alpha` cannot show it."
+        )
+      ),
+      call. = FALSE
+    )
+  }
+
+  out <- dplyr::bind_rows(rows)
+  attr(out, "orders") <- c(list(declared = declared), orders)
+  attr(out, "level") <- metric
+  attr(out, "conf_level") <- conf_level
+  stamp_provenance(out, call = match.call())
 }
 
 
@@ -1226,7 +1636,7 @@ coding_sample <- function(
   seed = 1234L
 ) {
   no_dots(..., .fn = "coding_sample")
-  results <- flat_results(results, "margin")
+  results <- flat_results(results, c("error", "margin"))
   b <- attr(results, "instrument")
   tx <- as_docs(docs, text, id, results)
 
@@ -1234,20 +1644,7 @@ coding_sample <- function(
   # the picture it describes. Read straight off `docs` rather than off the
   # results, since nothing in a results row holds a path.
   if (!is.null(image)) {
-    if (!is.data.frame(docs) || !image %in% names(docs)) {
-      stop(
-        fmt_err(paste0(
-          "`image` must name a column in `docs`. Columns are ",
-          if (is.data.frame(docs)) {
-            paste(names(docs), collapse = ", ")
-          } else {
-            "none, since `docs` is not a data frame"
-          },
-          "."
-        )),
-        call. = FALSE
-      )
-    }
+    check_image_col(docs, image)
     doc_ids <- if (is.null(id)) {
       as.character(seq_len(nrow(docs)))
     } else {
@@ -1268,7 +1665,7 @@ coding_sample <- function(
     tx$.fathom_image <- joined[match(tx$id, doc_ids)]
   }
 
-  scored <- results[results$call_ok, , drop = FALSE]
+  scored <- results[is.na(results$error), , drop = FALSE]
   if (!is.null(items)) {
     scored <- scored[scored$item %in% items, , drop = FALSE]
   }
@@ -1281,11 +1678,11 @@ coding_sample <- function(
   local_seed(seed)
   d <- scored %>%
     dplyr::group_by(.data$id, .data$item) %>%
-    dplyr::slice_max(.data$prob, n = 1L, with_ties = FALSE) %>%
+    dplyr::slice_max(.data$prob_renorm, n = 1L, with_ties = FALSE) %>%
     dplyr::ungroup()
 
   # `margin` is NA on exactly the all-absent branch of score_labels(), since
-  # failed calls left with `results$call_ok` above. So this is a pair where no
+  # failed calls left with their `error` above. So this is a pair where no
   # label appeared anywhere in the returned distribution, which leaves nothing
   # for a human to agree or disagree with.
   broken <- is.na(d$margin) | is.na(d$prob_renorm)

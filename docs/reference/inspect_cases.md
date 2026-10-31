@@ -108,8 +108,6 @@ drew on rather than a curated set.
   rescaled over the labels. This is what `which` filtered on and what
   the printout shows.
 
-- `prob` is the raw probability on `target`, before rescaling.
-
 - `prob_other` is the probability the model placed on tokens that were
   none of the labels, for that document.
 

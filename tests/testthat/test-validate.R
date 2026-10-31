@@ -38,13 +38,12 @@ many_case <- function(env = parent.frame(), q = NULL) {
   luis <- cs$sheet
   luis$human_label <- c("NO", "YES", "NO", "YES", "NO", "YES")
   # The stub answers every call alike, so a corpus whose confidence varies has
-  # to be set on the results. `prob` and `prob_renorm` move together, since the
-  # winner is read off the first and the figures off the second.
+  # to be set on the results, on `prob_renorm`, since the winner and every
+  # figure are read off it.
   if (!is.null(q)) {
     pr <- stats::setNames(q, cs$sheet$id)[cs$res$probs$id]
     win <- cs$res$probs$label == "YES"
     cs$res$probs$prob_renorm <- ifelse(win, pr, 1 - pr)
-    cs$res$probs$prob <- cs$res$probs$prob_renorm
   }
   list(res = cs$res, ana = cs$sheet, luis = luis)
 }
@@ -60,18 +59,16 @@ run_val <- function(sheet, res, ...) {
 }
 
 # Three labels, built by hand so the probabilities are exactly what the checks
-# need. validate_sample() reads id, item, label, prob, prob_renorm, top1_prob
-# and call_ok off the results and nothing else. Two labels would not do, since
-# dropping one from two leaves one and trips the other refusal first.
+# need. validate_sample() reads id, item, label, prob_renorm and error off the
+# results and nothing else. Two labels would not do, since dropping one from
+# two leaves one and trips the other refusal first.
 abc_results <- function() {
   tibble::tibble(
     id = rep(as.character(1:6), each = 3),
     item = "q",
     label = rep(c("A", "B", "C"), times = 6),
-    prob = rep(c(0.6, 0.3, 0.1), times = 6),
     prob_renorm = rep(c(0.6, 0.3, 0.1), times = 6),
-    top1_prob = 0.6,
-    call_ok = TRUE
+    error = NA_character_
   )
 }
 
@@ -147,7 +144,6 @@ test_that("a one-label results frame is refused", {
   full <- abc_results()
   one <- full[full$label == "A", , drop = FALSE]
   one$prob_renorm <- 1
-  one$prob <- 1
 
   expect_error(
     run_val(abc_sheet(), one),

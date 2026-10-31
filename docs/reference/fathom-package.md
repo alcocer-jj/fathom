@@ -37,6 +37,10 @@ Other contributors:
 
 - Karen Borglund <borglund@usc.edu> \[contributor\]
 
+- Rachel Chavez <rachel.chavez@austin.utexas.edu> \[contributor\]
+
+- Bailey Inglish <bei246@my.utexas.edu> \[contributor\]
+
 - Alain S. Muñoz <santiago.mc1106@gmail.com> \[contributor\]
 
 - Sandra S. Muñoz <saandramc2@gmail.com> \[contributor\]
