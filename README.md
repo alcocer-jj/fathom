@@ -1,5 +1,9 @@
 # fathom: Qualitative Coding and Measurement with Local Language Models
 
+[![registry status badge](https://alcocer-jj.r-universe.dev/badges/:registry)](https://alcocer-jj.r-universe.dev/)
+[![R-universe](https://img.shields.io/badge/dynamic/json?url=https://alcocer-jj.r-universe.dev/api/packages/fathom&query=$.Version&label=R-universe&color=blue)](https://alcocer-jj.r-universe.dev/fathom)
+[![License: MIT](https://img.shields.io/badge/License-MIT-orange)](https://alcocer-jj.r-universe.dev/fathom)
+
 <div align="center">
   <img src="man/figures/definition.png" alt="Dictionary Definition" width="600">
 </div>
