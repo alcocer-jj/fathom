@@ -37,6 +37,8 @@ Imports:
     cli (>= 3.0.0),
     digest,
     dplyr,
+    graphics,
+    grDevices,
     httr2,
     jsonlite,
     magrittr,
@@ -44,6 +46,7 @@ Imports:
     stringi,
     tibble,
     tidyr,
+    tools,
     utils
 Suggests:
     ggplot2,

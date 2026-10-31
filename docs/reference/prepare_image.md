@@ -52,12 +52,12 @@ grDevices::png(f, width = 8, height = 8)
 graphics::par(mar = c(0, 0, 0, 0))
 graphics::plot.new()
 grDevices::dev.off()
-#> agg_record_5884f8c3271 
-#>                      2 
+#> agg_record_93b523a143bf 
+#>                       2 
 
 prepare_image(f)
 #> # A tibble: 1 × 5
 #>   id               image                                      bytes exists ext  
 #>   <chr>            <chr>                                      <dbl> <lgl>  <chr>
-#> 1 file588422eaa23c /var/folders/0d/6_y1swz50c7gy3g7v86g93240…  1197 TRUE   png  
+#> 1 file93b52a83d74c /var/folders/0d/6_y1swz50c7gy3g7v86g93240…  1197 TRUE   png  
 ```
