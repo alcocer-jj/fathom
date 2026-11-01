@@ -18,3 +18,5 @@
 ^doc$
 ^Meta$
 ^fathom-design.md
+^cran-comments\.md$
+^CRAN-SUBMISSION$
