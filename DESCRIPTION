@@ -14,7 +14,8 @@ Authors@R: c(
 	person("Rachel", "Chavez", email = "rachel.chavez@austin.utexas.edu", role = "ctb"),
 	person("Bailey", "Inglish", email = "bei246@my.utexas.edu", role = "ctb"),
 	person("Alain S.", "Muñoz", email = "santiago.mc1106@gmail.com", role = "ctb"),
-        person("Sandra S.", "Muñoz", email = "saandramc2@gmail.com", role = "ctb")
+        person("Sandra S.", "Muñoz", email = "saandramc2@gmail.com", role = "ctb"),
+	person("Lauren", "Phillips", email = "lauren.phillips@email.ucr.edu", role = "ctb")
 	)
 Description: Qualitatively code a corpus by asking a local language model a set
     of questions about each document and reading the answer from the model's
