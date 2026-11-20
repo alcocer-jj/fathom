@@ -44,3 +44,5 @@ Other contributors:
 - Alain S. Muñoz <santiago.mc1106@gmail.com> \[contributor\]
 
 - Sandra S. Muñoz <saandramc2@gmail.com> \[contributor\]
+
+- Lauren Phillips <lauren.phillips@email.ucr.edu> \[contributor\]

@@ -48,16 +48,15 @@ which reads the `image` column.
 
 ``` r
 f <- tempfile(fileext = ".png")
-grDevices::png(f, width = 8, height = 8)
-graphics::par(mar = c(0, 0, 0, 0))
+grDevices::png(f)
 graphics::plot.new()
 grDevices::dev.off()
-#> agg_record_b94965480224 
+#> agg_record_81817554ee37 
 #>                       2 
 
 prepare_image(f)
 #> # A tibble: 1 × 5
 #>   id               image                                      bytes exists ext  
 #>   <chr>            <chr>                                      <dbl> <lgl>  <chr>
-#> 1 fileb94940b0af2f /var/folders/0d/6_y1swz50c7gy3g7v86g93240…  1197 TRUE   png  
+#> 1 file81815455b593 /var/folders/0d/6_y1swz50c7gy3g7v86g93240…  6128 TRUE   png  
 ```

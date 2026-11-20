@@ -1,3 +1,16 @@
+## Resubmission
+
+This is a resubmission. In response to the review of 0.1.4, version 0.1.5
+makes two changes.
+
+* check_backend() in R/backend.R no longer calls graphics::par(). The two
+  pictures its image probe sends take their color from the background of the
+  PNG device that writes them, so no graphical parameter is set, and the
+  device that was current before the probe is made current again afterwards.
+* The prepare_image() example, the source of man/prepare_image.Rd, no longer
+  calls graphics::par(). It writes a PNG at the default size, which needs no
+  change to the margins.
+
 ## Test environments
 
 * local macOS (Apple Silicon), devtools::check(remote = TRUE, manual = TRUE)
@@ -32,9 +45,9 @@
   displaying the assembled prompt and the sampled documents is what they are
   for. Both return their content invisibly, and inspect_cases() writes to a
   file instead when given one.
-* graphics::par() is called only on a PNG device that the same code opens and
-  closes, in the probe that checks a backend before a run with images and in
-  the prepare_image() example, so the user's graphics state is not changed.
+* No function, example or vignette calls par(), options() or setwd(). The
+  image probe in check_backend() writes its pictures on PNG devices it opens
+  and closes itself, and leaves the caller's current device as it found it.
 * coding_sample(), order_sensitivity() and validate_sample() take a `seed`
   argument that defaults to 1234 so their draws reproduce, and each restores
   the caller's random number state on exit.

@@ -647,6 +647,49 @@ test_that("a failed image call says what can be done about it", {
   expect_false(grepl("images = FALSE", joined, fixed = TRUE))
 })
 
+test_that("the image probe leaves the caller's devices as it found them", {
+  # CRAN refuses a function that changes par() without restoring it, so the
+  # probe sets no graphical parameter at all. Closing its PNG also makes the
+  # next open device current, and with two open and the second current, the
+  # next one is the first. So the probe selects the caller's device again
+  # rather than leaving the choice to dev.off().
+  seen <- 0L
+  gen <- function(prompt, backend, num_ctx = NULL, image = NULL) {
+    if (!is.null(image)) {
+      seen <<- seen + 1L
+    }
+    tok <- if (seen %% 2L == 1L) {
+      c("YES", "NO")
+    } else {
+      c("NO", "YES")
+    }
+    stub_generate(tokens = tok)(prompt, backend, num_ctx)
+  }
+  local_tags(gen = gen)
+
+  a <- withr::local_tempfile(fileext = ".pdf")
+  b <- withr::local_tempfile(fileext = ".pdf")
+  grDevices::pdf(a)
+  first <- grDevices::dev.cur()
+  withr::defer(grDevices::dev.off(first))
+  grDevices::pdf(b)
+  second <- grDevices::dev.cur()
+  withr::defer(grDevices::dev.off(second))
+  open <- grDevices::dev.list()
+  mar <- graphics::par("mar")
+
+  ok <- suppressMessages(check_backend(
+    stub_backend(),
+    ab_instrument(),
+    text = "one",
+    images = TRUE
+  ))
+  expect_true(ok)
+  expect_identical(grDevices::dev.cur(), second)
+  expect_identical(grDevices::dev.list(), open)
+  expect_identical(graphics::par("mar"), mar)
+})
+
 test_that("a list column sends every frame, a character column sends one", {
   # The probe settled that Ollama takes a vector. One picture cost 86 prompt
   # tokens, two cost 137 and four cost 239, so each is encoded rather than the

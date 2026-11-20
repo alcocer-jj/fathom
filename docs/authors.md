@@ -17,16 +17,18 @@
 
 - **Sandra S. Muñoz**. Contributor.
 
+- **Lauren Phillips**. Contributor.
+
 ## Citation
 
 Alcocer J (2026). *fathom: Qualitative Coding and Measurement with Local
-Language Models*. R package version 0.1.4,
+Language Models*. R package version 0.1.5,
 <https://www.alcocerjj.com/fathom/>.
 
 @Manual{,\
   title = {fathom: Qualitative Coding and Measurement with Local Language Models},\
   author = {Jose J. Alcocer},\
   year = {2026},\
-  note = {R package version 0.1.4},\
+  note = {R package version 0.1.5},\
   url = {https://www.alcocerjj.com/fathom/},\
 }

@@ -34,8 +34,7 @@ after reading the count.
 
 \examples{
 f <- tempfile(fileext = ".png")
-grDevices::png(f, width = 8, height = 8)
-graphics::par(mar = c(0, 0, 0, 0))
+grDevices::png(f)
 graphics::plot.new()
 grDevices::dev.off()
 

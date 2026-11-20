@@ -33,6 +33,7 @@ Other contributors:
   \item Bailey Inglish \email{bei246@my.utexas.edu} [contributor]
   \item Alain S. Muñoz \email{santiago.mc1106@gmail.com} [contributor]
   \item Sandra S. Muñoz \email{saandramc2@gmail.com} [contributor]
+  \item Lauren Phillips \email{lauren.phillips@email.ucr.edu} [contributor]
 }
 
 }

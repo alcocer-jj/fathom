@@ -907,13 +907,25 @@ check_backend <- function(
     # Written once, up front, and removed when check_backend() returns rather
     # than when the helper does, since the file has to outlive the call that
     # reads it.
+    #
+    # The color is the device background, which plot.new() paints as it opens
+    # the page, so nothing is drawn and no graphical parameter is set. The old
+    # 64-pixel picture needed par() to shrink its margins, and CRAN refuses a
+    # function that changes par() without restoring it. At the default 480
+    # pixels the margins fit as they are.
+    #
+    # Closing the PNG makes the next open device current, which need not be
+    # the one the caller had, so the device that was current before is
+    # selected again.
     swatch <- function(col) {
       p <- tempfile(fileext = ".png")
-      grDevices::png(p, width = 64, height = 64)
-      graphics::par(mar = c(0, 0, 0, 0))
+      was <- grDevices::dev.cur()
+      grDevices::png(p, bg = col)
       graphics::plot.new()
-      graphics::rect(0, 0, 1, 1, col = col, border = NA)
       grDevices::dev.off()
+      if (was > 1L) {
+        grDevices::dev.set(was)
+      }
       p
     }
     pics <- vapply(c("red", "blue"), swatch, character(1))
